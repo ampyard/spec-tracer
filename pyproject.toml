@@ -11,11 +11,16 @@ unified-test-tracer = "build_pyramid:main"
 
 [dependency-groups]
 dev = [
-  "pytest>=8.3"
+  "pytest>=8.3",
+  "behave>=1.2",
 ]
+[tool.setuptools.packages.find]
+exclude = ["features*", "reports*"]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]

@@ -270,29 +270,42 @@ python build_pyramid.py \
 
 ### 13. Implementation Roadmap
 
+**Guiding rules for every phase:**
+- All `.feature` files describe the **tool's own behavior** and live in `features/`. Never use fake placeholder features (e.g. "User Login").
+- Every phase **must include a behave E2E scenario** in `features/` that validates the phase's deliverable by running the tool CLI and asserting on its output/exit code. This is not optional.
+- Phase-specific fixture data (pre-canned `.xml` / `.json` inputs) lives in `tests/fixtures/<phase>/`. These are used by both behave steps and pytest integration tests.
+- "Dogfooding" means the tool consumes **its own test outputs**: `pytest --junitxml=` and `behave --format json -o`. Until dogfooding starts, behave still runs to validate the tool, but the tool does not process its own `reports/` output.
+
 #### Phase 1: Thinnest Vertical Slice (E2E Only)
-- Write one `.feature` file with one scenario tagged `@FC-001`.
-- Write a behave scenario: run the tool with `--features` + `--e2e` + `--output` -> verify HTML contains scenario name and "1/1 tested".
+- Write one `.feature` file in `features/` with one scenario tagged `@FC-001` describing the tool's core behavior.
+- Write **behave step definitions** that: run the tool with `--features` + `--e2e` + `--output` -> verify HTML contains scenario name and "1/1 tested".
 - Implement the minimum: CLI skeleton, feature file parser, Cucumber JSON parser, tag matcher, bare-bones Jinja2 template.
-- No dogfooding yet.
+- No dogfooding yet (tool does not process its own behave output — use fixture `e2e.json`).
 
 #### Phase 2: Add Unit Layer
 - Add `--unit` flag + JUnit XML parser.
-- Behave scenario: feature file + unit JUnit XML (matching tag) -> report shows unit coverage.
-- **First dogfooding milestone:** write a real pytest unit test tagged `@FC-001`, run it, point the tool at the output. The self-report now links a real test to a real scenario.
+- Add a behave scenario + step definitions: feature file + unit JUnit XML (matching tag) -> report shows unit coverage.
+- **First dogfooding milestone:** write a real pytest unit test tagged `@FC-001`, run it (`pytest --junitxml=`), point the tool at the output. The self-report now links a real test to a real scenario. Behave E2E output is also consumed by the tool (full `reports/` pipeline).
+- Add edge-case tests: tag collision, no match, empty results, malformed XML.
 
 #### Phase 3: Add Integration Layer
-- Same pattern as Phase 2 for `--integration`.
+- Add `--integration` flag. Reuse the JUnit XML parser from Phase 2.
+- Add a behave scenario + step definitions: feature file + integration JUnit XML (matching tag) -> report shows integration coverage.
+- Dogfooding: write a real pytest integration test tagged with the phase's tag, run it, include in self-report.
+- Add `--integration` to the dogfooding CI pipeline.
 
 #### Phase 4: Layer Requirement Checks
 - Implement `@require:*` tag matching against all three layers.
-- Behave scenario: scenario tagged `@require:unit @require:e2e` but only unit has results -> report flags missing E2E.
-- Add `@require:*` tags to the tool's own feature files.
+- Add a behave scenario: scenario tagged `@require:unit @require:e2e` but only unit has results -> report flags missing E2E.
+- Add `@require:*` tags to the tool's own feature files + step assertions.
+- Dogfooding: self-report shows required-layer status.
 
 #### Phase 5: Report Polish
-- Pyramid visualization, health checks, failure accordion, tag filter JS.
-- Each feature driven by a behave scenario first.
+- Pyramid visualization, health checks (inverted pyramid, E2E speed), failure accordion, tag filter JS.
+- Each feature driven by a behave scenario first (validate the HTML contains the new UI elements).
+- Dogfooding: self-report includes all visual sections.
 
 #### Phase 6: Coverage Completion
-- Fill gaps in the tool's own test suite.
+- Fill gaps in the tool's own test suite (unit, integration, E2E).
 - Self-report becomes the team's quality dashboard for the tool.
+- Full dogfooding CI pipeline is the single source of truth.

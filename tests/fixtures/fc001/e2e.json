@@ -1,0 +1,20 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "User Login",
+    "tags": [],
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "name": "Successful login with valid credentials",
+        "tags": [{"name": "@FC-001"}],
+        "steps": [
+          {"keyword": "Given", "name": "the user is on the login page", "result": {"status": "passed"}},
+          {"keyword": "When", "name": "they enter valid credentials", "result": {"status": "passed"}},
+          {"keyword": "Then", "name": "they should be redirected to the dashboard", "result": {"status": "passed"}}
+        ],
+        "status": "passed"
+      }
+    ]
+  }
+]

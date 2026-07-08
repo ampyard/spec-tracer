@@ -3,19 +3,23 @@ import subprocess
 import sys
 
 
-ROOT = Path(__file__).resolve().parents[1]
-FEATURES = ROOT / "tests" / "fixtures" / "phase1" / "features"
-E2E = ROOT / "tests" / "fixtures" / "phase1" / "e2e.json"
-OUTPUT = ROOT / "tests" / "fixtures" / "phase1" / "report.html"
+ROOT = Path(__file__).resolve().parents[2]
+FIXTURES = ROOT / "tests" / "fixtures" / "phase2_statuses"
+FEATURES = FIXTURES / "features"
+UNIT = FIXTURES / "unit.xml"
+E2E = FIXTURES / "e2e.json"
+OUTPUT = FIXTURES / "report.html"
 
 
-def test_phase1_cli_generates_coverage_report():
+def test_passed_failed_skipped_displayed_in_report():
     result = subprocess.run(
         [
             sys.executable,
             "build_pyramid.py",
             "--features",
             str(FEATURES),
+            "--unit",
+            str(UNIT),
             "--e2e",
             str(E2E),
             "--output",
@@ -28,9 +32,12 @@ def test_phase1_cli_generates_coverage_report():
     )
 
     assert result.returncode == 0, result.stderr
-    assert OUTPUT.exists()
-
     content = OUTPUT.read_text(encoding="utf-8")
-    assert "Scenario Coverage Progress" in content
-    assert "Successful login with valid credentials" in content
+
     assert "1/1 scenarios tested" in content
+    assert "<strong>unit</strong>" in content
+    assert "<strong>e2e</strong>" in content
+
+    assert "(passed)" in content
+    assert "(failed)" in content
+    assert "(skipped)" in content

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import re
 import sys
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,6 +22,7 @@ class Scenario:
     tags: List[str] = field(default_factory=list)
     steps: List[str] = field(default_factory=list)
     linked_results: List["TestResult"] = field(default_factory=list)
+    layers: List[List["TestResult"]] = field(default_factory=list)
 
     @property
     def is_tested(self) -> bool:
@@ -38,6 +41,7 @@ class TestResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a unified test coverage HTML report")
     parser.add_argument("--features", required=True, nargs="+", help="Feature file(s) or directory")
+    parser.add_argument("--unit", nargs="+", default=[], help="Unit test JUnit XML file(s) or directory")
     parser.add_argument("--e2e", nargs="+", default=[], help="Cucumber JSON file(s) or directory")
     parser.add_argument("--output", required=True, help="Path to output HTML report")
     parser.add_argument("--error-on-failure", action="store_true", help="Exit non-zero on any failing result")
@@ -68,6 +72,58 @@ def collect_result_files(paths: List[str]) -> List[Path]:
         elif path.is_dir():
             files.extend(sorted(path.rglob("*.json")))
     return sorted({path.resolve() for path in files})
+
+
+def collect_xml_files(paths: List[str]) -> List[Path]:
+    files: List[Path] = []
+    for raw_path in paths:
+        path = Path(raw_path)
+        if not path.exists():
+            continue
+        if path.is_file():
+            files.append(path)
+        elif path.is_dir():
+            files.extend(sorted(path.rglob("*.xml")))
+    return sorted({path.resolve() for path in files})
+
+
+def parse_junit_results(paths: List[Path]) -> List[TestResult]:
+    results: List[TestResult] = []
+    tag_pattern = re.compile(r"@[\w.-]+")
+    for path in paths:
+        tree = ET.parse(path)
+        root = tree.getroot()
+        suites = [root] if root.tag == "testsuite" else root.findall(".//testsuite")
+        for suite in suites:
+            for tc in suite.findall("testcase"):
+                name = tc.get("name", "")
+                classname = tc.get("classname", "")
+                time = float(tc.get("time", 0) or 0)
+                tags = tag_pattern.findall(name) + tag_pattern.findall(classname)
+                props = tc.find("properties")
+                if props is not None:
+                    for prop in props.findall("property"):
+                        val = prop.get("value", "")
+                        if val.startswith("@"):
+                            tags.append(val)
+                        pname = prop.get("name", "")
+                        if pname.startswith("@"):
+                            tags.append(pname)
+                status = "passed"
+                if tc.find("failure") is not None or tc.find("error") is not None:
+                    status = "failed"
+                elif tc.find("skipped") is not None:
+                    status = "skipped"
+                results.append(
+                    TestResult(
+                        layer="unit",
+                        name=name,
+                        tags=sorted(set(tags)),
+                        status=status,
+                        duration=time,
+                    )
+                )
+    return results
 
 
 def parse_feature_file(path: Path) -> List[Scenario]:
@@ -121,7 +177,11 @@ def parse_e2e_results(paths: List[Path]) -> List[TestResult]:
                     continue
                 if element.get("keyword", "").lower() != "scenario":
                     continue
-                tags = [tag.get("name", "") for tag in element.get("tags", []) if isinstance(tag, dict)]
+                raw_tags = element.get("tags", [])
+                if raw_tags and isinstance(raw_tags[0], dict):
+                    tags = [tag.get("name", "") for tag in raw_tags]
+                else:
+                    tags = [f"@{tag}" if not tag.startswith("@") else tag for tag in raw_tags]
                 status = element.get("status", "passed")
                 if status == "undefined":
                     status = "skipped"
@@ -166,6 +226,13 @@ def build_report_html(scenarios: List[Scenario], results: List[TestResult]) -> s
             }
         )
 
+    layer_order = ["e2e", "unit", "integration"]
+    for scenario in scenarios:
+        by_layer: dict[str, List[TestResult]] = {}
+        for result in scenario.linked_results:
+            by_layer.setdefault(result.layer, []).append(result)
+        scenario.layers = [by_layer.get(layer, []) for layer in layer_order if by_layer.get(layer)]
+
     if Template is not None:
         template = Template(
             """
@@ -205,6 +272,20 @@ def build_report_html(scenarios: List[Scenario], results: List[TestResult]) -> s
     <li>
       <span class=\"pill\">{{ scenario.feature }}</span>
       {{ scenario.name }} - {% if scenario.is_tested %}tested{% else %}untested{% endif %}
+      {% if scenario.layers %}
+      <ul>
+        {% for layer_group in scenario.layers %}
+        {% set layer_name = layer_group[0].layer %}
+        <li><strong>{{ layer_name }}</strong> ({{ layer_group | length }})
+          <ul>
+            {% for result in layer_group %}
+            <li>{{ result.name }} ({{ result.status }})</li>
+            {% endfor %}
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>
@@ -247,8 +328,13 @@ def main() -> int:
     for feature_file in feature_files:
         scenarios.extend(parse_feature_file(feature_file))
 
-    result_files = collect_result_files(args.e2e)
-    results = parse_e2e_results(result_files)
+    e2e_files = collect_result_files(args.e2e)
+    e2e_results = parse_e2e_results(e2e_files)
+
+    unit_files = collect_xml_files(args.unit)
+    unit_results = parse_junit_results(unit_files)
+
+    results = e2e_results + unit_results
     html = build_report_html(scenarios, results)
 
     output_path = Path(args.output)

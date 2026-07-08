@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testcase classname="tests" name="bad_closing_tag</broken>
+</testsuites>

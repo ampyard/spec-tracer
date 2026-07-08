@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="2" errors="0" failures="0" time="0.002">
+    <testcase classname="tests" name="test_scenario_tag_@FC-001" time="0.001"/>
+    <testcase classname="tests" name="test_feature_tag_@FeatureTag" time="0.001"/>
+  </testsuite>
+</testsuites>

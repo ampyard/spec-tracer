@@ -1,0 +1,38 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "User Login",
+    "tags": [],
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "name": "Successful login - passed",
+        "tags": [{"name": "@FC-001"}],
+        "steps": [
+          {"keyword": "Given", "name": "the user is on the login page", "result": {"status": "passed"}},
+          {"keyword": "When", "name": "they enter valid credentials", "result": {"status": "passed"}},
+          {"keyword": "Then", "name": "they should be redirected", "result": {"status": "passed"}}
+        ],
+        "status": "passed"
+      },
+      {
+        "keyword": "Scenario",
+        "name": "Login with invalid password - failed",
+        "tags": [{"name": "@FC-001"}],
+        "steps": [
+          {"keyword": "When", "name": "they enter invalid password", "result": {"status": "failed", "error_message": "AssertionError: Expected error message"}}
+        ],
+        "status": "failed"
+      },
+      {
+        "keyword": "Scenario",
+        "name": "Login lockout - skipped",
+        "tags": [{"name": "@FC-001"}],
+        "steps": [
+          {"keyword": "Then", "name": "account is locked", "result": {"status": "skipped"}}
+        ],
+        "status": "skipped"
+      }
+    ]
+  }
+]

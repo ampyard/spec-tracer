@@ -41,7 +41,8 @@ class TestResult:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a unified test coverage HTML report")
     parser.add_argument("--features", required=True, nargs="+", help="Feature file(s) or directory")
-    parser.add_argument("--unit", nargs="+", default=[], help="Unit test JUnit XML file(s) or directory")
+    parser.add_argument("--unit", action="append", default=[], help="Unit test JUnit XML file(s) or directory")
+    parser.add_argument("--integration", action="append", default=[], help="Integration test JUnit XML file(s) or directory")
     parser.add_argument("--e2e", nargs="+", default=[], help="Cucumber JSON file(s) or directory")
     parser.add_argument("--output", required=True, help="Path to output HTML report")
     parser.add_argument("--error-on-failure", action="store_true", help="Exit non-zero on any failing result")
@@ -87,11 +88,14 @@ def collect_xml_files(paths: List[str]) -> List[Path]:
     return sorted({path.resolve() for path in files})
 
 
-def parse_junit_results(paths: List[Path]) -> List[TestResult]:
+def parse_junit_results(paths: List[Path], layer: str = "unit") -> List[TestResult]:
     results: List[TestResult] = []
     tag_pattern = re.compile(r"@[\w.-]+")
     for path in paths:
-        tree = ET.parse(path)
+        try:
+            tree = ET.parse(path)
+        except ET.ParseError as exc:
+            raise ValueError(f"Malformed JUnit XML in {path}: {exc}") from exc
         root = tree.getroot()
         suites = [root] if root.tag == "testsuite" else root.findall(".//testsuite")
         for suite in suites:
@@ -116,7 +120,7 @@ def parse_junit_results(paths: List[Path]) -> List[TestResult]:
                     status = "skipped"
                 results.append(
                     TestResult(
-                        layer="unit",
+                        layer=layer,
                         name=name,
                         tags=sorted(set(tags)),
                         status=status,
@@ -332,9 +336,12 @@ def main() -> int:
     e2e_results = parse_e2e_results(e2e_files)
 
     unit_files = collect_xml_files(args.unit)
-    unit_results = parse_junit_results(unit_files)
+    unit_results = parse_junit_results(unit_files, layer="unit")
 
-    results = e2e_results + unit_results
+    integration_files = collect_xml_files(args.integration)
+    integration_results = parse_junit_results(integration_files, layer="integration")
+
+    results = e2e_results + unit_results + integration_results
     html = build_report_html(scenarios, results)
 
     output_path = Path(args.output)

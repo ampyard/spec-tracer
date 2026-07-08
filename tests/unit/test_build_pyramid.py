@@ -1,7 +1,9 @@
 from pathlib import Path
+import sys
+
 import pytest
 
-from build_pyramid import parse_feature_file, parse_e2e_results, parse_junit_results
+from build_pyramid import parse_args, parse_feature_file, parse_e2e_results, parse_junit_results
 
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
@@ -29,6 +31,73 @@ def test_parse_junit_results_extracts_tags(tag):
     assert len(results) == 1
     assert results[0].layer == "unit"
     assert tag in results[0].tags
+
+
+def test_parse_junit_results_extracts_tags_from_classname_and_properties(tmp_path):
+    xml_path = tmp_path / "integration.xml"
+    xml_path.write_text(
+        """<testsuite><testcase classname=\"tests.integration @FC-004\" name=\"some test\"><properties><property name=\"@FC-005\" value=\"x\" /></properties></testcase></testsuite>""",
+        encoding="utf-8",
+    )
+
+    results = parse_junit_results([xml_path], layer="integration")
+
+    assert len(results) == 1
+    assert results[0].layer == "integration"
+    assert "@FC-004" in results[0].tags
+    assert "@FC-005" in results[0].tags
+
+
+def test_parse_junit_results_raises_clear_error_on_malformed_xml(tmp_path):
+    xml_path = tmp_path / "broken.xml"
+    xml_path.write_text("<testsuite><testcase></testsuite>", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Malformed JUnit XML"):
+        parse_junit_results([xml_path], layer="integration")
+
+
+def test_parse_args_supports_repeated_integration_flags(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "build_pyramid.py",
+            "--features",
+            "features",
+            "--integration",
+            "one.xml",
+            "--integration",
+            "two.xml",
+            "--output",
+            "report.html",
+        ],
+    )
+
+    args = parse_args()
+
+    assert args.integration == ["one.xml", "two.xml"]
+
+
+def test_parse_args_supports_repeated_unit_flags(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "build_pyramid.py",
+            "--features",
+            "features",
+            "--unit",
+            "one.xml",
+            "--unit",
+            "two.xml",
+            "--output",
+            "report.html",
+        ],
+    )
+
+    args = parse_args()
+
+    assert args.unit == ["one.xml", "two.xml"]
 
 
 @pytest.mark.parametrize("tag", ["@FC-002"])

@@ -1,0 +1,3 @@
+<testsuite name="integration" tests="1" failures="0" errors="0" skipped="0" time="0.1">
+  <testcase classname="tests.integration" name="test_integration @FC-003" time="0.1" />
+</testsuite>

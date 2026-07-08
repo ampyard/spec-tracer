@@ -21,3 +21,32 @@ Feature: Test Coverage Report
     And the report should contain "(passed)"
     And the report should contain "(failed)"
     And the report should contain "(skipped)"
+
+  @FC-003
+  Scenario: Generate report with linked integration coverage
+    Given a feature file with scenario tagged "@FC-003"
+    And an integration JUnit XML result tagged "@FC-003"
+    When I run the tool with --features, --integration, and --output
+    Then the exit code should be 0
+    And the report should contain "1/1 scenarios tested"
+    And the report should contain "<strong>integration</strong>"
+
+  @FC-EDGE-001
+  Scenario: Generate report with linked edge case coverage
+    Given a feature file with scenario tagged "@FC-EDGE-001"
+    And a unit JUnit XML result tagged "@FC-EDGE-001"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "1/1 scenarios tested"
+    And the report should contain "<strong>unit</strong>"
+
+  @FC-004
+  Scenario: Generate report when unit and integration flags are repeated
+    Given a feature file with scenario tagged "@FC-004"
+    And a unit JUnit XML result tagged "@FC-004"
+    And an integration JUnit XML result tagged "@FC-004"
+    When I run the tool with --features, --unit, --integration, and --output
+    Then the exit code should be 0
+    And the report should contain "1/1 scenarios tested"
+    And the report should contain "<strong>unit</strong>"
+    And the report should contain "<strong>integration</strong>"

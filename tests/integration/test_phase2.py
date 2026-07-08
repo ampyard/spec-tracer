@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FEATURES = ROOT / "tests" / "fixtures" / "phase2" / "features"
@@ -9,7 +11,8 @@ UNIT = ROOT / "tests" / "fixtures" / "phase2" / "unit.xml"
 OUTPUT = ROOT / "tests" / "fixtures" / "phase2" / "report.html"
 
 
-def test_phase2_cli_links_unit_results():
+@pytest.mark.parametrize("tag", ["@FC-001"])
+def test_phase2_cli_links_unit_results(tag):
     result = subprocess.run(
         [
             sys.executable,

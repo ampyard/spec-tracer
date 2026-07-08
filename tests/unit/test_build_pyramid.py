@@ -56,7 +56,8 @@ def test_parse_junit_results_extracts_tags(tag):
     assert tag in results[0].tags
 
 
-def test_parse_junit_results_extracts_tags_from_classname_and_properties(tmp_path):
+@pytest.mark.parametrize("tag", ["@FC-007"])
+def test_parse_junit_results_extracts_tags_from_classname_and_properties(tag, tmp_path):
     xml_path = tmp_path / "integration.xml"
     xml_path.write_text(
         """<testsuite><testcase classname=\"tests.integration @FC-004\" name=\"some test\"><properties><property name=\"@FC-005\" value=\"x\" /></properties></testcase></testsuite>""",
@@ -71,7 +72,8 @@ def test_parse_junit_results_extracts_tags_from_classname_and_properties(tmp_pat
     assert "@FC-005" in results[0].tags
 
 
-def test_parse_junit_results_raises_clear_error_on_malformed_xml(tmp_path):
+@pytest.mark.parametrize("tag", ["@FC-007"])
+def test_parse_junit_results_raises_clear_error_on_malformed_xml(tag, tmp_path):
     xml_path = tmp_path / "broken.xml"
     xml_path.write_text("<testsuite><testcase></testsuite>", encoding="utf-8")
 
@@ -79,7 +81,8 @@ def test_parse_junit_results_raises_clear_error_on_malformed_xml(tmp_path):
         _parse_junit_results([xml_path], layer="integration")
 
 
-def test_parse_args_supports_repeated_integration_flags(monkeypatch):
+@pytest.mark.parametrize("tag", ["@FC-004"])
+def test_parse_args_supports_repeated_integration_flags(tag, monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
@@ -101,7 +104,8 @@ def test_parse_args_supports_repeated_integration_flags(monkeypatch):
     assert args.integration == ["one.xml", "two.xml"]
 
 
-def test_parse_args_supports_repeated_unit_flags(monkeypatch):
+@pytest.mark.parametrize("tag", ["@FC-004"])
+def test_parse_args_supports_repeated_unit_flags(tag, monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
@@ -151,7 +155,8 @@ def test_require_tags_excluded_from_linking(linking_tag):
     assert "@require:e2e" not in scenario.tags
 
 
-def test_require_tags_stored_as_required_layers():
+@pytest.mark.parametrize("tag", ["@FC-005"])
+def test_require_tags_stored_as_required_layers(tag):
     scenarios = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
@@ -160,7 +165,8 @@ def test_require_tags_stored_as_required_layers():
     assert "integration" not in scenario.required_layers
 
 
-def test_require_layer_status_missing_e2e(tmp_path):
+@pytest.mark.parametrize("tag", ["@FC-005"])
+def test_require_layer_status_missing_e2e(tag, tmp_path):
     from unified_test_tracer.models import ScenarioView, Scenario
     scenario = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")[0]
     unit_result = TestResult(layer="unit", name="test", tags=["@FC-005"], status="passed")

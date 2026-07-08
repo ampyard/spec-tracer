@@ -6,7 +6,7 @@ from unified_test_tracer.models import Scenario, ScenarioView, TestResult
 
 class ReportAggregator:
 
-    LAYER_ORDER = ["e2e", "unit", "integration"]
+    LAYER_ORDER = ["unit", "integration", "e2e"]
 
     @staticmethod
     def build_views(
@@ -48,3 +48,80 @@ class ReportAggregator:
                 "percentage": feature_pct,
             })
         return breakdown
+
+    MIN_TIER_WIDTH_PCT = 28
+
+    @staticmethod
+    def layer_stats(views: List[ScenarioView]) -> List[dict]:
+        linked_results = [result for view in views for result in view.linked_results]
+        metrics: List[dict] = []
+        for layer in ReportAggregator.LAYER_ORDER:
+            layer_results = [result for result in linked_results if result.layer == layer]
+            if not layer_results:
+                continue
+            passed = sum(1 for result in layer_results if result.status == "passed")
+            failed = sum(1 for result in layer_results if result.status == "failed")
+            skipped = sum(1 for result in layer_results if result.status == "skipped")
+            duration = sum(result.duration for result in layer_results)
+            total = len(layer_results)
+            metrics.append(
+                {
+                    "name": layer,
+                    "label": layer.upper(),
+                    "count": total,
+                    "passed": passed,
+                    "failed": failed,
+                    "skipped": skipped,
+                    "duration": duration,
+                    "pass_pct": int(round((passed / total * 100) if total else 0)),
+                    "fail_pct": int(round((failed / total * 100) if total else 0)),
+                    "skip_pct": int(round((skipped / total * 100) if total else 0)),
+                }
+            )
+        max_count = max((metric["count"] for metric in metrics), default=0)
+        for metric in metrics:
+            share = (metric["count"] / max_count * 100) if max_count else 0
+            metric["width_pct"] = round(max(share, ReportAggregator.MIN_TIER_WIDTH_PCT if metric["count"] else 0), 1)
+        return metrics
+
+    @staticmethod
+    def health_checks(views: List[ScenarioView], layer_stats: List[dict], coverage_stats: dict) -> dict:
+        coverage_pct = coverage_stats["percentage"]
+        if coverage_pct >= 80:
+            coverage_status = "pass"
+            coverage_message = "Coverage is healthy and trending forward."
+        elif coverage_pct >= 50:
+            coverage_status = "warn"
+            coverage_message = "Coverage is improving but still needs attention."
+        else:
+            coverage_status = "fail"
+            coverage_message = "Coverage is below the comfort threshold."
+
+        unit_count = next((metric["count"] for metric in layer_stats if metric["name"] == "unit"), 0)
+        integration_count = next((metric["count"] for metric in layer_stats if metric["name"] == "integration"), 0)
+        e2e_count = next((metric["count"] for metric in layer_stats if metric["name"] == "e2e"), 0)
+        pyramid_ok = unit_count >= integration_count + e2e_count
+        pyramid_status = "pass" if pyramid_ok else "fail"
+        pyramid_message = "Unit coverage is strong enough for the pyramid." if pyramid_ok else "The pyramid is inverted and needs more unit coverage."
+
+        e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
+        total_duration = sum(metric["duration"] for metric in layer_stats)
+        e2e_speed_ok = total_duration == 0 or e2e_duration <= total_duration * 0.5
+        e2e_status = "pass" if e2e_speed_ok else "fail"
+        e2e_message = "E2E runtime stays within the healthy envelope." if e2e_speed_ok else "E2E runtime dominates the suite."
+
+        return {
+            "coverage": {"status": coverage_status, "message": coverage_message, "value": f"{coverage_stats['tested']}/{coverage_stats['total']}"},
+            "pyramid": {"status": pyramid_status, "message": pyramid_message, "value": f"unit {unit_count} · integration {integration_count} · e2e {e2e_count}"},
+            "e2e_speed": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s / {total_duration:.1f}s"},
+        }
+
+    @staticmethod
+    def unlinked_results(scenarios: List[Scenario], results: List[TestResult]) -> List[TestResult]:
+        scenario_tags = {tag for scenario in scenarios for tag in scenario.tags}
+        return [
+            result
+            for result in results
+            if not any(tag in scenario_tags for tag in result.tags)
+            and any(tag.startswith("@FC-") for tag in result.tags)
+        ]

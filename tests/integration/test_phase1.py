@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FEATURES = ROOT / "tests" / "fixtures" / "phase1" / "features"
@@ -9,7 +11,8 @@ E2E = ROOT / "tests" / "fixtures" / "phase1" / "e2e.json"
 OUTPUT = ROOT / "tests" / "fixtures" / "phase1" / "report.html"
 
 
-def test_phase1_cli_generates_coverage_report():
+@pytest.mark.parametrize("tag", ["@FC-001"])
+def test_phase1_cli_generates_coverage_report(tag):
     result = subprocess.run(
         [
             sys.executable,

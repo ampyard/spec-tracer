@@ -19,6 +19,7 @@ class TestResult:
     tags: List[str] = field(default_factory=list)
     status: str = "passed"
     duration: float = 0.0
+    failure_message: str = ""
 
 
 @dataclass

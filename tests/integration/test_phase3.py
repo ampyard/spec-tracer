@@ -41,7 +41,8 @@ def test_phase3_cli_links_integration_results(tag):
     assert "@FC-003" in content
 
 
-def test_phase3_report_includes_integration_layer_from_pytest_junit(tmp_path):
+@pytest.mark.parametrize("tag", ["@FC-003"])
+def test_phase3_report_includes_integration_layer_from_pytest_junit(tag, tmp_path):
     xml_path = tmp_path / "int.xml"
     result = subprocess.run(
         [

@@ -14,7 +14,13 @@ TAG_FIXTURES = {
     "@FC-003": "phase3",
     "@FC-004": "repeatable",
     "@FC-005": "phase4",
+    "@FC-006": "fc002",
     "@FC-EDGE-001": "edge_cases/collision_across",
+    "@FC-EDGE-002": "edge_cases/collision_within",
+    "@FC-EDGE-003": "edge_cases/feature_tags_not_inherited",
+    "@FC-EDGE-004": "edge_cases/no_match",
+    "@FC-EDGE-005": "edge_cases/empty_result",
+    "@FC-EDGE-006": "edge_cases/malformed_xml",
 }
 
 

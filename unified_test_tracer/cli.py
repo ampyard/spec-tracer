@@ -55,9 +55,21 @@ def main(argv: List[str] | None = None) -> int:
     views = ReportAggregator.build_views(scenarios, links)
     stats = ReportAggregator.coverage_stats(views)
     breakdown = ReportAggregator.feature_breakdown(views)
+    layer_stats = ReportAggregator.layer_stats(views)
+    health_checks = ReportAggregator.health_checks(views, layer_stats, stats)
+    failed_results = [result for result in results if result.status == "failed"]
+    unlinked_results = ReportAggregator.unlinked_results(scenarios, results)
 
     renderer = HtmlRenderer()
-    html = renderer.render(views, stats, breakdown)
+    html = renderer.render(
+        views,
+        stats,
+        breakdown,
+        layer_stats=layer_stats,
+        health_checks=health_checks,
+        failed_results=failed_results,
+        unlinked_results=unlinked_results,
+    )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

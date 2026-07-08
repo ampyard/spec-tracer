@@ -93,8 +93,15 @@ class JunitParser(ResultParser):
                             pname = prop.get("name", "")
                             if pname.startswith("@"):
                                 tags.append(pname)
+                    failure_message = ""
+                    failure_node = tc.find("failure")
+                    error_node = tc.find("error")
+                    if failure_node is not None:
+                        failure_message = (failure_node.text or "").strip() or failure_node.get("message", "")
+                    elif error_node is not None:
+                        failure_message = (error_node.text or "").strip() or error_node.get("message", "")
                     status = "passed"
-                    if tc.find("failure") is not None or tc.find("error") is not None:
+                    if failure_node is not None or error_node is not None:
                         status = "failed"
                     elif tc.find("skipped") is not None:
                         status = "skipped"
@@ -105,6 +112,7 @@ class JunitParser(ResultParser):
                             tags=sorted(set(tags)),
                             status=status,
                             duration=time,
+                            failure_message=failure_message,
                         )
                     )
         return results

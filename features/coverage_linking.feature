@@ -1,4 +1,4 @@
-Feature: Test Coverage Report
+Feature: Test Coverage Linking
 
   @FC-001 @require:unit @require:e2e
   Scenario: Generate report with linked unit and E2E coverage
@@ -31,15 +31,6 @@ Feature: Test Coverage Report
     And the report should contain "1/1 scenarios tested"
     And the report should contain "<strong>integration</strong>"
 
-  @FC-EDGE-001
-  Scenario: Generate report with linked edge case coverage
-    Given a feature file with scenario tagged "@FC-EDGE-001"
-    And a unit JUnit XML result tagged "@FC-EDGE-001"
-    When I run the tool with --features, --unit, and --output
-    Then the exit code should be 0
-    And the report should contain "1/1 scenarios tested"
-    And the report should contain "<strong>unit</strong>"
-
   @FC-004 @require:unit @require:integration
   Scenario: Generate report when unit and integration flags are repeated
     Given a feature file with scenario tagged "@FC-004"
@@ -50,14 +41,3 @@ Feature: Test Coverage Report
     And the report should contain "1/1 scenarios tested"
     And the report should contain "<strong>unit</strong>"
     And the report should contain "<strong>integration</strong>"
-
-  @FC-005 @require:unit @require:e2e
-  Scenario: Report flags missing required layer
-    Given a feature file with scenario tagged "@FC-005"
-    And a unit JUnit XML result tagged "@FC-005"
-    When I run the tool with --features, --unit, and --output
-    Then the exit code should be 0
-    And the report should contain "1/1 scenarios tested"
-    And the report should contain "Required:"
-    And the report should contain "unit [OK]"
-    And the report should contain "e2e [MISSING]"

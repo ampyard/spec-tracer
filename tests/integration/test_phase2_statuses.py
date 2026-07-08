@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "tests" / "fixtures" / "phase2_statuses"
@@ -11,7 +13,8 @@ E2E = FIXTURES / "e2e.json"
 OUTPUT = FIXTURES / "report.html"
 
 
-def test_passed_failed_skipped_displayed_in_report():
+@pytest.mark.parametrize("tag", ["@FC-002"])
+def test_passed_failed_skipped_displayed_in_report(tag):
     result = subprocess.run(
         [
             sys.executable,

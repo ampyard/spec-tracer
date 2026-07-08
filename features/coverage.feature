@@ -1,6 +1,6 @@
 Feature: Test Coverage Report
 
-  @FC-001
+  @FC-001 @require:unit @require:e2e
   Scenario: Generate report with linked unit and E2E coverage
     Given a feature file with scenario tagged "@FC-001"
     And a unit JUnit XML result tagged "@FC-001"
@@ -11,7 +11,7 @@ Feature: Test Coverage Report
     And the report should contain "<strong>e2e</strong>"
     And the report should contain "<strong>unit</strong>"
 
-  @FC-002
+  @FC-002 @require:unit @require:e2e
   Scenario: Report shows passed, failed, and skipped statuses
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"
@@ -22,7 +22,7 @@ Feature: Test Coverage Report
     And the report should contain "(failed)"
     And the report should contain "(skipped)"
 
-  @FC-003
+  @FC-003 @require:integration @require:e2e
   Scenario: Generate report with linked integration coverage
     Given a feature file with scenario tagged "@FC-003"
     And an integration JUnit XML result tagged "@FC-003"
@@ -40,7 +40,7 @@ Feature: Test Coverage Report
     And the report should contain "1/1 scenarios tested"
     And the report should contain "<strong>unit</strong>"
 
-  @FC-004
+  @FC-004 @require:unit @require:integration
   Scenario: Generate report when unit and integration flags are repeated
     Given a feature file with scenario tagged "@FC-004"
     And a unit JUnit XML result tagged "@FC-004"
@@ -50,3 +50,14 @@ Feature: Test Coverage Report
     And the report should contain "1/1 scenarios tested"
     And the report should contain "<strong>unit</strong>"
     And the report should contain "<strong>integration</strong>"
+
+  @FC-005 @require:unit @require:e2e
+  Scenario: Report flags missing required layer
+    Given a feature file with scenario tagged "@FC-005"
+    And a unit JUnit XML result tagged "@FC-005"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "1/1 scenarios tested"
+    And the report should contain "Required:"
+    And the report should contain "unit [OK]"
+    And the report should contain "e2e [MISSING]"

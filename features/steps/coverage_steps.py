@@ -13,6 +13,7 @@ TAG_FIXTURES = {
     "@FC-002": "fc002",
     "@FC-003": "phase3",
     "@FC-004": "repeatable",
+    "@FC-005": "phase4",
     "@FC-EDGE-001": "edge_cases/collision_across",
 }
 

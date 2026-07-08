@@ -255,11 +255,11 @@ The tool tests itself using its own input formats and a true outside-in TDD appr
 
 **Dogfooding CI pipeline:**
 ```bash
-behave features/ --format json -o reports/e2e.json
-pytest tests/unit --junitxml=reports/unit.xml
-pytest tests/integration --junitxml=reports/int.xml
+uv run behave features/ --format json -o reports/e2e.json
+uv run pytest tests/unit --junitxml=reports/unit.xml
+uv run pytest tests/integration --junitxml=reports/int.xml
 
-python build_pyramid.py \
+uv run python build_pyramid.py \
   --features ./features \
   --unit ./reports/unit.xml \
   --integration ./reports/int.xml \

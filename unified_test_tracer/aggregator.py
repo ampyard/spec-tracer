@@ -6,7 +6,7 @@ from unified_test_tracer.models import Scenario, ScenarioView, TestResult
 
 class ReportAggregator:
 
-    LAYER_ORDER = ["unit", "integration", "e2e"]
+    LAYER_ORDER = ["e2e", "integration", "unit"]
 
     @staticmethod
     def build_views(
@@ -85,7 +85,32 @@ class ReportAggregator:
         return metrics
 
     @staticmethod
-    def health_checks(views: List[ScenarioView], layer_stats: List[dict], coverage_stats: dict) -> dict:
+    def failure_breakdown(views: List[ScenarioView]) -> List[dict]:
+        features: Dict[str, List[ScenarioView]] = defaultdict(list)
+        for view in views:
+            if any(result.status == "failed" for result in view.linked_results):
+                features[view.scenario.feature].append(view)
+
+        breakdown: List[dict] = []
+        for feature_name, feature_views in sorted(features.items()):
+            scenarios = []
+            for view in feature_views:
+                failed_results = [r for r in view.linked_results if r.status == "failed"]
+                scenarios.append({"view": view, "failed_results": failed_results})
+            breakdown.append({
+                "name": feature_name,
+                "scenarios": scenarios,
+                "failed_count": sum(len(s["failed_results"]) for s in scenarios),
+            })
+        return breakdown
+
+    @staticmethod
+    def health_checks(
+        views: List[ScenarioView],
+        layer_stats: List[dict],
+        coverage_stats: dict,
+        unlinked_count: int = 0,
+    ) -> dict:
         coverage_pct = coverage_stats["percentage"]
         if coverage_pct >= 80:
             coverage_status = "pass"
@@ -110,10 +135,30 @@ class ReportAggregator:
         e2e_status = "pass" if e2e_speed_ok else "fail"
         e2e_message = "E2E runtime stays within the healthy envelope." if e2e_speed_ok else "E2E runtime dominates the suite."
 
+        if unlinked_count == 0:
+            unlinked_status = "pass"
+            unlinked_message = "Every parsed result was linked to a scenario."
+        elif unlinked_count <= 3:
+            unlinked_status = "warn"
+            unlinked_message = "A few results didn't link to any scenario."
+        else:
+            unlinked_status = "fail"
+            unlinked_message = "Several results didn't link to any scenario."
+
         return {
             "coverage": {"status": coverage_status, "message": coverage_message, "value": f"{coverage_stats['tested']}/{coverage_stats['total']}"},
-            "pyramid": {"status": pyramid_status, "message": pyramid_message, "value": f"unit {unit_count} · integration {integration_count} · e2e {e2e_count}"},
+            "pyramid": {
+                "status": pyramid_status,
+                "message": pyramid_message,
+                "value": f"e2e {e2e_count} · integration {integration_count} · unit {unit_count}",
+                "layers": [
+                    {"name": "e2e", "count": e2e_count},
+                    {"name": "integration", "count": integration_count},
+                    {"name": "unit", "count": unit_count},
+                ],
+            },
             "e2e_speed": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s / {total_duration:.1f}s"},
+            "unlinked": {"status": unlinked_status, "message": unlinked_message, "value": str(unlinked_count)},
         }
 
     @staticmethod

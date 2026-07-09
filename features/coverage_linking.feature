@@ -18,9 +18,9 @@ Feature: Test Coverage Linking
     And an E2E Cucumber JSON result tagged "@FC-002"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0
-    And the report should contain "(passed)"
-    And the report should contain "(failed)"
-    And the report should contain "(skipped)"
+    And the report should contain "badge passed"
+    And the report should contain "badge failed"
+    And the report should contain "badge skipped"
 
   @FC-003 @require:integration @require:e2e
   Scenario: Generate report with linked integration coverage

@@ -24,5 +24,6 @@ Feature: Test Coverage Tool Internals
     And an E2E Cucumber JSON result tagged "@FC-006"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0
-    And the report should contain "Features List"
-    And the report should contain "page-feature-detail"
+    And the report should contain "Feature Breakdown"
+    And the report should contain "page-features"
+    And the report should contain "Unified Test Tracer"

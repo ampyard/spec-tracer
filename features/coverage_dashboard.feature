@@ -10,6 +10,6 @@ Feature: Test Coverage Dashboard Rendering
     And the report should contain "Scenario Coverage Progress"
     And the report should contain "Test Pyramid"
     And the report should contain "Health Check"
-    And the report should contain "Search by tag, e.g. FC-001"
+    And the report should contain "Search by name"
     And the report should contain "Failure Breakdown"
     And the report should contain "Unlinked Tests"

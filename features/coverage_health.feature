@@ -7,6 +7,6 @@ Feature: Test Coverage Health Signals
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
     And the report should contain "1/1 scenarios tested"
-    And the report should contain "Required:"
-    And the report should contain "unit [OK]"
-    And the report should contain "e2e [MISSING]"
+    And the report should contain "Required"
+    And the report should contain "required-chip ok"
+    And the report should contain "required-chip missing"

@@ -12,7 +12,7 @@ def _view(feature, name, results=None):
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
 def test_layer_order_is_unit_integration_e2e(tag):
-    assert ReportAggregator.LAYER_ORDER == ["unit", "integration", "e2e"]
+    assert ReportAggregator.LAYER_ORDER == ["e2e", "integration", "unit"]
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
@@ -27,7 +27,7 @@ def test_build_views_orders_layers_by_layer_order(tag):
 
     assert len(views) == 1
     layer_names = [group[0].layer for group in views[0].layers]
-    assert layer_names == ["unit", "integration", "e2e"]
+    assert layer_names == ["e2e", "integration", "unit"]
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
@@ -121,3 +121,54 @@ def test_unlinked_results_excludes_tags_matching_scenarios(tag):
     result = ReportAggregator.unlinked_results(scenarios, [linked, unlinked])
 
     assert result == [unlinked]
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_health_checks_unlinked_entry_passes_when_zero(tag):
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
+    layer_stats = ReportAggregator.layer_stats(views)
+    coverage_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats, unlinked_count=0)
+
+    assert health["unlinked"]["status"] == "pass"
+    assert health["unlinked"]["value"] == "0"
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_health_checks_unlinked_entry_fails_when_many(tag):
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
+    layer_stats = ReportAggregator.layer_stats(views)
+    coverage_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats, unlinked_count=5)
+
+    assert health["unlinked"]["status"] == "fail"
+    assert health["unlinked"]["value"] == "5"
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_failure_breakdown_groups_failed_results_by_feature_and_scenario(tag):
+    passing = TestResult(layer="unit", name="p1", status="passed")
+    failing = TestResult(layer="unit", name="f1", status="failed")
+    views = [
+        _view("Alpha", "S1", [passing]),
+        _view("Alpha", "S2", [failing]),
+        _view("Zebra", "S3", [failing]),
+    ]
+
+    breakdown = ReportAggregator.failure_breakdown(views)
+
+    assert [b["name"] for b in breakdown] == ["Alpha", "Zebra"]
+    alpha = breakdown[0]
+    assert alpha["failed_count"] == 1
+    assert len(alpha["scenarios"]) == 1
+    assert alpha["scenarios"][0]["view"].scenario.name == "S2"
+    assert alpha["scenarios"][0]["failed_results"] == [failing]
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_failure_breakdown_empty_when_no_failures(tag):
+    views = [_view("F", "S1", [TestResult(layer="unit", name="p1", status="passed")])]
+
+    assert ReportAggregator.failure_breakdown(views) == []

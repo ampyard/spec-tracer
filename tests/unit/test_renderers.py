@@ -13,58 +13,80 @@ def _build_views():
     return [view_a, view_b]
 
 
-def _render():
-    views = _build_views()
-    stats = {"tested": 1, "total": 2, "percentage": 50}
-    feature_breakdown = [
+def _render(**overrides):
+    views = overrides.pop("views", _build_views())
+    stats = overrides.pop("stats", {"tested": 1, "total": 2, "percentage": 50})
+    feature_breakdown = overrides.pop("feature_breakdown", [
         {"name": "Alpha Feature", "tested": 1, "total": 1, "percentage": 100},
         {"name": "Zebra Feature", "tested": 0, "total": 1, "percentage": 0},
-    ]
-    layer_stats = [
+    ])
+    layer_stats = overrides.pop("layer_stats", [
         {
             "name": "unit", "label": "UNIT", "count": 1, "passed": 1, "failed": 0, "skipped": 0,
             "duration": 0.5, "pass_pct": 100, "fail_pct": 0, "skip_pct": 0, "width_pct": 100.0,
         }
-    ]
-    health_checks = {
+    ])
+    health_checks = overrides.pop("health_checks", {
         "coverage": {"status": "warn", "message": "msg", "value": "1/2"},
-    }
+        "unlinked": {"status": "pass", "message": "none", "value": "0"},
+    })
+    failed_results = overrides.pop("failed_results", [])
+    unlinked_results = overrides.pop("unlinked_results", [])
+    failure_breakdown = overrides.pop("failure_breakdown", [])
     return HtmlRenderer().render(
         views, stats, feature_breakdown,
         layer_stats=layer_stats, health_checks=health_checks,
-        failed_results=[], unlinked_results=[],
+        failed_results=failed_results, unlinked_results=unlinked_results,
+        failure_breakdown=failure_breakdown,
+        **overrides,
     )
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_produces_three_page_containers(tag):
+def test_render_produces_header_with_title_only_once(tag):
     html = _render()
-    assert 'id="page-main"' in html
-    assert 'id="page-features"' in html
-    assert 'id="page-features" class="page-stack hidden"' in html
-    assert 'id="page-feature-detail" class="page-stack hidden"' in html
+    assert '<span class="app-title">Unified Test Tracer</span>' in html
+    assert html.count("Unified Test Tracer") == 2  # <title> + header span
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_only_main_page_visible_by_default(tag):
+def test_render_produces_five_page_containers(tag):
     html = _render()
-    assert 'id="page-main" class="page-stack">' in html
+    for page_id in ["page-dashboard", "page-pyramid", "page-features", "page-failures", "page-unlinked"]:
+        assert f'id="{page_id}"' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_groups_scenarios_by_feature_on_detail_page(tag):
+def test_render_only_dashboard_page_visible_by_default(tag):
     html = _render()
-    assert 'data-feature="Alpha Feature"' in html
-    assert 'data-feature="Zebra Feature"' in html
+    assert 'id="page-dashboard" class="page-stack">' in html
+    assert 'id="page-pyramid" class="page-stack hidden">' in html
+    assert 'id="page-features" class="page-stack hidden">' in html
+    assert 'id="page-failures" class="page-stack hidden">' in html
+    assert 'id="page-unlinked" class="page-stack hidden">' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_feature_links_are_urlencoded(tag):
-    scenario = Scenario(feature="Alpha Feature", name="S", tags=["@FC-1"])
-    views = [ScenarioView(scenario=scenario, linked_results=[], layers=[])]
-    feature_breakdown = [{"name": "Alpha Feature", "tested": 0, "total": 1, "percentage": 0}]
-    html = HtmlRenderer().render(views, {"tested": 0, "total": 1, "percentage": 0}, feature_breakdown)
-    assert 'href="#/features/Alpha%20Feature"' in html
+def test_render_top_nav_has_five_links(tag):
+    html = _render()
+    for route, label in [
+        ("/", "Dashboard"),
+        ("/pyramid", "Test Pyramid"),
+        ("/features", "Feature Breakdown"),
+        ("/failures", "Failure Breakdown"),
+        ("/unlinked", "Unlinked Tests"),
+    ]:
+        assert f'data-route="{route}"' in html
+        assert label in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_feature_breakdown_tree_groups_scenarios_by_feature(tag):
+    html = _render()
+    assert 'data-sort-name="Alpha Feature"' in html
+    assert 'data-sort-name="Zebra Feature"' in html
+    assert 'data-sort-name="Scenario A"' in html
+    assert 'data-sort-name="Scenario B"' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
@@ -74,9 +96,10 @@ def test_render_pyramid_tier_uses_layer_specific_class(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_search_placeholder_mentions_tag_example(tag):
+def test_render_search_placeholder_present(tag):
     html = _render()
-    assert "Search by tag, e.g. FC-001" in html
+    assert 'placeholder="Search by name"' in html
+    assert 'class="search-bar"' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
@@ -87,10 +110,52 @@ def test_render_navigation_click_handler_present(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_tree_table_sort_buttons_present(tag):
+    html = _render()
+    assert 'data-sort-key="name"' in html
+    assert 'data-sort-key="status"' in html
+    assert 'data-sort-key="duration"' in html
+    assert 'data-sort-key="coverage"' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_includes_scenario_status_badges(tag):
     html = _render()
     assert 'class="badge tested"' in html
     assert 'class="badge untested"' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_health_check_unlinked_entry_links_to_unlinked_page(tag):
+    html = _render()
+    assert 'href="#/unlinked">View unlinked tests' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_failure_breakdown_tree_present_when_failures_exist(tag):
+    scenario = Scenario(feature="Alpha Feature", name="Scenario A", tags=["@FC-100"])
+    failed_result = TestResult(layer="unit", name="test_a", tags=["@FC-100"], status="failed", failure_message="boom")
+    view = ScenarioView(scenario=scenario, linked_results=[failed_result], layers=[[failed_result]])
+    failure_breakdown = [{
+        "name": "Alpha Feature",
+        "scenarios": [{"view": view, "failed_results": [failed_result]}],
+        "failed_count": 1,
+    }]
+    html = _render(views=[view], failure_breakdown=failure_breakdown)
+    assert "boom" in html
+    assert 'data-sort-name="Alpha Feature"' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_no_logo_by_default(tag):
+    html = _render()
+    assert '<img class="logo"' not in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_logo_rendered_when_provided(tag):
+    html = _render(logo_data_uri="data:image/png;base64,abc")
+    assert '<img class="logo" src="data:image/png;base64,abc"' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])

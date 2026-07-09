@@ -6,7 +6,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-001"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "1/1 scenarios tested"
+    And the report should contain "2/2 scenarios tested"
     And the report should contain "<strong>unit</strong>"
 
   @FC-EDGE-002

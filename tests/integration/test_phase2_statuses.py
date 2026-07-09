@@ -41,6 +41,6 @@ def test_passed_failed_skipped_displayed_in_report(tag):
     assert "<strong>unit</strong>" in content
     assert "<strong>e2e</strong>" in content
 
-    assert "(passed)" in content
-    assert "(failed)" in content
-    assert "(skipped)" in content
+    assert "badge passed" in content
+    assert "badge failed" in content
+    assert "badge skipped" in content

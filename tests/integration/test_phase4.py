@@ -38,8 +38,8 @@ def test_phase4_cli_flags_missing_required_layer(tag):
     assert "Scenario Coverage Progress" in content
     assert "Report flags missing e2e layer" in content
     assert "1/1 scenarios tested" in content
-    assert "Required:" in content
+    assert "Required" in content
     assert "unit" in content
     assert "e2e" in content
-    assert "[OK]" in content
-    assert "[MISSING]" in content
+    assert "required-chip ok" in content
+    assert "required-chip missing" in content

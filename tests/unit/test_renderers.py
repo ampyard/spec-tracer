@@ -121,8 +121,8 @@ def test_render_tree_table_sort_buttons_present(tag):
 @pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_includes_scenario_status_badges(tag):
     html = _render()
-    assert 'class="badge tested"' in html
-    assert 'class="badge untested"' in html
+    assert 'class="badge tested">Complete' in html
+    assert 'class="badge incomplete">Incomplete' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])

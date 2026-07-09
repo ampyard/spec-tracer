@@ -110,12 +110,15 @@ class ReportAggregator:
         layer_stats: List[dict],
         coverage_stats: dict,
         unlinked_count: int = 0,
+        coverage_threshold_green: float = 80,
+        coverage_threshold_amber: float = 50,
+        e2e_speed_threshold_pct: float = 50,
     ) -> dict:
         coverage_pct = coverage_stats["percentage"]
-        if coverage_pct >= 80:
+        if coverage_pct >= coverage_threshold_green:
             coverage_status = "pass"
             coverage_message = "Coverage is healthy and trending forward."
-        elif coverage_pct >= 50:
+        elif coverage_pct >= coverage_threshold_amber:
             coverage_status = "warn"
             coverage_message = "Coverage is improving but still needs attention."
         else:
@@ -131,7 +134,7 @@ class ReportAggregator:
 
         e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
         total_duration = sum(metric["duration"] for metric in layer_stats)
-        e2e_speed_ok = total_duration == 0 or e2e_duration <= total_duration * 0.5
+        e2e_speed_ok = total_duration == 0 or e2e_duration <= total_duration * (e2e_speed_threshold_pct / 100)
         e2e_status = "pass" if e2e_speed_ok else "fail"
         e2e_message = "E2E runtime stays within the healthy envelope." if e2e_speed_ok else "E2E runtime dominates the suite."
 

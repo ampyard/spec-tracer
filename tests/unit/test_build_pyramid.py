@@ -1,12 +1,12 @@
+import json
 from pathlib import Path
-import sys
 
 import pytest
 
 from unified_test_tracer.parsers import FeatureParser, JunitParser, CucumberParser
 from unified_test_tracer.models import TestResult
 from unified_test_tracer.renderers import _required_status
-from unified_test_tracer.cli import _parse_args
+from unified_test_tracer.cli import _collect_and_parse_junit_results, _load_config
 
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
@@ -26,10 +26,6 @@ def _parse_e2e_results(paths):
 
 def _parse_junit_results(paths, layer="unit"):
     return _junit_parser.parse(paths, layer=layer)
-
-
-def parse_args():
-    return _parse_args()
 
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
@@ -82,49 +78,32 @@ def test_parse_junit_results_raises_clear_error_on_malformed_xml(tag, tmp_path):
 
 
 @pytest.mark.parametrize("tag", ["@FC-004"])
-def test_parse_args_supports_repeated_integration_flags(tag, monkeypatch):
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "build_pyramid.py",
-            "--features",
-            "features",
-            "--integration",
-            "one.xml",
-            "--integration",
-            "two.xml",
-            "--output",
-            "report.html",
-        ],
-    )
+def test_load_config_requires_features_and_output(tag, tmp_path):
+    config_path = tmp_path / "tracer.config.json"
+    config_path.write_text(json.dumps({"features": ["features"]}), encoding="utf-8")
 
-    args = parse_args()
-
-    assert args.integration == ["one.xml", "two.xml"]
+    with pytest.raises(ValueError, match="output"):
+        _load_config(config_path)
 
 
 @pytest.mark.parametrize("tag", ["@FC-004"])
-def test_parse_args_supports_repeated_unit_flags(tag, monkeypatch):
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "build_pyramid.py",
-            "--features",
-            "features",
-            "--unit",
-            "one.xml",
-            "--unit",
-            "two.xml",
-            "--output",
-            "report.html",
-        ],
+def test_collect_and_parse_junit_results_groups_by_module(tag, tmp_path):
+    module_a = tmp_path / "a.xml"
+    module_a.write_text(
+        '<testsuite><testcase name="test_a @FC-004" time="0.1" /></testsuite>', encoding="utf-8"
+    )
+    module_b = tmp_path / "b.xml"
+    module_b.write_text(
+        '<testsuite><testcase name="test_b @FC-004" time="0.1" /></testsuite>', encoding="utf-8"
     )
 
-    args = parse_args()
+    results = _collect_and_parse_junit_results(
+        {"billing": [str(module_a)], "": [str(module_b)]}, _junit_parser, "unit"
+    )
 
-    assert args.unit == ["one.xml", "two.xml"]
+    modules = {r.module for r in results}
+    assert modules == {"billing", ""}
+    assert all(r.layer == "unit" for r in results)
 
 
 @pytest.mark.parametrize("tag", ["@FC-002"])
@@ -151,8 +130,8 @@ def test_require_tags_excluded_from_linking(linking_tag):
     assert len(scenarios) == 1
     scenario = scenarios[0]
     assert linking_tag in scenario.tags
-    assert "@require:unit" not in scenario.tags
-    assert "@require:e2e" not in scenario.tags
+    assert "@require-unit" not in scenario.tags
+    assert "@require-e2e" not in scenario.tags
 
 
 @pytest.mark.parametrize("tag", ["@FC-005"])
@@ -160,9 +139,10 @@ def test_require_tags_stored_as_required_layers(tag):
     scenarios = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
-    assert "unit" in scenario.required_layers
-    assert "e2e" in scenario.required_layers
-    assert "integration" not in scenario.required_layers
+    layers = [r.layer for r in scenario.required_layers]
+    assert "unit" in layers
+    assert "e2e" in layers
+    assert "integration" not in layers
 
 
 @pytest.mark.parametrize("tag", ["@FC-005"])

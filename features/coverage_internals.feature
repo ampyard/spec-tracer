@@ -11,6 +11,7 @@ Feature: Test Coverage Tool Internals
   Scenario: Aggregator computes pyramid and health metrics
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"
+    And the unit result is scoped to module "aggregator"
     And an E2E Cucumber JSON result tagged "@FC-002"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0
@@ -21,6 +22,7 @@ Feature: Test Coverage Tool Internals
   Scenario: Dashboard renders multi-page navigation
     Given a feature file with scenario tagged "@FC-006"
     And a unit JUnit XML result tagged "@FC-006"
+    And the unit result is scoped to module "renderers"
     And an E2E Cucumber JSON result tagged "@FC-006"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0

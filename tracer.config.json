@@ -1,0 +1,8 @@
+{
+  "features": ["./features"],
+  "unit": { "": ["./reports/unit.xml"] },
+  "integration": { "": ["./reports/int.xml"] },
+  "e2e": ["./reports/e2e.json"],
+  "output": "./self-report.html",
+  "error_on_failure": true
+}

@@ -5,15 +5,16 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
 
-from unified_test_tracer.models import Scenario, TestResult
+from unified_test_tracer.models import RequiredLayer, Scenario, TestResult
 
-REQUIRE_PREFIX = "@require:"
+_REQUIRE_SCOPED_PATTERN = re.compile(r"@require-(unit|integration)(?::([\w.-]+))?$", re.IGNORECASE)
+_REQUIRE_E2E_PATTERN = re.compile(r"@require-e2e$", re.IGNORECASE)
 
 
 class ResultParser(ABC):
 
     @abstractmethod
-    def parse(self, paths: List[Path], layer: str = "") -> List[TestResult]:
+    def parse(self, paths: List[Path], layer: str = "", module: str = "") -> List[TestResult]:
         ...
 
 
@@ -41,12 +42,21 @@ class FeatureParser:
             if stripped.startswith(("Scenario:", "Scenario Outline:")):
                 if current_scenario is not None:
                     scenarios.append(current_scenario)
-                linking_tags = [t for t in current_tags if not t.lower().startswith(REQUIRE_PREFIX)]
-                required_layers = [
-                    t.split(":", 1)[1].strip().lower()
-                    for t in current_tags
-                    if t.lower().startswith(REQUIRE_PREFIX)
-                ]
+                linking_tags = []
+                required_layers: List[RequiredLayer] = []
+                for t in current_tags:
+                    scoped_match = _REQUIRE_SCOPED_PATTERN.match(t)
+                    if scoped_match:
+                        required_layers.append(
+                            RequiredLayer(layer=scoped_match.group(1).lower(), module=scoped_match.group(2) or "")
+                        )
+                        continue
+                    if _REQUIRE_E2E_PATTERN.match(t):
+                        required_layers.append(RequiredLayer(layer="e2e", module=""))
+                        continue
+                    linking_tags.append(t)
+                if not required_layers:
+                    required_layers.append(RequiredLayer(layer="e2e", module=""))
                 current_scenario = Scenario(
                     feature=feature_name,
                     name=stripped.split(":", 1)[1].strip(),
@@ -69,7 +79,7 @@ class JunitParser(ResultParser):
 
     _tag_pattern = re.compile(r"@[\w.-]+")
 
-    def parse(self, paths: List[Path], layer: str = "unit") -> List[TestResult]:
+    def parse(self, paths: List[Path], layer: str = "unit", module: str = "") -> List[TestResult]:
         results: List[TestResult] = []
         for path in paths:
             try:
@@ -113,6 +123,7 @@ class JunitParser(ResultParser):
                             status=status,
                             duration=time,
                             failure_message=failure_message,
+                            module=module,
                         )
                     )
         return results

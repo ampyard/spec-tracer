@@ -29,7 +29,7 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 - Show a prominent **Scenario Coverage Progress** (% tested vs. untested) as the headline metric.
 - Visualize the global Test Pyramid (E2E counts scenarios, other layers count individual testcases).
 - Display per-scenario, per-layer pass/fail/skip breakdowns with full Gherkin text.
-- Flag missing layers per scenario via `@require:*` tags.
+- Flag missing layers per scenario via `@require-*` tags.
 - Feature a configurable health-check summary (inverted pyramid detection, E2E speed check).
 - Require zero heavy infrastructure — just a CLI run in CI producing a self-contained static HTML file.
 
@@ -57,26 +57,18 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 - **Test results (E2E):** Cucumber JSON only. Preserves native scenario->steps->tags structure.
 
 **CLI Interface:**
+
+The tool is configured entirely through a JSON config file — there are no CLI flags. This mirrors tools like ESLint: drop a `tracer.config.json` at the root of your project and just run the tool.
+
 ```bash
-python build_pyramid.py \
-  --features ./features \
-  --unit ./reports/unit.xml \
-  --integration ./reports/int.xml \
-  --e2e ./reports/e2e.json \
-  --output ./report.html \
-  --config .tracer-config.json \
-  --error-on-failure
+python build_pyramid.py
+# looks for ./tracer.config.json in the current directory
+
+python build_pyramid.py path/to/other-config.json
+# or point at an explicit config file
 ```
 
-| Flag | Required | Description |
-|---|---|---|
-| `--features` | Yes | Path to Gherkin `.feature` file(s). Accepts a directory (recursive) or individual files. |
-| `--unit` | No | Unit test JUnit XML file(s). Repeatable. E.g., `--unit ./backend/unit.xml --unit ./frontend/unit.xml`. |
-| `--integration` | No | Integration test JUnit XML file(s). Repeatable. E.g., `--integration ./backend/int.xml --integration ./frontend/int.xml`. |
-| `--e2e` | No | E2E test results. Directory or individual file(s). Cucumber JSON format. |
-| `--output` | Yes | Path for the generated HTML report. |
-| `--config` | No | JSON configuration file. CLI flags override config values. |
-| `--error-on-failure` | No | If set, exit non-zero when any test result is a failure. Default: exit 0. |
+See section 9 for the full config schema. `features` and `output` are the only required keys; everything else is optional.
 
 ### 6. The Tag-Based Linking System
 
@@ -86,7 +78,7 @@ Feature files and test results connect via **shared tags**.
 ```gherkin
 Feature: User Login
 
-  @FC-42 @regression @require:unit @require:integration @require:e2e
+  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e
   Scenario: Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
@@ -101,7 +93,9 @@ Feature: User Login
 
 **Two kinds of tags on a scenario:**
 - **Linking tags** (`@FC-42`, `@regression`): Shared with test results. A test result carrying this tag links to the scenario.
-- **Layer requirement tags** (`@require:unit`, `@require:integration`, `@require:e2e`): Tell the tool which layers are expected to have coverage for this scenario. These are NOT used for linking — test results never carry them. After processing, the tool checks each declared required layer and flags any that have zero linked results.
+- **Layer requirement tags** (`@require-unit`, `@require-integration`, `@require-e2e`): Tell the tool which layers are expected to have coverage for this scenario. These are NOT used for linking — test results never carry them. After processing, the tool checks each declared required layer and flags any that have zero linked results.
+
+**Module-scoped requirements:** `@require-unit` and `@require-integration` accept an optional `:modulename` suffix (e.g. `@require-unit:auth`). This is paired with the module-keyed `unit`/`integration` objects in the config file (see section 9) — a module-scoped requirement is only satisfied by a result that came from a source registered under that exact module key. An unscoped result (config key `""`) never satisfies a module-scoped requirement, and a bare `@require-unit` (no module) is satisfied by any linked unit result regardless of module. `@require-e2e` does not accept a module suffix — E2E scenarios typically span multiple modules, so it stays a bare tag.
 
 **In JUnit XML:**
 A unit test with `@FC-42` in its name/properties links to the "Successful login" scenario. An E2E test with `@FC-42` also links.
@@ -110,7 +104,7 @@ A unit test with `@FC-42` in its name/properties links to the "Successful login"
 - **Exact string match** — `@FC-42` matches `@FC-42`, not `@FC-4` or `@FC-42-smoke`.
 - **OR logic** — if a scenario has tags `[@FC-42, @regression]` and a test has only `@regression`, they still link.
 - **Scenario tags only** — tags on the `Feature:` line are NOT inherited by scenarios.
-- **`@require:*` tags** are excluded from linking logic — no collision possible.
+- **`@require-*` tags** are excluded from linking logic — no collision possible.
 - **Tag collision across features** — if two `.feature` files have a scenario tagged `@FC-42`, a test with that tag links to BOTH.
 - **Tag collision within a feature** — if two scenarios share a tag (e.g., both `@smoke`), a test with `@smoke` links to BOTH.
 
@@ -192,15 +186,25 @@ A "Health Check" banner at the top of the report shows:
 | Pyramid Ratio | Unit count >= Integration + E2E count | Pass / Fail |
 | E2E Speed | E2E duration <= X% of total duration | Pass / Fail (X configurable, default 50%) |
 
-Health checks are **visual indicators only** — they do not affect the exit code. Exit code is controlled solely by `--error-on-failure`.
+Health checks are **visual indicators only** — they do not affect the exit code. Exit code is controlled solely by `error_on_failure` in the config file.
 
 ### 9. Configuration File
 
-JSON format (`.tracer-config.json`):
+JSON format, default filename `tracer.config.json` at the project root (auto-discovered — pass an explicit path as the sole CLI argument to override):
 
 ```json
 {
-  "exit_on_failure": false,
+  "features": ["./features"],
+  "unit": {
+    "": ["./reports/unit.xml"],
+    "billing": ["./reports/billing-unit.xml"]
+  },
+  "integration": {
+    "": ["./reports/int.xml"]
+  },
+  "e2e": ["./reports/e2e.json"],
+  "output": "./report.html",
+  "error_on_failure": false,
   "health_checks": {
     "coverage_threshold_green": 80,
     "coverage_threshold_amber": 50,
@@ -209,20 +213,29 @@ JSON format (`.tracer-config.json`):
 }
 ```
 
-CLI flags override config file values when both are present.
+| Key | Required | Description |
+|---|---|---|
+| `features` | Yes | Array of Gherkin `.feature` file/directory paths (directories are searched recursively). |
+| `unit` | No | Object keyed by module name. Each value is an array of JUnit XML file/directory paths. Use `""` as the key for unscoped results (not tied to any module). Matches against `@require-unit`/`@require-unit:<module>` tags. |
+| `integration` | No | Same shape as `unit`, matched against `@require-integration`/`@require-integration:<module>` tags. |
+| `e2e` | No | Array of Cucumber JSON file/directory paths. E2E results are never module-scoped (see section 6). |
+| `output` | Yes | Path for the generated HTML report. |
+| `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
+| `health_checks` | No | Optional thresholds overriding the defaults shown above. |
 
 ### 10. Edge Cases & Behavior
 
 | Scenario | Behavior |
 |---|---|
-| No `--features` provided | Error out. Feature files are mandatory. |
+| No config file found and none specified | Error out. A config file is mandatory. |
+| Config missing `features` or `output` | Error out. Both are mandatory keys. |
 | Empty / missing test result directory | Silently ignored (zero tests for that layer). |
 | Malformed JUnit XML | Abort on first error with a clear message. |
 | Malformed Cucumber JSON | Abort on first error with a clear message. |
 | Malformed `.feature` file | Whatever the E2E framework would do (typically parse error). |
 | Test matches no scenario | Placed in "Unlinked Tests" section. |
 | Scenario matches no test | Shown as "untested" in the matrix. |
-| Scenario has `@require:*` but no matching test | Required layer flagged as missing in the matrix. |
+| Scenario has `@require-*` but no matching test | Required layer flagged as missing in the matrix. |
 | Tag collision across feature files | Test result is duplicated under both features. |
 | Tag collision within a feature file | Test result is duplicated under both scenarios. |
 | Feature-level tags (`@Feature:`) | NOT inherited by scenarios. Only scenario-level tags match. |
@@ -247,9 +260,9 @@ The tool tests itself using its own input formats and a true outside-in TDD appr
 
 | Layer | Framework | Output Format | Feeds Tool As |
 |---|---|---|---|
-| E2E tests | behave (`--format json`) | Cucumber JSON | `--e2e` |
-| Unit tests | pytest | JUnit XML | `--unit` |
-| Integration tests | pytest | JUnit XML | `--integration` |
+| E2E tests | behave (`--format json`) | Cucumber JSON | `e2e` |
+| Unit tests | pytest | JUnit XML | `unit` |
+| Integration tests | pytest | JUnit XML | `integration` |
 
 **Principle:** Every feature starts with a `.feature` file defining the scenarios, followed by a behave scenario that asserts the desired behavior (red). Implementation makes it pass (green). Then lower-layer tests fill in coverage.
 
@@ -259,13 +272,19 @@ uv run behave features/ --format json -o reports/e2e.json
 uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
 
-uv run python build_pyramid.py \
-  --features ./features \
-  --unit ./reports/unit.xml \
-  --integration ./reports/int.xml \
-  --e2e ./reports/e2e.json \
-  --output ./self-report.html \
-  --error-on-failure
+uv run python build_pyramid.py tracer.config.json
+```
+
+Where `tracer.config.json` contains:
+```json
+{
+  "features": ["./features"],
+  "unit": { "": ["./reports/unit.xml"] },
+  "integration": { "": ["./reports/int.xml"] },
+  "e2e": ["./reports/e2e.json"],
+  "output": "./self-report.html",
+  "error_on_failure": true
+}
 ```
 
 ### 13. Implementation Roadmap
@@ -295,14 +314,26 @@ uv run python build_pyramid.py \
 - Add `--integration` to the dogfooding CI pipeline.
 
 #### Phase 4: Layer Requirement Checks
-- Implement `@require:*` tag matching against all three layers.
-- Add a behave scenario: scenario tagged `@require:unit @require:e2e` but only unit has results -> report flags missing E2E.
-- Add `@require:*` tags to the tool's own feature files + step assertions.
+- Implement `@require-*` tag matching against all three layers.
+- Add a behave scenario: scenario tagged `@require-unit @require-e2e` but only unit has results -> report flags missing E2E.
+- Add `@require-*` tags to the tool's own feature files + step assertions.
 - Dogfooding: self-report shows required-layer status.
+
+#### Phase 6: Module Scoped Layer Requirements
+- Extend `@require-unit`/`@require-integration` with an optional `:modulename` suffix.
+- Extend `--unit`/`--integration` to accept `modulename=path` entries, tagging parsed results with their module.
+- Strict module matching: a module-scoped requirement is only satisfied by a result from the same module.
+- `@require-e2e` intentionally stays unscoped (no module suffix) since E2E scenarios typically span modules.
 
 #### Phase 5: Report Polish
 - Pyramid visualization, health checks (inverted pyramid, E2E speed), failure accordion, tag filter JS.
 - Each feature driven by a behave scenario first (validate the HTML contains the new UI elements).
+
+#### Phase 7: Config-File-Only CLI
+- Replace all CLI flags (`--features`/`--unit`/`--integration`/`--e2e`/`--output`/`--error-on-failure`) with a single JSON config file, auto-discovered as `tracer.config.json` (or an explicit path passed as the sole CLI argument) — ESLint-style.
+- `unit`/`integration` become objects keyed by module name (`""` = unscoped), replacing the `modulename=path` CLI string form from Phase 6 with real JSON structure.
+- Wire up the previously-unused `health_checks` config block (`coverage_threshold_green`, `coverage_threshold_amber`, `e2e_speed_threshold_pct`) into `ReportAggregator.health_checks`, which had hardcoded these values since Phase 5.
+- Tag the tool's own dogfood scenarios with real module names (`linker`, `collectors`, `aggregator`, `renderers`) reflecting `unified_test_tracer`'s internal structure, so the self-report showcases module-scoped requirements end-to-end.
 - Dogfooding: self-report includes all visual sections.
 
 #### Phase 6: Coverage Completion

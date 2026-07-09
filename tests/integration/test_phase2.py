@@ -1,8 +1,8 @@
 from pathlib import Path
-import subprocess
-import sys
 
 import pytest
+
+from conftest import run_tool
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -13,22 +13,7 @@ OUTPUT = ROOT / "tests" / "fixtures" / "phase2" / "report.html"
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
 def test_phase2_cli_links_unit_results(tag):
-    result = subprocess.run(
-        [
-            sys.executable,
-            "build_pyramid.py",
-            "--features",
-            str(FEATURES),
-            "--unit",
-            str(UNIT),
-            "--output",
-            str(OUTPUT),
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = run_tool(FEATURES, OUTPUT, unit=UNIT)
 
     assert result.returncode == 0, result.stderr
     assert OUTPUT.exists()

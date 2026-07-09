@@ -1,8 +1,8 @@
 from pathlib import Path
-import subprocess
-import sys
 
 import pytest
+
+from conftest import run_tool
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,24 +15,7 @@ OUTPUT = FIXTURES / "report.html"
 
 @pytest.mark.parametrize("tag", ["@FC-002"])
 def test_passed_failed_skipped_displayed_in_report(tag):
-    result = subprocess.run(
-        [
-            sys.executable,
-            "build_pyramid.py",
-            "--features",
-            str(FEATURES),
-            "--unit",
-            str(UNIT),
-            "--e2e",
-            str(E2E),
-            "--output",
-            str(OUTPUT),
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = run_tool(FEATURES, OUTPUT, unit=UNIT, e2e=E2E)
 
     assert result.returncode == 0, result.stderr
     content = OUTPUT.read_text(encoding="utf-8")

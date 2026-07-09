@@ -1,5 +1,7 @@
+import json
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 from behave import given, when, then
@@ -15,6 +17,7 @@ TAG_FIXTURES = {
     "@FC-004": "repeatable",
     "@FC-005": "phase4",
     "@FC-006": "fc002",
+    "@FC-007": "module_scope",
     "@FC-EDGE-001": "edge_cases/collision_across",
     "@FC-EDGE-002": "edge_cases/collision_within",
     "@FC-EDGE-003": "edge_cases/feature_tags_not_inherited",
@@ -36,6 +39,18 @@ def step_unit_with_tag(context, tag):
     context.unit = str(FIXTURES / dir_name / "unit.xml")
 
 
+@given('a module-scoped unit JUnit XML result tagged "{tag}" for module "{module}"')
+def step_unit_with_tag_and_module(context, tag, module):
+    dir_name = TAG_FIXTURES.get(tag, "phase2")
+    context.unit = str(FIXTURES / dir_name / (module + "_unit.xml"))
+    context.unit_module = module
+
+
+@given('the unit result is scoped to module "{module}"')
+def step_unit_scoped_to_module(context, module):
+    context.unit_module = module
+
+
 @given('an E2E Cucumber JSON result tagged "{tag}"')
 def step_e2e_with_tag(context, tag):
     dir_name = TAG_FIXTURES.get(tag, "phase1")
@@ -48,69 +63,66 @@ def step_integration_with_tag(context, tag):
     context.integration = str(FIXTURES / dir_name / "integration.xml")
 
 
+@given('the integration result is scoped to module "{module}"')
+def step_integration_scoped_to_module(context, module):
+    context.integration_module = module
+
+
+def _build_config(context) -> dict:
+    config = {
+        "features": [context.features],
+        "output": str(ROOT / "reports" / "e2e-report.html"),
+    }
+    if hasattr(context, "unit"):
+        module = getattr(context, "unit_module", "")
+        config["unit"] = {module: [context.unit]}
+    if hasattr(context, "integration"):
+        module = getattr(context, "integration_module", "")
+        config["integration"] = {module: [context.integration]}
+    if hasattr(context, "e2e"):
+        config["e2e"] = [context.e2e]
+    return config
+
+
+def _run_tool(context):
+    config = _build_config(context)
+    output_path = Path(config["output"])
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    context.output_path = output_path
+
+    config_path = ROOT / "reports" / f"config-{uuid.uuid4().hex}.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    try:
+        result = subprocess.run(
+            [sys.executable, "build_pyramid.py", str(config_path)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    finally:
+        config_path.unlink(missing_ok=True)
+    context.returncode = result.returncode
+
+
 @when("I run the tool with --features, --unit, --e2e, and --output")
 def step_run_tool(context):
-    output = ROOT / "reports" / "e2e-report.html"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    context.output_path = output
-    command = [
-        sys.executable,
-        "build_pyramid.py",
-        "--features",
-        context.features,
-        "--output",
-        str(output),
-    ]
-    if hasattr(context, "unit"):
-        command.extend(["--unit", context.unit])
-    if hasattr(context, "integration"):
-        command.extend(["--integration", context.integration])
-    if hasattr(context, "e2e"):
-        command.extend(["--e2e", context.e2e])
-    result = subprocess.run(
-        command,
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    context.returncode = result.returncode
+    _run_tool(context)
 
 
 @when("I run the tool with --features, --integration, and --output")
 def step_run_tool_with_integration(context):
-    step_run_tool(context)
+    _run_tool(context)
 
 
 @when("I run the tool with --features, --unit, and --output")
 def step_run_tool_with_unit(context):
-    step_run_tool(context)
+    _run_tool(context)
 
 
 @when("I run the tool with --features, --unit, --integration, and --output")
 def step_run_tool_with_unit_and_integration(context):
-    output = ROOT / "reports" / "e2e-report.html"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    context.output_path = output
-    result = subprocess.run(
-        [
-            sys.executable,
-            "build_pyramid.py",
-            "--features",
-            context.features,
-            "--unit",
-            context.unit,
-            "--integration",
-            context.integration,
-            "--output",
-            str(output),
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    context.returncode = result.returncode
+    _run_tool(context)
 
 
 @then("the exit code should be {code}")

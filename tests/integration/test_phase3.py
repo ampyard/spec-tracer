@@ -4,6 +4,8 @@ import sys
 
 import pytest
 
+from conftest import run_tool
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FEATURES = ROOT / "tests" / "fixtures" / "phase3" / "features"
@@ -13,22 +15,7 @@ OUTPUT = ROOT / "tests" / "fixtures" / "phase3" / "report.html"
 
 @pytest.mark.parametrize("tag", ["@FC-003"])
 def test_phase3_cli_links_integration_results(tag):
-    result = subprocess.run(
-        [
-            sys.executable,
-            "build_pyramid.py",
-            "--features",
-            str(FEATURES),
-            "--integration",
-            str(INTEGRATION),
-            "--output",
-            str(OUTPUT),
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = run_tool(FEATURES, OUTPUT, integration=INTEGRATION)
 
     assert result.returncode == 0, result.stderr
     assert OUTPUT.exists()
@@ -64,22 +51,7 @@ def test_phase3_report_includes_integration_layer_from_pytest_junit(tag, tmp_pat
     assert result.returncode == 0, result.stderr
 
     report_path = tmp_path / "report.html"
-    report_result = subprocess.run(
-        [
-            sys.executable,
-            "build_pyramid.py",
-            "--features",
-            str(FEATURES),
-            "--integration",
-            str(xml_path),
-            "--output",
-            str(report_path),
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    report_result = run_tool(FEATURES, report_path, integration=xml_path)
 
     assert report_result.returncode == 0, report_result.stderr
     content = report_path.read_text(encoding="utf-8")

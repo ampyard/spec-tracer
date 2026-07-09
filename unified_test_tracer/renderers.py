@@ -7,28 +7,30 @@ except ImportError:
 
 from unified_test_tracer.models import ScenarioView, TestResult
 
-ALL_LAYERS = ["e2e", "integration", "unit"]
-
 LOGO_DATA_URI = ""
+
+
+def _layer_satisfied(req, linked_results) -> bool:
+    return any(
+        r.layer == req.layer and (req.module == "" or r.module == req.module)
+        for r in linked_results
+    )
 
 
 def _required_status(view: ScenarioView) -> str:
     parts = []
-    for layer in ALL_LAYERS:
-        if layer not in view.scenario.required_layers:
-            continue
-        has = any(r.layer == layer for r in view.linked_results)
-        parts.append(f"{layer} {'[OK]' if has else '[MISSING]'}")
+    for req in view.scenario.required_layers:
+        has = _layer_satisfied(req, view.linked_results)
+        label = f"{req.layer}({req.module})" if req.module else req.layer
+        parts.append(f"{label} {'[OK]' if has else '[MISSING]'}")
     return " | ".join(parts) if parts else "none"
 
 
 def _required_layers(view: ScenarioView) -> list:
     result = []
-    for layer in ALL_LAYERS:
-        if layer not in view.scenario.required_layers:
-            continue
-        has = any(r.layer == layer for r in view.linked_results)
-        result.append({"layer": layer, "ok": has})
+    for req in view.scenario.required_layers:
+        has = _layer_satisfied(req, view.linked_results)
+        result.append({"layer": req.layer, "module": req.module, "ok": has})
     return result
 
 
@@ -36,22 +38,29 @@ def _expected_test_count(scenario) -> int:
     return len(scenario.required_layers) if scenario.required_layers else 1
 
 
-def _scenario_status(actual: int, expected: int) -> dict:
-    if actual == 0:
-        return {"word": "Untested", "cls": "untested"}
-    if expected > actual:
-        return {"word": "Incomplete", "cls": "incomplete"}
-    return {"word": "Tested", "cls": "tested"}
+def _has_missing_required_layer(view: ScenarioView) -> bool:
+    return any(not _layer_satisfied(req, view.linked_results) for req in view.scenario.required_layers)
 
 
-def _feature_status(tested_count: int, total_count: int, actual: int, expected: int) -> dict:
-    if tested_count == 0:
-        return {"word": "Untested", "cls": "untested"}
-    if expected > actual:
+def _scenario_status(view: ScenarioView) -> dict:
+    if any(r.status == "failed" for r in view.linked_results):
+        return {"word": "Failed", "cls": "failed"}
+    if not view.linked_results:
         return {"word": "Incomplete", "cls": "incomplete"}
-    if tested_count < total_count:
-        return {"word": "Partial", "cls": "partial"}
-    return {"word": "Tested", "cls": "tested"}
+    if _has_missing_required_layer(view):
+        return {"word": "Incomplete", "cls": "incomplete"}
+    if any(r.status == "skipped" for r in view.linked_results):
+        return {"word": "Incomplete", "cls": "incomplete"}
+    return {"word": "Complete", "cls": "tested"}
+
+
+def _feature_status(feature_views: list) -> dict:
+    statuses = [_scenario_status(view)["word"] for view in feature_views]
+    if "Failed" in statuses:
+        return {"word": "Failed", "cls": "failed"}
+    if "Incomplete" in statuses:
+        return {"word": "Incomplete", "cls": "incomplete"}
+    return {"word": "Complete", "cls": "tested"}
 
 
 def _format_duration(value: float) -> str:
@@ -380,6 +389,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .required-chip.ok { background: var(--success-soft); color: var(--success); }
     .required-chip.missing { background: var(--danger-soft); color: var(--danger); }
     .required-chip.none { background: var(--surface); color: var(--text-soft); border: 1px solid var(--border); }
+    .module-tag { font-weight: 400; text-transform: none; opacity: 0.75; }
     .failure-block { margin: 4px 16px 14px 48px; padding: 12px; border-radius: 8px; background: var(--danger-soft); border: 1px solid var(--border); white-space: pre-wrap; ui-monospace, SFMono-Regular, monospace; font-size: 0.79rem; line-height: 1.5; color: var(--danger); }
     .nav-button {
       display: inline-flex;
@@ -537,7 +547,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             {% set feature_ns.actual = feature_ns.actual + (view.linked_results | length) %}
             {% for r in view.linked_results %}{% set feature_ns.total = feature_ns.total + r.duration %}{% endfor %}
             {% endfor %}
-            {% set fstatus = feature_status(feature_tested, feature_total, feature_ns.actual, feature_ns.expected) %}
+            {% set fstatus = feature_status(feature_views) %}
             <details class="tree-row level-1" data-sort-name="{{ feature_name }}" data-sort-status="{{ feature_pct }}" data-sort-duration="{{ feature_ns.total }}" data-sort-coverage="{{ feature_pct }}" data-search="{{ feature_name | lower }}">
               <summary>
                 <span class="col-name lvl-1"><span class="tree-caret"></span><span class="name-text"><strong>{{ feature_name }}</strong></span></span>
@@ -552,7 +562,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                 {% set scenario_duration = view.linked_results | sum(attribute='duration') %}
                 {% set scenario_expected = expected_test_count(view.scenario) %}
                 {% set scenario_actual = view.linked_results | length %}
-                {% set sstatus = scenario_status(scenario_actual, scenario_expected) %}
+                {% set sstatus = scenario_status(view) %}
                 <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_tested else 0 }}" data-sort-duration="{{ scenario_duration }}" data-sort-coverage="{{ 100 if view.is_tested else 0 }}" data-search="{{ view.scenario.name | lower }}">
                   <summary>
                     <span class="col-name lvl-2"><span class="tree-caret"></span><span class="name-text">{{ view.scenario.name }}</span></span>
@@ -568,7 +578,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                       <span class="required-label">Required</span>
                       {% if req_layers %}
                       {% for item in req_layers %}
-                      <span class="required-chip {{ 'ok' if item.ok else 'missing' }}">{{ item.layer }} <strong>{{ 'OK' if item.ok else 'Missing' }}</strong></span>
+                      <span class="required-chip {{ 'ok' if item.ok else 'missing' }}">{{ item.layer }}{% if item.module %} <span class="module-tag">({{ item.module }})</span>{% endif %} <strong>{{ 'OK' if item.ok else 'Missing' }}</strong></span>
                       {% endfor %}
                       {% else %}
                       <span class="required-chip none">No required layers</span>

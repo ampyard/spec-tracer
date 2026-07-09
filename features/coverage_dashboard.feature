@@ -1,9 +1,10 @@
 Feature: Test Coverage Dashboard Rendering
 
-  @FC-006 @require:unit @require:e2e
+  @FC-006 @require-unit:renderers @require-e2e
   Scenario: Report renders polished dashboard sections
     Given a feature file with scenario tagged "@FC-006"
     And a unit JUnit XML result tagged "@FC-006"
+    And the unit result is scoped to module "renderers"
     And an E2E Cucumber JSON result tagged "@FC-006"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0

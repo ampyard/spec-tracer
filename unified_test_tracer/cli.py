@@ -1,7 +1,7 @@
-import argparse
+import json
 import sys
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from unified_test_tracer.aggregator import ReportAggregator
 from unified_test_tracer.collectors import FileCollector
@@ -9,16 +9,27 @@ from unified_test_tracer.linker import ResultLinker
 from unified_test_tracer.parsers import CucumberParser, FeatureParser, JunitParser
 from unified_test_tracer.renderers import HtmlRenderer
 
+DEFAULT_CONFIG_NAME = "tracer.config.json"
 
-def _parse_args(argv: List[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a unified test coverage HTML report")
-    parser.add_argument("--features", required=True, nargs="+", help="Feature file(s) or directory")
-    parser.add_argument("--unit", action="append", default=[], help="Unit test JUnit XML file(s) or directory")
-    parser.add_argument("--integration", action="append", default=[], help="Integration test JUnit XML file(s) or directory")
-    parser.add_argument("--e2e", nargs="+", default=[], help="Cucumber JSON file(s) or directory")
-    parser.add_argument("--output", required=True, help="Path to output HTML report")
-    parser.add_argument("--error-on-failure", action="store_true", help="Exit non-zero on any failing result")
-    return parser.parse_args(argv)
+
+def _find_config_path(argv: List[str] | None = None) -> Path:
+    args = sys.argv[1:] if argv is None else argv
+    if args:
+        path = Path(args[0])
+    else:
+        path = Path(DEFAULT_CONFIG_NAME)
+    if not path.exists():
+        raise FileNotFoundError(f"Config file not found: {path}")
+    return path
+
+
+def _load_config(path: Path) -> dict:
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if "features" not in config:
+        raise ValueError("Config is missing required key: 'features'")
+    if "output" not in config:
+        raise ValueError("Config is missing required key: 'output'")
+    return config
 
 
 def _collect_and_parse_features(paths: List[str]) -> List:
@@ -32,22 +43,31 @@ def _collect_and_parse_features(paths: List[str]) -> List:
     return scenarios
 
 
-def _collect_and_parse_results(paths: List[str], parser, layer: str) -> List:
-    files = FileCollector.xml_files(paths) if layer != "e2e" else FileCollector.json_files(paths)
-    return parser.parse(files, layer=layer)
+def _collect_and_parse_junit_results(entries: Dict[str, List[str]], parser: JunitParser, layer: str) -> List:
+    results = []
+    for module, paths in entries.items():
+        files = FileCollector.xml_files(paths)
+        results.extend(parser.parse(files, layer=layer, module=module))
+    return results
+
+
+def _collect_and_parse_e2e_results(paths: List[str], parser: CucumberParser) -> List:
+    files = FileCollector.json_files(paths)
+    return parser.parse(files, layer="e2e")
 
 
 def main(argv: List[str] | None = None) -> int:
-    args = _parse_args(argv)
+    config_path = _find_config_path(argv)
+    config = _load_config(config_path)
 
-    scenarios = _collect_and_parse_features(args.features)
+    scenarios = _collect_and_parse_features(config["features"])
 
     junit_parser = JunitParser()
-    unit_results = _collect_and_parse_results(args.unit, junit_parser, "unit")
-    integration_results = _collect_and_parse_results(args.integration, junit_parser, "integration")
+    unit_results = _collect_and_parse_junit_results(config.get("unit", {}), junit_parser, "unit")
+    integration_results = _collect_and_parse_junit_results(config.get("integration", {}), junit_parser, "integration")
 
     cucumber_parser = CucumberParser()
-    e2e_results = _collect_and_parse_results(args.e2e, cucumber_parser, "e2e")
+    e2e_results = _collect_and_parse_e2e_results(config.get("e2e", []), cucumber_parser)
 
     results = e2e_results + unit_results + integration_results
 
@@ -58,7 +78,16 @@ def main(argv: List[str] | None = None) -> int:
     layer_stats = ReportAggregator.layer_stats(views)
     failed_results = [result for result in results if result.status == "failed"]
     unlinked_results = ReportAggregator.unlinked_results(scenarios, results)
-    health_checks = ReportAggregator.health_checks(views, layer_stats, stats, unlinked_count=len(unlinked_results))
+    health_check_config = config.get("health_checks", {})
+    health_checks = ReportAggregator.health_checks(
+        views,
+        layer_stats,
+        stats,
+        unlinked_count=len(unlinked_results),
+        coverage_threshold_green=health_check_config.get("coverage_threshold_green", 80),
+        coverage_threshold_amber=health_check_config.get("coverage_threshold_amber", 50),
+        e2e_speed_threshold_pct=health_check_config.get("e2e_speed_threshold_pct", 50),
+    )
     failure_breakdown = ReportAggregator.failure_breakdown(views)
 
     renderer = HtmlRenderer()
@@ -73,11 +102,11 @@ def main(argv: List[str] | None = None) -> int:
         failure_breakdown=failure_breakdown,
     )
 
-    output_path = Path(args.output)
+    output_path = Path(config["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
 
-    if args.error_on_failure and any(result.status == "failed" for result in results):
+    if config.get("error_on_failure", False) and any(result.status == "failed" for result in results):
         return 1
     return 0
 

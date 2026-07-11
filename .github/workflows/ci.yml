@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload report
         if: always()
-        uses:  mmkal/artifact.ci/upload@main
+        uses:  actions/upload-artifact@v4
         with:
           name: SpecTracer report
-          path: spectracer-report.html
+          path: reports

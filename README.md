@@ -1,4 +1,4 @@
-# Unified Test Tracer
+# SpecTracer
 
 A CLI tool that takes your Gherkin `.feature` files as the source of truth for what needs testing, then collates test results from your **Unit**, **Integration**, and **E2E** suites into a single, self-contained HTML report.
 
@@ -32,7 +32,7 @@ This installs the tool along with its only runtime dependency, Jinja2.
 
 1. Write `.feature` files describing your scenarios, tagged so test results can link back to them (see [Tagging Convention](#tagging-convention) below).
 2. Run your test suites and produce JUnit XML (unit/integration) and/or Cucumber JSON (E2E) output.
-3. Create a `tracer.config.json` in your project root:
+3. Create a `spectracer.config.json` in your project root:
 
    ```json
    {

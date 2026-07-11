@@ -37,11 +37,11 @@ jobs:
 
       - name: Generate SpecTracer report
         if: always()
-        run: uv run unified-test-tracer
+        run: uv run python build_pyramid.py
 
       - name: Upload report
         if: always()
         uses:  actions/upload-artifact@v4
         with:
           name: SpecTracer report
-          path: reports
+          path: spectracer-report.html

@@ -21,7 +21,7 @@ def test_phase3_cli_links_integration_results(tag):
     assert OUTPUT.exists()
 
     content = OUTPUT.read_text(encoding="utf-8")
-    assert "Scenario Coverage Progress" in content
+    assert "Testing Progress" in content
     assert "Report shows integration coverage" in content
     assert "1/1 scenarios tested" in content
     assert "<strong>integration</strong>" in content

@@ -19,7 +19,7 @@ def test_phase2_cli_links_unit_results(tag):
     assert OUTPUT.exists()
 
     content = OUTPUT.read_text(encoding="utf-8")
-    assert "Scenario Coverage Progress" in content
+    assert "Testing Progress" in content
     assert "Successful login with valid credentials" in content
     assert "1/1 scenarios tested" in content
     assert "<strong>unit</strong>" in content

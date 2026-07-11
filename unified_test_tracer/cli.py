@@ -1,3 +1,4 @@
+import base64
 import json
 import sys
 from pathlib import Path
@@ -30,6 +31,15 @@ def _load_config(path: Path) -> dict:
     if "output" not in config:
         raise ValueError("Config is missing required key: 'output'")
     return config
+
+
+def _load_logo(config_dir: Path) -> str:
+    logo_path = config_dir / "docs" / "logo.png"
+    if logo_path.exists():
+        data = logo_path.read_bytes()
+        encoded = base64.b64encode(data).decode("ascii")
+        return f"data:image/png;base64,{encoded}"
+    return ""
 
 
 def _collect_and_parse_features(paths: List[str]) -> List:
@@ -100,6 +110,7 @@ def main(argv: List[str] | None = None) -> int:
         failed_results=failed_results,
         unlinked_results=unlinked_results,
         failure_breakdown=failure_breakdown,
+        logo_data_uri=_load_logo(config_path.parent),
     )
 
     output_path = Path(config["output"])

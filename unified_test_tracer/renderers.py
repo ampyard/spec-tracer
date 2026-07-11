@@ -435,8 +435,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
 
     <main id="page-dashboard" class="page-stack">
       <section class="panel">
-        <h1>Scenario Coverage Progress</h1>
-        <p class="hero-subtitle">A release dashboard for feature coverage, layer maturity, and release risk.</p>
+        <h1>Testing Progress</h1>
         <div class="hero-stats">
           <div class="stat-card" title="{{ tested }}/{{ total }} scenarios tested">
             <strong>{{ tested }}/{{ total }}</strong>
@@ -896,7 +895,7 @@ class HtmlRenderer:
             '<html lang="en">',
             '<head><meta charset="utf-8"><title>SpecTracer</title></head>',
             "<body>",
-            "<h1>Scenario Coverage Progress</h1>",
+            "<h1>Testing Progress</h1>",
             f"<p>{stats['tested']}/{stats['total']} scenarios tested</p>",
             "<ul>",
         ]

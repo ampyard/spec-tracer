@@ -26,7 +26,7 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 - Parse JUnit XML results from Unit and Integration test suites.
 - Parse Cucumber JSON results from the E2E test suite.
 - Link test results to scenarios via shared tags (exact match, OR logic — any matching tag links).
-- Show a prominent **Scenario Coverage Progress** (% tested vs. untested) as the headline metric.
+- Show a prominent **Testing Progress** (% tested vs. untested) as the headline metric.
 - Visualize the global Test Pyramid (E2E counts scenarios, other layers count individual testcases).
 - Display per-scenario, per-layer pass/fail/skip breakdowns with full Gherkin text.
 - Flag missing layers per scenario via `@require-*` tags.

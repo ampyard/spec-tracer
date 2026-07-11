@@ -27,13 +27,13 @@ jobs:
         run: mkdir -p reports
 
       - name: Run unit tests (XML output)
-        run: uv run pytest tests/unit/ --junitxml=reports/unit.xml -v
+        run: uv run pytest tests/unit/ --junitxml=reports/unit.xml --html=reports/unit.html  --self-contained-html -v
 
       - name: Run integration tests (XML output)
-        run: uv run pytest tests/integration/ --junitxml=reports/int.xml -v
+        run: uv run pytest tests/integration/ --junitxml=reports/int.xml --html=reports/int.html --self-contained-html -v
 
       - name: Run BDD tests (JSON output)
-        run: uv run behave features/ --format json --outfile=reports/e2e.json
+        run: uv run behave features/ -f json -o reports/e2e.json -f modern -o reports/e2e-report.html
 
       - name: Generate SpecTracer report
         if: always()
@@ -43,5 +43,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SpecTracer report
-          path: spectracer-report.html
+          name: Test Reports
+          path: reports/

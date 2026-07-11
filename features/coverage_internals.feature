@@ -28,4 +28,4 @@ Feature: Test Coverage Tool Internals
     Then the exit code should be 0
     And the report should contain "Feature Breakdown"
     And the report should contain "page-features"
-    And the report should contain "Unified Test Tracer"
+    And the report should contain "SpecTracer"

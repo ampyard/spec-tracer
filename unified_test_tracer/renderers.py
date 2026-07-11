@@ -88,7 +88,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Unified Test Tracer</title>
+  <title>SpecTracer</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -422,7 +422,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
 <body>
   <header class="app-header">
     {% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}" alt="Logo">{% endif %}
-    <span class="app-title">Unified Test Tracer</span>
+    <span class="app-title">SpecTracer</span>
   </header>
   <nav class="app-nav">
     <a class="nav-link" data-route="/" href="#/">Dashboard</a>
@@ -894,7 +894,7 @@ class HtmlRenderer:
         lines = [
             "<!DOCTYPE html>",
             '<html lang="en">',
-            '<head><meta charset="utf-8"><title>Unified Test Tracer</title></head>',
+            '<head><meta charset="utf-8"><title>SpecTracer</title></head>',
             "<body>",
             "<h1>Scenario Coverage Progress</h1>",
             f"<p>{stats['tested']}/{stats['total']} scenarios tested</p>",

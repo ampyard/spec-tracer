@@ -9,7 +9,7 @@ from unified_test_tracer.linker import ResultLinker
 from unified_test_tracer.parsers import CucumberParser, FeatureParser, JunitParser
 from unified_test_tracer.renderers import HtmlRenderer
 
-DEFAULT_CONFIG_NAME = "tracer.config.json"
+DEFAULT_CONFIG_NAME = "spectracer.config.json"
 
 
 def _find_config_path(argv: List[str] | None = None) -> Path:

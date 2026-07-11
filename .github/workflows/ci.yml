@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run unit tests (XML output)
+        run: uv run pytest tests/unit/ --junitxml=reports/unit.xml -v
+
+      - name: Run integration tests (XML output)
+        run: uv run pytest tests/integration/ --junitxml=reports/int.xml -v
+
+      - name: Run BDD tests (JSON output)
+        run: uv run behave features/ --format json --outfile=reports/e2e.json
+
+      - name: Generate SpecTracer report
+        if: always()
+        run: uv run unified-test-tracer
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpecTracer report
+          path: spectracer-report.html

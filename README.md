@@ -1,5 +1,15 @@
 # SpecTracer
 
+<div align="center">
+<img src="docs/logo.png" style="align: center; width:30%; height: auto"></img>
+
+<p>
+
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)   [![CI](https://github.com/ampyard/spec-tracer/actions/workflows/ci.yml/badge.svg)](https://github.com/ampyard/spec-tracer/actions/workflows/ci.yml)
+
+</p>
+</div>
+
 A CLI tool that takes your Gherkin `.feature` files as the source of truth for what needs testing, then collates test results from your **Unit**, **Integration**, and **E2E** suites into a single, self-contained HTML report.
 
 Feature files define the scope. Tags on scenarios link them to test results across layers. The report shows:
@@ -32,7 +42,7 @@ This installs the tool along with its only runtime dependency, Jinja2.
 
 1. Write `.feature` files describing your scenarios, tagged so test results can link back to them (see [Tagging Convention](#tagging-convention) below).
 2. Run your test suites and produce JUnit XML (unit/integration) and/or Cucumber JSON (E2E) output.
-3. Create a `spectracer.config.json` in your project root:
+3. Create a `specspectracer.config.json` in your project root:
 
    ```json
    {
@@ -50,7 +60,7 @@ This installs the tool along with its only runtime dependency, Jinja2.
    uv run python build_pyramid.py
    ```
 
-   It auto-discovers `tracer.config.json` in the current directory — no flags needed. Open the generated `report.html` in a browser.
+   It auto-discovers `spectracer.config.json` in the current directory — no flags needed. Open the generated `report.html` in a browser.
 
 To point at a config file with a different name or location, pass it as the only argument:
 
@@ -58,7 +68,7 @@ To point at a config file with a different name or location, pass it as the only
 uv run python build_pyramid.py path/to/other-config.json
 ```
 
-> **Note on shells:** use forward slashes (`./tracer.config.json`) or a bare filename. A leading `.\` (PowerShell-style) can be mangled by POSIX-style shells (Git Bash, WSL), since backslash is their escape character there.
+> **Note on shells:** use forward slashes (`./spectracer.config.json`) or a bare filename. A leading `.\` (PowerShell-style) can be mangled by POSIX-style shells (Git Bash, WSL), since backslash is their escape character there.
 
 ## Tagging Convention
 
@@ -104,7 +114,7 @@ Feature: User Login
 
 ## Configuration File
 
-The tool is configured entirely through a JSON file — there are no CLI flags. Default filename is `tracer.config.json` at the project root; pass an explicit path as the sole CLI argument to use a different one.
+The tool is configured entirely through a JSON file — there are no CLI flags. Default filename is `spectracer.config.json` at the project root; pass an explicit path as the sole CLI argument to use a different one.
 
 ```json
 {

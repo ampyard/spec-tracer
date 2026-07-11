@@ -79,7 +79,7 @@ def test_parse_junit_results_raises_clear_error_on_malformed_xml(tag, tmp_path):
 
 @pytest.mark.parametrize("tag", ["@FC-004"])
 def test_load_config_requires_features_and_output(tag, tmp_path):
-    config_path = tmp_path / "tracer.config.json"
+    config_path = tmp_path / "spectracer.config.json"
     config_path.write_text(json.dumps({"features": ["features"]}), encoding="utf-8")
 
     with pytest.raises(ValueError, match="output"):

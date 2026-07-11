@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
-## Project Name: Unified Test Tracer
+## Project Name: SpecTracer
 
 ### 1. Overview
-The **Unified Test Tracer** is a CLI-based tool that takes **Gherkin feature files** as the single source of truth for what scenarios need testing, then collates test results from **Unit, Integration, and E2E** test suites into a single HTML report.
+The **SpecTracer** is a CLI-based tool that takes **Gherkin feature files** as the single source of truth for what scenarios need testing, then collates test results from **Unit, Integration, and E2E** test suites into a single HTML report.
 
 Feature files define the scope. Tags on scenarios link to test results across layers. The report shows:
 - What percentage of scenarios have test coverage (the headline "progress" metric).
@@ -58,11 +58,11 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 
 **CLI Interface:**
 
-The tool is configured entirely through a JSON config file — there are no CLI flags. This mirrors tools like ESLint: drop a `tracer.config.json` at the root of your project and just run the tool.
+The tool is configured entirely through a JSON config file — there are no CLI flags. This mirrors tools like ESLint: drop a `spectracer.config.json` at the root of your project and just run the tool.
 
 ```bash
 python build_pyramid.py
-# looks for ./tracer.config.json in the current directory
+# looks for ./spectracer.config.json in the current directory
 
 python build_pyramid.py path/to/other-config.json
 # or point at an explicit config file
@@ -190,7 +190,7 @@ Health checks are **visual indicators only** — they do not affect the exit cod
 
 ### 9. Configuration File
 
-JSON format, default filename `tracer.config.json` at the project root (auto-discovered — pass an explicit path as the sole CLI argument to override):
+JSON format, default filename `spectracer.config.json` at the project root (auto-discovered — pass an explicit path as the sole CLI argument to override):
 
 ```json
 {
@@ -272,10 +272,10 @@ uv run behave features/ --format json -o reports/e2e.json
 uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
 
-uv run python build_pyramid.py tracer.config.json
+uv run python build_pyramid.py spectracer.config.json
 ```
 
-Where `tracer.config.json` contains:
+Where `spectracer.config.json` contains:
 ```json
 {
   "features": ["./features"],
@@ -330,7 +330,7 @@ Where `tracer.config.json` contains:
 - Each feature driven by a behave scenario first (validate the HTML contains the new UI elements).
 
 #### Phase 7: Config-File-Only CLI
-- Replace all CLI flags (`--features`/`--unit`/`--integration`/`--e2e`/`--output`/`--error-on-failure`) with a single JSON config file, auto-discovered as `tracer.config.json` (or an explicit path passed as the sole CLI argument) — ESLint-style.
+- Replace all CLI flags (`--features`/`--unit`/`--integration`/`--e2e`/`--output`/`--error-on-failure`) with a single JSON config file, auto-discovered as `spectracer.config.json` (or an explicit path passed as the sole CLI argument) — ESLint-style.
 - `unit`/`integration` become objects keyed by module name (`""` = unscoped), replacing the `modulename=path` CLI string form from Phase 6 with real JSON structure.
 - Wire up the previously-unused `health_checks` config block (`coverage_threshold_green`, `coverage_threshold_amber`, `e2e_speed_threshold_pct`) into `ReportAggregator.health_checks`, which had hardcoded these values since Phase 5.
 - Tag the tool's own dogfood scenarios with real module names (`linker`, `collectors`, `aggregator`, `renderers`) reflecting `unified_test_tracer`'s internal structure, so the self-report showcases module-scoped requirements end-to-end.

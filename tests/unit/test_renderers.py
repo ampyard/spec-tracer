@@ -45,8 +45,8 @@ def _render(**overrides):
 @pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_produces_header_with_title_only_once(tag):
     html = _render()
-    assert '<span class="app-title">Unified Test Tracer</span>' in html
-    assert html.count("Unified Test Tracer") == 2  # <title> + header span
+    assert '<span class="app-title">SpecTracer</span>' in html
+    assert html.count("SpecTracer") == 2  # <title> + header span
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])

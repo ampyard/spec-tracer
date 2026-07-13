@@ -94,9 +94,10 @@ def main(argv: List[str] | None = None) -> int:
         layer_stats,
         stats,
         unlinked_count=len(unlinked_results),
-        coverage_threshold_green=health_check_config.get("coverage_threshold_green", 80),
-        coverage_threshold_amber=health_check_config.get("coverage_threshold_amber", 50),
-        e2e_speed_threshold_pct=health_check_config.get("e2e_speed_threshold_pct", 50),
+        progress_threshold_green=health_check_config.get("progress_threshold_green", 80),
+        progress_threshold_amber=health_check_config.get("progress_threshold_amber", 50),
+        e2e_duration_amber_seconds=health_check_config.get("e2e_duration_amber_seconds", 600),
+        e2e_duration_red_seconds=health_check_config.get("e2e_duration_red_seconds", 1800),
     )
     failure_breakdown = ReportAggregator.failure_breakdown(views)
 

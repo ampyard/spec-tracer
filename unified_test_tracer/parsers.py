@@ -152,12 +152,26 @@ class CucumberParser(ResultParser):
                     status = element.get("status", "passed")
                     if status == "undefined":
                         status = "skipped"
+                    step_durations = []
+                    for step in element.get("steps", []):
+                        step_result = step.get("result", {})
+                        dur = step_result.get("duration")
+                        if dur is not None:
+                            step_durations.append(dur)
+                            continue
+                        dur = step.get("duration")
+                        if dur is not None:
+                            step_durations.append(dur)
+                    duration = sum(step_durations)
+                    if step_durations and max(step_durations) >= 1.0:
+                        duration = duration / 1_000_000_000  # nanoseconds to seconds
                     results.append(
                         TestResult(
                             layer=layer,
                             name=element.get("name", ""),
                             tags=tags,
                             status=status,
+                            duration=duration,
                         )
                     )
         return results

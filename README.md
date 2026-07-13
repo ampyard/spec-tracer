@@ -130,9 +130,10 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
   "output": "./report.html",
   "error_on_failure": false,
   "health_checks": {
-    "coverage_threshold_green": 80,
-    "coverage_threshold_amber": 50,
-    "e2e_speed_threshold_pct": 50
+    "progress_threshold_green": 80,
+    "progress_threshold_amber": 50,
+    "e2e_duration_amber_seconds": 600,
+    "e2e_duration_red_seconds": 1800
   }
 }
 ```
@@ -152,7 +153,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 The generated HTML is a single self-contained file (all CSS/JS inlined — no external assets, safe to email or archive) with five sections:
 
 1. **Coverage Progress Summary** — the headline `Tested: X / Y scenarios (Z%)` metric, plus a per-feature breakdown. Color-coded green/amber/red using the configurable thresholds.
-2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer that dominates runtime.
+2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer with excessive runtime.
 3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status with failure stack traces.
 4. **Detailed Failure Breakdown** — every failed test across all layers, with feature/scenario context and full stack trace on expand.
 5. **Unlinked Tests** — test results whose tags didn't match any scenario, to help catch orphaned or mis-tagged tests.

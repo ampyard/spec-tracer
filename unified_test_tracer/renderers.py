@@ -213,6 +213,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       border-radius: var(--radius);
       box-shadow: var(--shadow-1);
       padding: 24px 28px;
+      margin: 10px;
     }
     h1, h2, h3, p { margin: 0; }
     h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
@@ -443,7 +444,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
           </div>
           <div class="stat-card">
             <strong>{{ percentage }}%</strong>
-            <span>coverage</span>
+            <span>progress</span>
           </div>
         </div>
         <div class="bar-shell"><div class="bar-fill" style="width: {{ percentage }}%;"></div></div>

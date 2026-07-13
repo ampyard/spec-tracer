@@ -181,10 +181,10 @@ A section at the bottom listing every test result whose tags did not match any s
 A "Health Check" banner at the top of the report shows:
 
 | Check | Condition | Result |
-|---|---|---|
-| Coverage Progress | % of scenarios with >=1 linked test | Pass / Warn / Fail (configurable thresholds) |
-| Pyramid Ratio | Unit count >= Integration + E2E count | Pass / Fail |
-| E2E Speed | E2E duration <= X% of total duration | Pass / Fail (X configurable, default 50%) |
+|---|---|---|---|
+| Progress | % of scenarios with >=1 linked test | Pass / Warn / Fail (configurable thresholds) |
+| Pyramid Ratio | Unit count vs Integration + E2E count | Pass / Warn / Fail |
+| E2E Runtime | E2E total duration in seconds | Pass / Warn / Fail (configurable thresholds, defaults: warn @ 10min, fail @ 30min) |
 
 Health checks are **visual indicators only** — they do not affect the exit code. Exit code is controlled solely by `error_on_failure` in the config file.
 
@@ -206,9 +206,10 @@ JSON format, default filename `spectracer.config.json` at the project root (auto
   "output": "./report.html",
   "error_on_failure": false,
   "health_checks": {
-    "coverage_threshold_green": 80,
-    "coverage_threshold_amber": 50,
-    "e2e_speed_threshold_pct": 50
+    "progress_threshold_green": 80,
+    "progress_threshold_amber": 50,
+    "e2e_duration_amber_seconds": 600,
+    "e2e_duration_red_seconds": 1800
   }
 }
 ```
@@ -272,7 +273,7 @@ uv run behave features/ --format json -o reports/e2e.json
 uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
 
-uv run python build_pyramid.py spectracer.config.json
+uv run python build_pyramid.py
 ```
 
 Where `spectracer.config.json` contains:
@@ -326,13 +327,13 @@ Where `spectracer.config.json` contains:
 - `@require-e2e` intentionally stays unscoped (no module suffix) since E2E scenarios typically span modules.
 
 #### Phase 5: Report Polish
-- Pyramid visualization, health checks (inverted pyramid, E2E speed), failure accordion, tag filter JS.
+- Pyramid visualization, health checks (inverted pyramid, E2E runtime), failure accordion, tag filter JS.
 - Each feature driven by a behave scenario first (validate the HTML contains the new UI elements).
 
 #### Phase 7: Config-File-Only CLI
 - Replace all CLI flags (`--features`/`--unit`/`--integration`/`--e2e`/`--output`/`--error-on-failure`) with a single JSON config file, auto-discovered as `spectracer.config.json` (or an explicit path passed as the sole CLI argument) — ESLint-style.
 - `unit`/`integration` become objects keyed by module name (`""` = unscoped), replacing the `modulename=path` CLI string form from Phase 6 with real JSON structure.
-- Wire up the previously-unused `health_checks` config block (`coverage_threshold_green`, `coverage_threshold_amber`, `e2e_speed_threshold_pct`) into `ReportAggregator.health_checks`, which had hardcoded these values since Phase 5.
+- Wire up the previously-unused `health_checks` config block (`progress_threshold_green`, `progress_threshold_amber`, `e2e_duration_amber_seconds`, `e2e_duration_red_seconds`) into `ReportAggregator.health_checks`, which had hardcoded these values since Phase 5.
 - Tag the tool's own dogfood scenarios with real module names (`linker`, `collectors`, `aggregator`, `renderers`) reflecting `unified_test_tracer`'s internal structure, so the self-report showcases module-scoped requirements end-to-end.
 - Dogfooding: self-report includes all visual sections.
 

@@ -113,6 +113,64 @@ def test_health_checks_passes_when_unit_dominates(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
+def test_health_checks_pyramid_warns_when_at_parity(tag):
+    views = [
+        _view("F", "S1", [TestResult(layer="unit", name="u1")]),
+        _view("F", "S2", [TestResult(layer="unit", name="u2")]),
+        _view("F", "S3", [TestResult(layer="integration", name="i1")]),
+        _view("F", "S4", [TestResult(layer="e2e", name="e1")]),
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert health["pyramid"]["status"] == "warn"
+
+
+@pytest.mark.parametrize("tag", ["@FC-008"])
+def test_health_checks_e2e_runtime_passes_when_below_amber(tag):
+    views = [
+        _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
+        _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=300)]),
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert health["e2e_runtime"]["status"] == "pass"
+
+
+@pytest.mark.parametrize("tag", ["@FC-008"])
+def test_health_checks_e2e_runtime_warns_when_between_amber_and_red(tag):
+    views = [
+        _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
+        _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=900)]),
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert health["e2e_runtime"]["status"] == "warn"
+
+
+@pytest.mark.parametrize("tag", ["@FC-008"])
+def test_health_checks_e2e_runtime_fails_when_exceeds_red(tag):
+    views = [
+        _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
+        _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=2000)]),
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.coverage_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert health["e2e_runtime"]["status"] == "fail"
+
+
+@pytest.mark.parametrize("tag", ["@FC-008"])
 def test_unlinked_results_excludes_tags_matching_scenarios(tag):
     scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
     linked = TestResult(layer="unit", name="t1", tags=["@FC-001"])

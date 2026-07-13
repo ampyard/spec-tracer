@@ -13,9 +13,10 @@ class ReportAggregator:
         scenarios: List[Scenario],
         links: Dict[int, List[TestResult]],
     ) -> List[ScenarioView]:
+        layer_rank = {layer: i for i, layer in enumerate(ReportAggregator.LAYER_ORDER)}
         views: List[ScenarioView] = []
         for scenario in scenarios:
-            linked = links.get(id(scenario), [])
+            linked = sorted(links.get(id(scenario), []), key=lambda r: layer_rank.get(r.layer, len(layer_rank)))
             by_layer: Dict[str, List[TestResult]] = {}
             for result in linked:
                 by_layer.setdefault(result.layer, []).append(result)
@@ -108,35 +109,47 @@ class ReportAggregator:
     def health_checks(
         views: List[ScenarioView],
         layer_stats: List[dict],
-        coverage_stats: dict,
+        progress_stats: dict,
         unlinked_count: int = 0,
-        coverage_threshold_green: float = 80,
-        coverage_threshold_amber: float = 50,
-        e2e_speed_threshold_pct: float = 50,
+        progress_threshold_green: float = 80,
+        progress_threshold_amber: float = 50,
+        e2e_duration_amber_seconds: float = 600,
+        e2e_duration_red_seconds: float = 1800,
     ) -> dict:
-        coverage_pct = coverage_stats["percentage"]
-        if coverage_pct >= coverage_threshold_green:
-            coverage_status = "pass"
-            coverage_message = "Coverage is healthy and trending forward."
-        elif coverage_pct >= coverage_threshold_amber:
-            coverage_status = "warn"
-            coverage_message = "Coverage is improving but still needs attention."
+        progress_pct = progress_stats["percentage"]
+        if progress_pct >= progress_threshold_green:
+            progress_status = "pass"
+            progress_message = "Progress is healthy."
+        elif progress_pct >= progress_threshold_amber:
+            progress_status = "warn"
+            progress_message = "Progress still needs attention."
         else:
-            coverage_status = "fail"
-            coverage_message = "Coverage is below the comfort threshold."
+            progress_status = "fail"
+            progress_message = "Progress is below the comfort threshold."
 
         unit_count = next((metric["count"] for metric in layer_stats if metric["name"] == "unit"), 0)
         integration_count = next((metric["count"] for metric in layer_stats if metric["name"] == "integration"), 0)
         e2e_count = next((metric["count"] for metric in layer_stats if metric["name"] == "e2e"), 0)
-        pyramid_ok = unit_count >= integration_count + e2e_count
-        pyramid_status = "pass" if pyramid_ok else "fail"
-        pyramid_message = "Unit coverage is strong enough for the pyramid." if pyramid_ok else "The pyramid is inverted and needs more unit coverage."
+        if unit_count > integration_count + e2e_count:
+            pyramid_status = "pass"
+            pyramid_message = "Unit coverage is strong enough for the pyramid."
+        elif unit_count == integration_count + e2e_count:
+            pyramid_status = "warn"
+            pyramid_message = "Unit coverage is exactly at parity — add more unit tests."
+        else:
+            pyramid_status = "fail"
+            pyramid_message = "The pyramid is inverted and needs more unit coverage."
 
         e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
-        total_duration = sum(metric["duration"] for metric in layer_stats)
-        e2e_speed_ok = total_duration == 0 or e2e_duration <= total_duration * (e2e_speed_threshold_pct / 100)
-        e2e_status = "pass" if e2e_speed_ok else "fail"
-        e2e_message = "E2E runtime stays within the healthy envelope." if e2e_speed_ok else "E2E runtime dominates the suite."
+        if e2e_duration <= e2e_duration_amber_seconds:
+            e2e_status = "pass"
+            e2e_message = "E2E runtime is within the healthy envelope."
+        elif e2e_duration <= e2e_duration_red_seconds:
+            e2e_status = "warn"
+            e2e_message = "E2E runtime is getting slow."
+        else:
+            e2e_status = "fail"
+            e2e_message = "E2E runtime exceeds the configured threshold."
 
         if unlinked_count == 0:
             unlinked_status = "pass"
@@ -149,7 +162,7 @@ class ReportAggregator:
             unlinked_message = "Several results didn't link to any scenario."
 
         return {
-            "coverage": {"status": coverage_status, "message": coverage_message, "value": f"{coverage_stats['tested']}/{coverage_stats['total']}"},
+            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['tested']}/{progress_stats['total']}"},
             "pyramid": {
                 "status": pyramid_status,
                 "message": pyramid_message,
@@ -160,7 +173,7 @@ class ReportAggregator:
                     {"name": "unit", "count": unit_count},
                 ],
             },
-            "e2e_speed": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s / {total_duration:.1f}s"},
+            "e2e_runtime": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s"},
             "unlinked": {"status": unlinked_status, "message": unlinked_message, "value": str(unlinked_count)},
         }
 

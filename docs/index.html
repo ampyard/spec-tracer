@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpecTracer — Trace coverage across every layer of your stack</title>
+  <meta name="description" content="SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" class="nav-logo-img" alt="SpecTracer">
+      SpecTracer
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="installation.html">Install</a></li>
+      <li><a href="usage.html">Usage</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+    </ul>
+    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <img src="logo.png" class="hero-logo animate-in" alt="SpecTracer">
+    <div class="hero-badge animate-in">&#9670; v1.0 &mdash; MIT Licensed</div>
+    <h1 class="animate-in animate-in-d1">One report to<br>trace all your tests</h1>
+    <p class="animate-in animate-in-d2">SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report. Tech-stack agnostic.</p>
+    <div class="hero-actions animate-in animate-in-d3">
+      <a href="installation.html" class="btn btn-primary">Get Started &rarr;</a>
+      <a href="https://github.com/ampyard/spec-tracer" class="btn btn-secondary">GitHub</a>
+      <a href="usage.html" class="btn btn-secondary">View Docs</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Why SpecTracer?</h2>
+      <p>Modern teams test across multiple layers &mdash; but visibility is fragmented. SpecTracer brings everything together.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card animate-in">
+        <div class="card-icon purple">&#9776;</div>
+        <h3>Fragmented Visibility</h3>
+        <p>Unit, integration, and E2E tests live in different directories (or repos). There is no single view of overall coverage &mdash; until now.</p>
+      </div>
+      <div class="card animate-in animate-in-d1">
+        <div class="card-icon gold">&#9650;</div>
+        <h3>Inverted Pyramids</h3>
+        <p>Teams unknowingly accumulate slow E2E tests instead of fast unit tests. The pyramid dashboard makes it obvious at a glance.</p>
+      </div>
+      <div class="card animate-in animate-in-d2">
+        <div class="card-icon purple">&#9878;</div>
+        <h3>No Traceability</h3>
+        <p>Hard to know if a specific business scenario is tested across all necessary layers. SpecTracer flags missing coverage per scenario.</p>
+      </div>
+      <div class="card animate-in animate-in-d3">
+        <div class="card-icon pink">&#9881;</div>
+        <h3>Tooling Lock-in</h3>
+        <p>Most reporting tools are tied to one framework (Allure for Java, Cypress Dashboard for Cypress). SpecTracer works with any stack.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>How It Works</h2>
+      <p>Three steps from feature files to a rich HTML report.</p>
+    </div>
+    <div class="steps">
+      <div class="step animate-in">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Write Gherkin Feature Files</h3>
+          <p>Define your scenarios in standard <code>.feature</code> files with tags like <span class="tag tag-link">@FC-42</span> that link to test results. Declare required layers with <span class="tag tag-require">@require-unit</span>.</p>
+        </div>
+      </div>
+      <div class="step animate-in animate-in-d1">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Run Your Tests</h3>
+          <p>Use any test framework &mdash; pytest, Jest, Cypress, Behave, anything that produces JUnit XML or Cucumber JSON. SpecTracer doesn't care what language you use.</p>
+        </div>
+      </div>
+      <div class="step animate-in animate-in-d2">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Generate the Report</h3>
+          <p>Run <code>uv run python build_pyramid.py</code>. SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Quick Start</h2>
+      <p>Get a report generated in under a minute.</p>
+    </div>
+    <div class="code-header"><span>Install &amp; run</span></div>
+<pre><code><span class="hl-com"># Clone and install</span>
+git clone https://github.com/ampyard/spec-tracer.git
+<span class="hl-kw">cd</span> spec-tracer
+uv sync
+
+<span class="hl-com"># Run your tests with JUnit/Cucumber output</span>
+uv run pytest tests/unit --junitxml=reports/unit.xml
+uv run pytest tests/integration --junitxml=reports/int.xml
+uv run behave features/ --format json -o reports/e2e.json
+
+<span class="hl-com"># Generate the report</span>
+uv run python build_pyramid.py
+
+<span class="hl-com"># Open report.html in your browser</span></code></pre>
+
+<div class="callout callout-info" style="margin-top: 1.5rem;">
+  <strong>&#8505; No CLI flags</strong>
+  SpecTracer is configured entirely through a JSON file. Drop a <code>spectracer.config.json</code> at your project root and just run the tool &mdash; no flags needed.
+</div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>What You Get</h2>
+      <p>The generated report is a single self-contained HTML file with five sections.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9679;</div>
+        <h4>Coverage Progress</h4>
+        <p>The headline metric: <strong>Tested: X / Y (Z%)</strong>. Per-feature breakdowns with green/amber/red thresholds. Designed for daily standups.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9650;</div>
+        <h4>Test Pyramid</h4>
+        <p>3-tier visualization of E2E / Integration / Unit with test counts, duration, and pass rates. Spot inverted pyramids instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9776;</div>
+        <h4>Feature Traceability</h4>
+        <p>Searchable tree: Feature &rarr; Scenario &rarr; Layer results. Full Gherkin text, required layer status, and per-test pass/fail/skip.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9888;</div>
+        <h4>Failure Breakdown</h4>
+        <p>Every failed test across all layers with feature/scenario context and expandable stack traces. One place to triage everything.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9881;</div>
+        <h4>Health Checks</h4>
+        <p>Progress, pyramid ratio, and E2E runtime checks with configurable thresholds. Visual indicators that make team health obvious.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9872;</div>
+        <h4>Unlinked Tests</h4>
+        <p>Test results whose tags don't match any scenario. Catch orphaned or mis-tagged tests that would otherwise go unnoticed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>Trusted by the Team Behind It</h2>
+      <p>SpecTracer <strong>dogfoods</strong> its own reports &mdash; it processes its own test outputs to generate a self-report. Every feature is validated with real Gherkin scenarios and E2E tests before it ships.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card" style="text-align: center;">
+        <div class="card-icon pink" style="margin: 0 auto 1rem;">&#9733;</div>
+        <h3>MIT License</h3>
+        <p>Free to use, modify, and distribute. No restrictions.</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <div class="card-icon pink" style="margin: 0 auto 1rem;">&#9881;</div>
+        <h3>Zero Infrastructure</h3>
+        <p>Just a CLI run in CI producing a static HTML file. No databases, no servers, no setup.</p>
+      </div>
+      <div class="card" style="text-align: center;">
+        <div class="card-icon pink" style="margin: 0 auto 1rem;">&#9733;</div>
+        <h3>Stack Agnostic</h3>
+        <p>Works with Python, Java, JavaScript, Go, &mdash; anything that outputs JUnit XML or Cucumber JSON.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-links">
+    <a href="installation.html">Installation</a>
+    <a href="usage.html">Usage</a>
+    <a href="features.html">Features</a>
+    <a href="ci-cd.html">CI/CD</a>
+    <a href="architecture.html">Architecture</a>
+    <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+  </div>
+  <p>&copy; 2026 Ampyard. Released under the MIT License.</p>
+</footer>
+
+<script>
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+</script>
+</body>
+</html>

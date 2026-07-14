@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features — SpecTracer</title>
+  <meta name="description" content="Detailed walkthrough of every SpecTracer feature: coverage dashboard, test pyramid, health checks, module-scoped requirements, and more.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" class="nav-logo-img" alt="SpecTracer">
+      SpecTracer
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="installation.html">Install</a></li>
+      <li><a href="usage.html">Usage</a></li>
+      <li><a href="features.html" class="active">Features</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+    </ul>
+    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="page-sidebar">
+    <nav>
+      <span class="sidebar-label">Report Sections</span>
+      <a href="#dashboard">Coverage Dashboard</a>
+      <a href="#pyramid">Test Pyramid</a>
+      <a href="#feature-matrix">Feature Traceability</a>
+      <a href="#failures">Failure Breakdown</a>
+      <a href="#unlinked">Unlinked Tests</a>
+      <span class="sidebar-label">Quality</span>
+      <a href="#health-checks">Health Checks</a>
+      <a href="#tag-linking">Tag Linking System</a>
+      <a href="#module-scope">Module-Scoped Requirements</a>
+      <a href="#edge-cases">Edge Case Behavior</a>
+    </nav>
+  </aside>
+
+  <main class="page-content">
+    <h1>Features</h1>
+    <p class="subtitle">SpecTracer generates a single self-contained HTML report with five interactive sections and intelligent health indicators. All CSS and JS are inlined — the report is safe to email, archive, or publish as a CI artifact.</p>
+
+    <h2 id="dashboard">Coverage Progress Dashboard</h2>
+    <p>The first thing visible in the report — designed for daily standup discussion. It answers the single most important question: <strong>what percentage of our scenarios actually have test coverage?</strong></p>
+
+    <div class="feature-block">
+      <h3>&#9679; Headline Metric</h3>
+      <p><strong>Tested: X / Y scenarios (Z%)</strong> &mdash; prominently displayed with color coding:</p>
+      <ul>
+        <li><span class="badge badge-green">Green</span> above the configurable green threshold (default 80%)</li>
+        <li><span class="badge badge-amber">Amber</span> between the amber and green thresholds</li>
+        <li><span class="badge badge-red">Red</span> below the amber threshold (default 50%)</li>
+      </ul>
+      <p>A scenario counts as <strong>tested</strong> if at least one test result (across any layer) links to it.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9776; Per-Feature Breakdown</h3>
+      <p>Each feature file gets its own mini progress bar with its own tested/untested count. This makes it easy to see which areas of the application are well-covered and which need attention.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9881; Health Check Cards</h3>
+      <p>Four health indicator cards sit below the progress bar:</p>
+      <div class="health-grid">
+        <div class="health-card">
+          <div class="health-icon">&#9679;</div>
+          <div class="health-value">80%</div>
+          <div class="health-label">Progress Threshold</div>
+        </div>
+        <div class="health-card">
+          <div class="health-icon">&#9650;</div>
+          <div class="health-value">&#10003;</div>
+          <div class="health-label">Pyramid Ratio</div>
+        </div>
+        <div class="health-card">
+          <div class="health-icon">&#9201;</div>
+          <div class="health-value">12m</div>
+          <div class="health-label">E2E Runtime</div>
+        </div>
+        <div class="health-card">
+          <div class="health-icon">&#9872;</div>
+          <div class="health-value">0</div>
+          <div class="health-label">Unlinked Tests</div>
+        </div>
+      </div>
+      <p>Each card shows its status (<span class="badge badge-green">pass</span> / <span class="badge badge-amber">warn</span> / <span class="badge badge-red">fail</span>) at a glance.</p>
+    </div>
+
+    <h2 id="pyramid">Test Pyramid Dashboard</h2>
+    <p>A 3-tier visualization of your test suite distribution. This is the fastest way to spot an <strong>inverted pyramid</strong> — where you have more E2E tests than unit tests.</p>
+
+    <div class="pyramid-viz">
+      <div class="pyramid-tier pyramid-e2e" title="E2E: 12 tests, 3.2m">E2E &mdash; 12 tests &middot; 3.2m</div>
+      <div class="pyramid-tier pyramid-integration" title="Integration: 48 tests, 1.1m">Integration &mdash; 48 tests &middot; 1.1m</div>
+      <div class="pyramid-tier pyramid-unit" title="Unit: 156 tests, 0.4m">Unit &mdash; 156 tests &middot; 0.4m</div>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9650; Per-Layer Metrics</h3>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Unit</th><th>Integration</th><th>E2E</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Test count</td><td>Individual test cases</td><td>Individual test cases</td><td>Scenarios</td></tr>
+          <tr><td>Duration</td><td>Total execution time</td><td>Total execution time</td><td>Total execution time</td></tr>
+          <tr><td>Pass / Fail / Skip</td><td>Percentages</td><td>Percentages</td><td>Percentages</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9888; Health Indicators</h3>
+      <ul>
+        <li><strong>Speed Check:</strong> Flags if E2E takes too long (configurable: amber at 10 min, red at 30 min by default)</li>
+        <li><strong>Ratio Check:</strong> Flags if Unit test count &le; Integration + E2E count (inverted pyramid)</li>
+      </ul>
+    </div>
+
+    <h2 id="feature-matrix">Feature Traceability &amp; Scenario Matrix</h2>
+    <p>A searchable, sortable tree that shows every feature, every scenario, and every layer's test results:</p>
+
+    <div class="feature-block">
+      <h3>&#9776; Tree View</h3>
+<pre><code>Feature: User Login
+  [=== 75% coverage ===] (3 of 4 scenarios tested)
+
+  &#9500;&#9472; Scenario: Successful login (tested)
+  &#9474;   Required: <span class="hl-str">unit &#10003;</span>  <span class="hl-str">integration &#10003;</span>  <span class="hl-str">e2e &#10003;</span>
+  &#9474;   Unit: 3 passed &middot; 0.4s
+  &#9474;   Integration: 1 passed &middot; 2.1s
+  &#9474;   E2E: 2 passed &middot; 12.3s
+  &#9474;
+  &#9492;&#9472; Scenario: Invalid password (no coverage)
+      Required: none
+      (No test results found)</code></pre>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#128269; Search &amp; Filter</h3>
+      <p>A text input at the top of the matrix. Type a tag name or scenario name and the matrix filters to show only matching entries. Client-side JavaScript — no page reload needed.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9881; Sortable Columns</h3>
+      <p>Click any column header to sort by name, status, duration, or coverage. Click again to reverse the sort order.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9660; Expandable Layer Details</h3>
+      <p>Click a layer pill to expand and see individual test names, their pass/fail/skip statuses, and expandable failure stack traces for any failed test.</p>
+    </div>
+
+    <h2 id="failures">Failure Breakdown</h2>
+    <p>An accordion-style table listing every failed test across all layers. This is your <strong>single triage surface</strong> — no more switching between test reports.</p>
+
+    <div class="feature-block">
+      <h3>&#9888; What You See</h3>
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Layer</td><td>Which test layer (Unit, Integration, E2E)</td></tr>
+          <tr><td>Feature</td><td>Which feature file the scenario belongs to</td></tr>
+          <tr><td>Scenario</td><td>Which scenario the test links to</td></tr>
+          <tr><td>Test Name</td><td>The name of the individual test</td></tr>
+          <tr><td>Status</td><td>Pass / Fail / Skip</td></tr>
+          <tr><td>Duration</td><td>Test execution time</td></tr>
+        </tbody>
+      </table>
+      <p>Click any failed test to expand and see the full <code>&lt;failure&gt;</code> or <code>&lt;error&gt;</code> stack trace from the JUnit XML.</p>
+    </div>
+
+    <h2 id="unlinked">Unlinked Tests</h2>
+    <p>Every test result whose tags didn't match any scenario ends up here. This is invaluable for catching:</p>
+    <ul>
+      <li><strong>Orphaned tests</strong> — tests that were written for a scenario that no longer exists</li>
+      <li><strong>Mis-tagged tests</strong> — tests with typos in their tags (<code>@FC-42</code> vs <code>@FC-43</code>)</li>
+      <li><strong>Coverage gaps</strong> — areas where test results exist but no feature file scenario describes them</li>
+    </ul>
+
+    <table>
+      <thead>
+        <tr><th>Column</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Layer</td><td>Which test layer produced the orphan</td></tr>
+        <tr><td>Test Name</td><td>The orphaned test's name</td></tr>
+        <tr><td>Tags Found</td><td>All tags on the test result</td></tr>
+        <tr><td>Status</td><td>Pass / Fail / Skip</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="health-checks">Health Checks</h2>
+    <p>Four visual health indicators sit at the top of the report. They are <strong>purely visual</strong> — they never affect the exit code.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9679;</div>
+        <h4>Progress</h4>
+        <p>% of scenarios with at least one linked test. Thresholds configured via <code>health_checks</code> in config.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9650;</div>
+        <h4>Pyramid Ratio</h4>
+        <p>Pass if Unit count &gt; Integration + E2E count. Fail if the pyramid is inverted.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9201;</div>
+        <h4>E2E Runtime</h4>
+        <p>Warns/fails if E2E duration exceeds configurable thresholds. Defaults: 10min amber, 30min red.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9872;</div>
+        <h4>Unlinked Tests</h4>
+        <p>Pass at 0, warn at 1&ndash;3, fail at 4+. Helps enforce tag hygiene.</p>
+      </div>
+    </div>
+
+    <h2 id="tag-linking">Tag Linking System</h2>
+    <p>The heart of SpecTracer. Feature files and test results connect through <strong>shared tags</strong> on scenarios.</p>
+
+    <div class="feature-block">
+      <h3>Two Kinds of Tags</h3>
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Examples</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-link">Linking</span></td>
+            <td><code>@FC-42</code>, <code>@regression</code></td>
+            <td>Shared with test results. Any matching tag links the test to the scenario.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-require">Requirement</span></td>
+            <td><code>@require-unit</code>, <code>@require-e2e</code></td>
+            <td>Declares which layers must have coverage. Excluded from linking logic.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Default Behavior</h3>
+    <p>Scenarios without any <code>@require-*</code> tags default to <code>@require-e2e</code> &mdash; because if you wrote a Gherkin scenario but didn't declare requirements, it should at least have E2E coverage.</p>
+
+    <h2 id="module-scope">Module-Scoped Requirements</h2>
+    <p>For teams with multi-module codebases, <code>@require-unit:auth</code> and <code>@require-integration:billing</code> let you pin requirements to specific modules.</p>
+
+    <div class="feature-block">
+      <h3>How It Works</h3>
+      <p>In your config file:</p>
+<pre><code>{
+  <span class="hl-prop">"unit"</span>: {
+    <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>],
+    <span class="hl-str">"auth"</span>: [<span class="hl-str">"./reports/auth-unit.xml"</span>],
+    <span class="hl-str">"billing"</span>: [<span class="hl-str">"./reports/billing-unit.xml"</span>]
+  }
+}</code></pre>
+      <p>In your feature file:</p>
+<pre><code><span class="hl-tag">@FC-42</span> <span class="hl-tag">@require-unit:auth</span>
+<span class="hl-section">Scenario:</span> Authenticated billing access</code></pre>
+      <p>The <code>@require-unit:auth</code> requirement is <strong>only</strong> satisfied by results from the <code>"auth"</code> module key. Unscoped results (<code>""</code>) never satisfy it.</p>
+    </div>
+
+    <p><code>@require-e2e</code> intentionally does not accept a module suffix &mdash; E2E scenarios typically span multiple modules by nature.</p>
+
+    <h2 id="edge-cases">Edge Case Behavior</h2>
+    <table>
+      <thead>
+        <tr><th>Situation</th><th>Behavior</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>No config file found</td><td>Errors out — a config file is mandatory</td></tr>
+        <tr><td>Missing <code>features</code> or <code>output</code></td><td>Errors out — both are required</td></tr>
+        <tr><td>Empty/missing test result path</td><td>Silently ignored (zero tests for that layer)</td></tr>
+        <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
+        <tr><td>Test matches no scenario</td><td>Listed in "Unlinked Tests"</td></tr>
+        <tr><td>Scenario matches no test</td><td>Shown as "untested"</td></tr>
+        <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
+        <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>
+        <tr><td>Tag collisions</td><td>Result links to ALL matching scenarios</td></tr>
+        <tr><td>Unicode / special characters</td><td>Preserved, HTML-escaped</td></tr>
+      </tbody>
+    </table>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="usage.html">Usage</a>
+    <a href="features.html">Features</a>
+    <a href="ci-cd.html">CI/CD</a>
+    <a href="architecture.html">Architecture</a>
+    <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+  </div>
+  <p>&copy; 2026 Ampyard. Released under the MIT License.</p>
+</footer>
+
+<script>
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI/CD Integration — SpecTracer</title>
+  <meta name="description" content="Integrate SpecTracer into your CI/CD pipeline: GitHub Actions, GitLab CI, Jenkins, and team workflows.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" class="nav-logo-img" alt="SpecTracer">
+      SpecTracer
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="installation.html">Install</a></li>
+      <li><a href="usage.html">Usage</a></li>
+      <li><a href="features.html">Features</a></li>
+      <li><a href="ci-cd.html" class="active">CI/CD</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+    </ul>
+    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="page-sidebar">
+    <nav>
+      <span class="sidebar-label">CI Platforms</span>
+      <a href="#github-actions">GitHub Actions</a>
+      <a href="#gitlab-ci">GitLab CI</a>
+      <a href="#jenkins">Jenkins</a>
+      <span class="sidebar-label">Workflows</span>
+      <a href="#team-workflows">Team Workflows</a>
+      <a href="#best-practices">Best Practices</a>
+      <a href="#standup">Standup Metric</a>
+    </nav>
+  </aside>
+
+  <main class="page-content">
+    <h1>CI/CD Integration</h1>
+    <p class="subtitle">SpecTracer is designed from the ground up for CI pipelines. Zero infrastructure — just a CLI run producing a static HTML file you can publish as an artifact.</p>
+
+    <h2 id="github-actions">GitHub Actions</h2>
+    <p>Add a step to your existing workflow to generate the SpecTracer report and upload it as an artifact:</p>
+
+    <div class="code-header"><span>.github/workflows/ci.yml</span></div>
+<pre><code><span class="hl-section">name:</span> CI
+<span class="hl-section">on:</span> [push, pull_request]
+
+<span class="hl-section">jobs:</span>
+  <span class="hl-fn">test-and-report</span>:
+    <span class="hl-section">runs-on:</span> ubuntu-latest
+    <span class="hl-section">steps:</span>
+      - <span class="hl-section">uses:</span> actions/checkout@v4
+
+      - <span class="hl-section">uses:</span> astral-sh/setup-uv@v5
+        <span class="hl-section">with:</span>
+          python-version: <span class="hl-str">"3.12"</span>
+
+      - <span class="hl-section">name:</span> Install dependencies
+        <span class="hl-section">run:</span> uv sync
+
+      - <span class="hl-section">name:</span> Run unit tests
+        <span class="hl-section">run:</span> uv run pytest tests/unit --junitxml=reports/unit.xml
+
+      - <span class="hl-section">name:</span> Run integration tests
+        <span class="hl-section">run:</span> uv run pytest tests/integration --junitxml=reports/int.xml
+
+      - <span class="hl-section">name:</span> Run E2E tests
+        <span class="hl-section">run:</span> uv run behave features/ --format json -o reports/e2e.json
+
+      - <span class="hl-section">name:</span> Generate SpecTracer report
+        <span class="hl-section">run:</span> uv run python build_pyramid.py
+
+      - <span class="hl-section">name:</span> Upload report as artifact
+        <span class="hl-section">uses:</span> actions/upload-artifact@v4
+        <span class="hl-section">with:</span>
+          name: coverage-report
+          path: report.html</code></pre>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Report is self-contained</strong>
+      The HTML file includes all CSS and JS inline. You can download it from the Actions run page and open it directly in a browser — no server needed.
+    </div>
+
+    <h3>PR Comment with Report Link</h3>
+    <p>To make the report visible on pull requests, add a step that comments with a link to the artifact:</p>
+
+<pre><code>      - <span class="hl-section">name:</span> Comment PR
+        <span class="hl-section">uses:</span> actions/github-script@v7
+        <span class="hl-section">if:</span> github.event_name == 'pull_request'
+        <span class="hl-section">with:</span>
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## SpecTracer Coverage Report\n\n[Download the report](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
+            })</code></pre>
+
+    <h2 id="gitlab-ci">GitLab CI</h2>
+
+    <div class="code-header"><span>.gitlab-ci.yml</span></div>
+<pre><code><span class="hl-section">stages:</span>
+  - test
+  - report
+
+<span class="hl-section">variables:</span>
+  UV_PYTHON: <span class="hl-str">"3.12"</span>
+
+<span class="hl-section">unit-tests:</span>
+  <span class="hl-section">stage:</span> test
+  <span class="hl-section">script:</span>
+    - uv run pytest tests/unit --junitxml=reports/unit.xml
+  <span class="hl-section">artifacts:</span>
+    <span class="hl-section">paths:</span>
+      - reports/unit.xml
+
+<span class="hl-section">integration-tests:</span>
+  <span class="hl-section">stage:</span> test
+  <span class="hl-section">script:</span>
+    - uv run pytest tests/integration --junitxml=reports/int.xml
+  <span class="hl-section">artifacts:</span>
+    <span class="hl-section">paths:</span>
+      - reports/int.xml
+
+<span class="hl-section">e2e-tests:</span>
+  <span class="hl-section">stage:</span> test
+  <span class="hl-section">script:</span>
+    - uv run behave features/ --format json -o reports/e2e.json
+  <span class="hl-section">artifacts:</span>
+    <span class="hl-section">paths:</span>
+      - reports/e2e.json
+
+<span class="hl-section">spectracer-report:</span>
+  <span class="hl-section">stage:</span> report
+  <span class="hl-section">needs:</span>
+    - unit-tests
+    - integration-tests
+    - e2e-tests
+  <span class="hl-section">script:</span>
+    - uv sync
+    - uv run python build_pyramid.py
+  <span class="hl-section">artifacts:</span>
+    <span class="hl-section">paths:</span>
+      - report.html
+    <span class="hl-section">expose_as:</span> Coverage Report</code></pre>
+
+    <h2 id="jenkins">Jenkins</h2>
+
+    <div class="code-header"><span>Jenkinsfile (Declarative)</span></div>
+<pre><code><span class="hl-section">pipeline</span> {
+    <span class="hl-section">agent</span> any
+
+    <span class="hl-section">stages</span> {
+        <span class="hl-section">stage</span>(<span class="hl-str">'Install'</span>) {
+            <span class="hl-section">steps</span> {
+                sh <span class="hl-str">'uv sync'</span>
+            }
+        }
+        <span class="hl-section">stage</span>(<span class="hl-str">'Run Tests'</span>) {
+            <span class="hl-section">parallel</span> {
+                <span class="hl-section">stage</span>(<span class="hl-str">'Unit'</span>) {
+                    <span class="hl-section">steps</span> {
+                        sh <span class="hl-str">'uv run pytest tests/unit --junitxml=reports/unit.xml'</span>
+                    }
+                }
+                <span class="hl-section">stage</span>(<span class="hl-str">'Integration'</span>) {
+                    <span class="hl-section">steps</span> {
+                        sh <span class="hl-str">'uv run pytest tests/integration --junitxml=reports/int.xml'</span>
+                    }
+                }
+                <span class="hl-section">stage</span>(<span class="hl-str">'E2E'</span>) {
+                    <span class="hl-section">steps</span> {
+                        sh <span class="hl-str">'uv run behave features/ --format json -o reports/e2e.json'</span>
+                    }
+                }
+            }
+        }
+        <span class="hl-section">stage</span>(<span class="hl-str">'Generate Report'</span>) {
+            <span class="hl-section">steps</span> {
+                sh <span class="hl-str">'uv run python build_pyramid.py'</span>
+            }
+        }
+    }
+    <span class="hl-section">post</span> {
+        <span class="hl-section">success</span> {
+            <span class="hl-section">archiveArtifacts</span> artifacts: <span class="hl-str">'report.html'</span>,
+                fingerprint: <span class="hl-kw">true</span>
+        }
+    }
+}</code></pre>
+
+    <h2 id="team-workflows">Team Workflows</h2>
+
+    <div class="feature-block">
+      <h3>&#127891; Onboarding a New Project</h3>
+      <ol>
+        <li><strong>Write feature files</strong> &mdash; your team's QA or product owner creates <code>.feature</code> files describing every business scenario. Each scenario gets a unique tag like <span class="tag tag-link">@FC-001</span>.</li>
+        <li><strong>Add tags to tests</strong> &mdash; developers add the matching tags to their unit/integration/E2E tests. A quick PR review ensures tag naming consistency.</li>
+        <li><strong>Set up the config</strong> &mdash; create <code>spectracer.config.json</code> pointing at your feature files and test outputs.</li>
+        <li><strong>Add to CI</strong> &mdash; add the SpecTracer step to your pipeline. The report becomes part of every build.</li>
+      </ol>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#128200; Using the Report in a Sprint</h3>
+      <ul>
+        <li><strong>Daily standup:</strong> Pull up the latest report. The headline coverage % is a great conversation starter. "We dropped from 78% to 72% &mdash; did we add scenarios without tests?"</li>
+        <li><strong>Sprint review:</strong> Show the trend. Are you adding more scenarios than tests? Is the pyramid inverting?</li>
+        <li><strong>PR reviews:</strong> If you gate PRs on <code>error_on_failure: true</code>, the report shows exactly which scenarios lost coverage.</li>
+      </ul>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#128220; Tag Naming Convention</h3>
+      <p>Establish a consistent tag naming scheme across your team:</p>
+      <table>
+        <thead>
+          <tr><th>Pattern</th><th>Example</th><th>Use</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>@FC-&lt;N&gt;</code></td><td><code>@FC-42</code></td><td>Feature-case ID — unique per scenario</td></tr>
+          <tr><td><code>@&lt;module&gt;</code></td><td><code>@billing</code></td><td>Cross-cutting module tag</td></tr>
+          <tr><td><code>@&lt;type&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Test type classification</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="best-practices">Best Practices</h2>
+
+    <div class="callout callout-success">
+      <strong>&#10003; Start small, expand gradually</strong>
+      Begin with just E2E coverage (<code>@require-e2e</code> is the default). Add unit and integration requirements as you build out those test layers.
+    </div>
+
+    <div class="callout callout-success">
+      <strong>&#10003; Commit the config file</strong>
+      <code>spectracer.config.json</code> belongs in version control. It defines your team's coverage contract.
+    </div>
+
+    <div class="callout callout-warning">
+      <strong>&#9888; Ignore the report</strong>
+      Add <code>report.html</code> to <code>.gitignore</code>. It's a build artifact generated by CI.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Use module-scoped requirements for microservices</strong>
+      If your team owns a single service in a multi-service repo, use <code>@require-unit:my-service</code> to ensure your service's unit tests cover its scenarios.
+    </div>
+
+    <h2 id="standup">The Standup Metric</h2>
+    <p>SpecTracer's headline metric — <strong>Tested: X / Y scenarios (Z%)</strong> — is designed for daily standup discussion. Unlike code coverage (which measures lines executed), this metric measures <strong>business scenario coverage</strong>:</p>
+    <ul>
+      <li>It's <strong>meaningful to product managers</strong> — "we haven't tested the password reset flow yet"</li>
+      <li>It's <strong>actionable for developers</strong> — "scenario @FC-43 needs a unit test"</li>
+      <li>It's <strong>visible to leadership</strong> — a single number that reflects the team's testing health</li>
+    </ul>
+    <p>Teams that use SpecTracer find themselves discussing coverage in standup naturally: "Our coverage dropped from 85% to 78% this sprint &mdash; let's add tests for the new billing scenarios before the sprint ends."</p>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="installation.html">Installation</a>
+    <a href="usage.html">Usage</a>
+    <a href="features.html">Features</a>
+    <a href="ci-cd.html">CI/CD</a>
+    <a href="architecture.html">Architecture</a>
+    <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+  </div>
+  <p>&copy; 2026 Ampyard. Released under the MIT License.</p>
+</footer>
+
+<script>
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+</script>
+</body>
+</html>

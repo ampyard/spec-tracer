@@ -1,7 +1,7 @@
 # SpecTracer
 
 <div align="center">
-<img src="docs/logo.png" style="align: center; width:30%; height: auto"></img>
+<img src="docs/hero-image.png" style="align: center; width:30%; height: auto"></img>
 
 <p>
 

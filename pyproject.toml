@@ -15,6 +15,7 @@ unified-test-tracer = "unified_test_tracer.cli:main"
 dev = [
   "pytest>=8.3",
   "behave>=1.2",
+  "jsonschema>=4.23",
 ]
 [tool.setuptools.packages.find]
 exclude = ["features*", "reports*"]

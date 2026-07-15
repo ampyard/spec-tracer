@@ -108,6 +108,24 @@
               body: `## SpecTracer Coverage Report\n\n[Download the report](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`
             })</code></pre>
 
+    <h3>PR Comment with Live Coverage Numbers</h3>
+    <p>Set <code>output_json</code> in the config to get structured data your CI script can read directly, instead of just linking to the HTML artifact:</p>
+
+<pre><code>      - <span class="hl-section">name:</span> Comment PR with coverage
+        <span class="hl-section">if:</span> github.event_name == 'pull_request'
+        <span class="hl-section">run:</span> |
+          PERCENT=$(jq -r '.summary.coverage.percent' reports/spectracer-report.json)
+          HEALTH=$(jq -r '.summary.health.status' reports/spectracer-report.json)
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "SpecTracer coverage: **${PERCENT}%** (health: ${HEALTH})"
+        <span class="hl-section">env:</span>
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Schema-validated JSON</strong>
+      <code>output_json</code> conforms to <code>spectracer-report.schema.json</code> in the repo, so any consumer script can validate the shape before parsing it.
+    </div>
+
     <h2 id="gitlab-ci">GitLab CI</h2>
 
     <div class="code-header"><span>.gitlab-ci.yml</span></div>
@@ -257,6 +275,11 @@
     <div class="callout callout-info">
       <strong>&#8505; Use module-scoped requirements for microservices</strong>
       If your team owns a single service in a multi-service repo, use <code>@require-unit:my-service</code> to ensure your service's unit tests cover its scenarios.
+    </div>
+
+    <div class="callout callout-success">
+      <strong>&#10003; Use <code>output_json</code> for anything beyond pass/fail gating</strong>
+      <code>error_on_failure</code> only handles the binary "did any test fail" case. For coverage-percentage thresholds, health-status gating, or feeding a dashboard, script against <code>output_json</code> instead of parsing HTML.
     </div>
 
     <h2 id="standup">The Standup Metric</h2>

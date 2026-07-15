@@ -39,6 +39,56 @@ jobs:
         if: always()
         run: uv run python build_pyramid.py
 
+      - name: Validate JSON report against schema
+        if: always()
+        run: |
+          uv run python -c "
+          import json
+          from pathlib import Path
+          from jsonschema import Draft7Validator
+
+          config = json.load(open('spectracer.config.json', encoding='utf-8'))
+          output_json = config.get('output_json')
+          if not output_json:
+              print('output_json not set in config — skipping JSON validation')
+          elif not Path(output_json).exists():
+              raise SystemExit(f'output_json is set to {output_json!r} but the file was not generated')
+          else:
+              report = json.load(open(output_json, encoding='utf-8'))
+              schema = json.load(open('spectracer-report.schema.json', encoding='utf-8'))
+              Draft7Validator(schema).validate(report)
+              print(f'{output_json} is valid')
+          "
+
+      - name: Write coverage summary
+        if: always()
+        run: |
+          uv run python -c "
+          import json
+          from pathlib import Path
+
+          config = json.load(open('spectracer.config.json', encoding='utf-8'))
+          output_json = config.get('output_json')
+          if not output_json or not Path(output_json).exists():
+              raise SystemExit(0)
+
+          report = json.load(open(output_json, encoding='utf-8'))
+          c = report['summary']['coverage']
+          h = report['summary']['health']
+          p = report['summary']['pyramid']
+          lines = ['## SpecTracer Coverage', '', f\"**{c['tested']}/{c['total']} scenarios tested ({c['percent']}%)** — health: **{h['status']}**\", '']
+          if h['reasons']:
+              lines += ['**Reasons:**'] + [f'- {r}' for r in h['reasons']] + ['']
+          if p:
+              lines += ['| Layer | Tests | Duration (ms) | Pass rate |', '|---|---|---|---|']
+              lines += [f\"| {name} | {s['testCount']} | {s['duration']:.0f} | {s['passRate']}% |\" for name, s in p.items()]
+          Path('summary.md').write_text(chr(10).join(lines), encoding='utf-8')
+          "
+          if [ -f summary.md ]; then
+            cat summary.md >> "$GITHUB_STEP_SUMMARY"
+            rm summary.md
+          fi
+
       - name: Upload report
         if: always()
         uses:  actions/upload-artifact@v4

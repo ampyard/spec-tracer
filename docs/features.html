@@ -41,6 +41,7 @@
       <a href="#feature-matrix">Feature Traceability</a>
       <a href="#failures">Failure Breakdown</a>
       <a href="#unlinked">Unlinked Tests</a>
+      <a href="#json-report">JSON Report</a>
       <span class="sidebar-label">Quality</span>
       <a href="#health-checks">Health Checks</a>
       <a href="#tag-linking">Tag Linking System</a>
@@ -205,6 +206,30 @@
         <tr><td>Status</td><td>Pass / Fail / Skip</td></tr>
       </tbody>
     </table>
+
+    <h2 id="json-report">Machine-Readable JSON Report</h2>
+    <p>Every section above is also available as structured JSON &mdash; set <code>output_json</code> in the config and SpecTracer writes a second file alongside the HTML report, built from the exact same internal data so the two can never disagree.</p>
+
+    <div class="feature-block">
+      <h3>&#128196; Schema-Validated</h3>
+      <p>Conforms to <code>spectracer-report.schema.json</code> (JSON Schema Draft 7), shipped in the repo as the authoritative contract. SpecTracer's own test suite validates its self-report against it on every run.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#128279; Same Data, No Drift</h3>
+      <p>The JSON is built from the same coverage stats, pyramid metrics, and health checks that feed the HTML dashboard &mdash; not a second parallel implementation. If the HTML says 89%, the JSON says 89%.</p>
+    </div>
+
+    <div class="feature-block">
+      <h3>&#9989; Use Cases</h3>
+      <ul>
+        <li><strong>PR bots</strong> &mdash; post a coverage delta comment without scraping HTML</li>
+        <li><strong>Custom CI gating</strong> &mdash; beyond <code>error_on_failure</code>, script your own thresholds against <code>summary.coverage</code> or <code>summary.health</code></li>
+        <li><strong>Dashboards</strong> &mdash; feed coverage trends into an internal metrics system over time</li>
+      </ul>
+    </div>
+
+    <p>Fully opt-in and backward compatible: omit <code>output_json</code> and nothing changes.</p>
 
     <h2 id="health-checks">Health Checks</h2>
     <p>Four visual health indicators sit at the top of the report. They are <strong>purely visual</strong> — they never affect the exit code.</p>

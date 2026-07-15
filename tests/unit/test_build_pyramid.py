@@ -6,7 +6,7 @@ import pytest
 from unified_test_tracer.parsers import FeatureParser, JunitParser, CucumberParser
 from unified_test_tracer.models import TestResult
 from unified_test_tracer.renderers import _required_status
-from unified_test_tracer.cli import _collect_and_parse_junit_results, _load_config
+from unified_test_tracer.cli import _collect_and_parse_features, _collect_and_parse_junit_results, _load_config
 
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
@@ -155,3 +155,36 @@ def test_require_layer_status_missing_e2e(tag, tmp_path):
     assert "unit [OK]" in status
     assert "e2e [MISSING]" in status
     assert "integration" not in status
+
+
+@pytest.mark.parametrize("tag", ["@FC-010"])
+def test_collect_and_parse_features_returns_path_relative_to_base_dir(tag, tmp_path):
+    features_dir = tmp_path / "features"
+    features_dir.mkdir()
+    (features_dir / "login.feature").write_text(
+        "Feature: Login\n\n  @FC-010\n  Scenario: Sign in\n    Given a user\n",
+        encoding="utf-8",
+    )
+
+    scenarios, feature_files = _collect_and_parse_features([str(features_dir)], tmp_path)
+
+    assert len(scenarios) == 1
+    assert feature_files["Login"] == "features/login.feature"
+
+
+@pytest.mark.parametrize("tag", ["@FC-010"])
+def test_collect_and_parse_features_never_returns_absolute_path(tag, tmp_path):
+    config_dir = tmp_path / "config_dir"
+    config_dir.mkdir()
+    features_dir = tmp_path / "elsewhere" / "features"
+    features_dir.mkdir(parents=True)
+    (features_dir / "login.feature").write_text(
+        "Feature: Login\n\n  @FC-010\n  Scenario: Sign in\n    Given a user\n",
+        encoding="utf-8",
+    )
+
+    _, feature_files = _collect_and_parse_features([str(features_dir)], config_dir)
+
+    path = feature_files["Login"]
+    assert not Path(path).is_absolute()
+    assert path == "../elsewhere/features/login.feature"

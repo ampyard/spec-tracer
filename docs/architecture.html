@@ -43,6 +43,7 @@
       <a href="#linker">Linker</a>
       <a href="#aggregator">Aggregator</a>
       <a href="#renderer">Renderer</a>
+      <a href="#json-report-model">JSON Report Model</a>
       <span class="sidebar-label">Design</span>
       <a href="#data-flow">Data Flow</a>
       <a href="#tag-resolution">Tag Resolution</a>
@@ -52,7 +53,7 @@
 
   <main class="page-content">
     <h1>Architecture</h1>
-    <p class="subtitle">SpecTracer is a lean Python CLI with no heavy infrastructure. Four modules orchestrate a simple pipeline: collect &rarr; parse &rarr; link &rarr; aggregate &rarr; render.</p>
+    <p class="subtitle">SpecTracer is a lean Python CLI with no heavy infrastructure. A handful of modules orchestrate a simple pipeline: collect &rarr; parse &rarr; link &rarr; aggregate &rarr; render (HTML and, optionally, JSON).</p>
 
     <h2 id="pipeline">Pipeline Overview</h2>
 
@@ -73,9 +74,11 @@
                                |
                      <span class="hl-section">AggregatedData</span>{views, stats, health}
                                |
-                          <span class="hl-section">HtmlRenderer</span>
-                               |
-                          <span class="hl-str">report.html</span></code></pre>
+                    +----------+----------+
+                    |                     |
+              <span class="hl-section">HtmlRenderer</span>          <span class="hl-section">build_report()</span>
+                    |                     |
+              <span class="hl-str">report.html</span>          <span class="hl-str">report.json</span> (optional)</code></pre>
 
     <h2 id="modules">Modules</h2>
 
@@ -106,9 +109,14 @@
         <p>Jinja2 template with 845 lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
       </div>
       <div class="feature-card">
+        <div class="feature-icon">&#128203;</div>
+        <h4>report_model.py</h4>
+        <p>Builds the JSON report from the same views/stats/health data the HTML renderer consumes &mdash; one data model, two outputs, no drift. Emitted only when <code>output_json</code> is set.</p>
+      </div>
+      <div class="feature-card">
         <div class="feature-icon">&#9881;</div>
         <h4>cli.py</h4>
-        <p>Orchestrator: loads config, collects files, runs pipeline, writes output. 131 lines.</p>
+        <p>Orchestrator: loads config, collects files, runs pipeline, writes HTML and (optionally) JSON output.</p>
       </div>
     </div>
 
@@ -194,6 +202,21 @@
 
     <p>The report file has zero external dependencies &mdash; it works offline, on any OS, in any modern browser.</p>
 
+    <h2 id="json-report-model">JSON Report Model</h2>
+    <p><code>report_model.build_report()</code> takes the exact same <code>views</code>, <code>stats</code>, <code>layer_stats</code>, <code>health_checks</code>, and <code>unlinked_results</code> that <code>HtmlRenderer.render()</code> consumes and reshapes them into the dict defined by <code>spectracer-report.schema.json</code>. There is no second parsing or aggregation path &mdash; if it were, the HTML and JSON could disagree.</p>
+
+    <div class="feature-block">
+      <h3>Key Transformations</h3>
+      <ul>
+        <li><strong>Duration units</strong> &mdash; internal model stores seconds; the JSON schema expects milliseconds, so <code>report_model.py</code> converts on the way out.</li>
+        <li><strong>Omit, don't null</strong> &mdash; <code>duration</code> and <code>failureMessage</code> are left out of a result entirely when the underlying JUnit/Cucumber data didn't provide them, rather than serialized as <code>null</code>.</li>
+        <li><strong>Health rollup</strong> &mdash; the aggregator's four independent <code>pass</code>/<code>warn</code>/<code>fail</code> checks are reduced to a single worst-of <code>summary.health.status</code> (<code>green</code>/<code>amber</code>/<code>red</code>), with each non-passing check's message becoming a <code>reasons[]</code> entry. No separate health logic is reimplemented.</li>
+        <li><strong>Relative feature paths</strong> &mdash; <code>feature.file</code> is computed relative to the config file's directory (via <code>os.path.relpath</code>, so it stays relative even outside that directory tree), never an absolute filesystem path &mdash; important for reports generated in CI and compared across machines.</li>
+      </ul>
+    </div>
+
+    <p>Written to disk only when <code>output_json</code> is set in the config &mdash; omit it and <code>cli.py</code> skips this step entirely, leaving HTML-only behavior unchanged.</p>
+
     <h2 id="data-flow">Data Flow</h2>
     <p>Here's exactly what happens when you run <code>uv run python build_pyramid.py</code>:</p>
     <ol>
@@ -202,7 +225,8 @@
       <li><strong>Parsing</strong> &mdash; Each file type is parsed by its dedicated parser. Scenarios and test results are extracted into typed data classes.</li>
       <li><strong>Linking</strong> &mdash; <code>ResultLinker</code> cross-references scenario tags against test result tags. OR logic: any shared tag creates a link.</li>
       <li><strong>Aggregation</strong> &mdash; <code>ReportAggregator</code> computes all stats, views, breakdowns, and health checks from the linked data.</li>
-      <li><strong>Rendering</strong> &mdash; <code>HtmlRenderer</code> feeds the aggregated data into a Jinja2 template and writes the output file.</li>
+      <li><strong>Rendering</strong> &mdash; <code>HtmlRenderer</code> feeds the aggregated data into a Jinja2 template and writes the HTML output file.</li>
+      <li><strong>JSON output (optional)</strong> &mdash; if <code>output_json</code> is set, <code>report_model.build_report()</code> reshapes the same aggregated data into the schema-conformant JSON file.</li>
     </ol>
 
     <h2 id="tag-resolution">Tag Resolution Order</h2>
@@ -241,7 +265,10 @@ uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
 
 uv run python build_pyramid.py
-<span class="hl-com"># Output: reports/spectracer-report.html — a self-report</span></code></pre>
+<span class="hl-com"># Output: reports/spectracer-report.html — a self-report
+# Output: reports/spectracer-report.json — same self-report, machine-readable</span></code></pre>
+
+    <p>SpecTracer's own <code>spectracer.config.json</code> sets <code>output_json</code>, so every self-report run also exercises the JSON code path. Both the integration test suite and the behave suite validate the generated JSON against <code>spectracer-report.schema.json</code> using <code>jsonschema.Draft7Validator</code> &mdash; the schema is enforced by the tool's own tests, not just documented.</p>
 
     <div class="callout callout-success">
       <strong>&#10003; What gets measured gets managed</strong>

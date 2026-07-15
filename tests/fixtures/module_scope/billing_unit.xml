@@ -1,3 +1,0 @@
-<testsuite tests="1" failures="0" errors="0" skipped="0">
-  <testcase classname="tests.unit" name="test_billing @FC-007" time="0.1" />
-</testsuite>

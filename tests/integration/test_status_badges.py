@@ -6,7 +6,7 @@ from conftest import run_tool
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FIXTURES = ROOT / "tests" / "fixtures" / "phase2_statuses"
+FIXTURES = ROOT / "tests" / "fixtures" / "status_badges"
 FEATURES = FIXTURES / "features"
 UNIT = FIXTURES / "unit.xml"
 E2E = FIXTURES / "e2e.json"

@@ -13,9 +13,9 @@ FIXTURES = ROOT / "tests" / "fixtures"
 TAG_FIXTURES = {
     "@FC-001": "fc001",
     "@FC-002": "fc002",
-    "@FC-003": "phase3",
+    "@FC-003": "integration_linking",
     "@FC-004": "repeatable",
-    "@FC-005": "phase4",
+    "@FC-005": "missing_required_layer",
     "@FC-006": "fc002",
     "@FC-007": "module_scope",
     "@FC-EDGE-001": "edge_cases/collision_across",
@@ -29,19 +29,19 @@ TAG_FIXTURES = {
 
 @given('a feature file with scenario tagged "{tag}"')
 def step_feature_with_tag(context, tag):
-    dir_name = TAG_FIXTURES.get(tag, "phase1")
+    dir_name = TAG_FIXTURES.get(tag, "e2e_coverage")
     context.features = str(FIXTURES / dir_name / "features")
 
 
 @given('a unit JUnit XML result tagged "{tag}"')
 def step_unit_with_tag(context, tag):
-    dir_name = TAG_FIXTURES.get(tag, "phase2")
+    dir_name = TAG_FIXTURES.get(tag, "unit_linking")
     context.unit = str(FIXTURES / dir_name / "unit.xml")
 
 
 @given('a module-scoped unit JUnit XML result tagged "{tag}" for module "{module}"')
 def step_unit_with_tag_and_module(context, tag, module):
-    dir_name = TAG_FIXTURES.get(tag, "phase2")
+    dir_name = TAG_FIXTURES.get(tag, "unit_linking")
     context.unit = str(FIXTURES / dir_name / (module + "_unit.xml"))
     context.unit_module = module
 
@@ -53,13 +53,13 @@ def step_unit_scoped_to_module(context, module):
 
 @given('an E2E Cucumber JSON result tagged "{tag}"')
 def step_e2e_with_tag(context, tag):
-    dir_name = TAG_FIXTURES.get(tag, "phase1")
+    dir_name = TAG_FIXTURES.get(tag, "e2e_coverage")
     context.e2e = str(FIXTURES / dir_name / "e2e.json")
 
 
 @given('an integration JUnit XML result tagged "{tag}"')
 def step_integration_with_tag(context, tag):
-    dir_name = TAG_FIXTURES.get(tag, "phase3")
+    dir_name = TAG_FIXTURES.get(tag, "integration_linking")
     context.integration = str(FIXTURES / dir_name / "integration.xml")
 
 

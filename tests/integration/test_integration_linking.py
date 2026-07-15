@@ -8,13 +8,13 @@ from conftest import run_tool
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FEATURES = ROOT / "tests" / "fixtures" / "phase3" / "features"
-INTEGRATION = ROOT / "tests" / "fixtures" / "phase3" / "integration.xml"
-OUTPUT = ROOT / "tests" / "fixtures" / "phase3" / "report.html"
+FEATURES = ROOT / "tests" / "fixtures" / "integration_linking" / "features"
+INTEGRATION = ROOT / "tests" / "fixtures" / "integration_linking" / "integration.xml"
+OUTPUT = ROOT / "tests" / "fixtures" / "integration_linking" / "report.html"
 
 
 @pytest.mark.parametrize("tag", ["@FC-003"])
-def test_phase3_cli_links_integration_results(tag):
+def test_cli_links_integration_results(tag):
     result = run_tool(FEATURES, OUTPUT, integration=INTEGRATION)
 
     assert result.returncode == 0, result.stderr
@@ -29,14 +29,14 @@ def test_phase3_cli_links_integration_results(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-003"])
-def test_phase3_report_includes_integration_layer_from_pytest_junit(tag, tmp_path):
+def test_report_includes_integration_layer_from_pytest_junit(tag, tmp_path):
     xml_path = tmp_path / "int.xml"
     result = subprocess.run(
         [
             sys.executable,
             "-m",
             "pytest",
-            "tests/integration/test_phase3.py",
+            "tests/integration/test_integration_linking.py",
             "-k",
             "not report_includes",
             "--junitxml",

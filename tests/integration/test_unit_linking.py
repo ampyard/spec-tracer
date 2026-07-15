@@ -6,14 +6,14 @@ from conftest import run_tool
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FEATURES = ROOT / "tests" / "fixtures" / "phase1" / "features"
-E2E = ROOT / "tests" / "fixtures" / "phase1" / "e2e.json"
-OUTPUT = ROOT / "tests" / "fixtures" / "phase1" / "report.html"
+FEATURES = ROOT / "tests" / "fixtures" / "unit_linking" / "features"
+UNIT = ROOT / "tests" / "fixtures" / "unit_linking" / "unit.xml"
+OUTPUT = ROOT / "tests" / "fixtures" / "unit_linking" / "report.html"
 
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
-def test_phase1_cli_generates_coverage_report(tag):
-    result = run_tool(FEATURES, OUTPUT, e2e=E2E)
+def test_cli_links_unit_results(tag):
+    result = run_tool(FEATURES, OUTPUT, unit=UNIT)
 
     assert result.returncode == 0, result.stderr
     assert OUTPUT.exists()
@@ -22,3 +22,5 @@ def test_phase1_cli_generates_coverage_report(tag):
     assert "Testing Progress" in content
     assert "Successful login with valid credentials" in content
     assert "1/1 scenarios tested" in content
+    assert "<strong>unit</strong>" in content
+    assert "@FC-001" in content

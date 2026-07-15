@@ -30,7 +30,7 @@ def _parse_junit_results(paths, layer="unit"):
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
 def test_parse_feature_file_returns_scenarios(tag):
-    scenarios = _parse_feature_file(FIXTURES / "phase1" / "features" / "login.feature")
+    scenarios = _parse_feature_file(FIXTURES / "e2e_coverage" / "features" / "login.feature")
     assert len(scenarios) == 1
     assert scenarios[0].name == "Successful login with valid credentials"
     assert tag in scenarios[0].tags
@@ -38,7 +38,7 @@ def test_parse_feature_file_returns_scenarios(tag):
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
 def test_parse_e2e_results_extracts_tags(tag):
-    results = _parse_e2e_results([FIXTURES / "phase1" / "e2e.json"])
+    results = _parse_e2e_results([FIXTURES / "e2e_coverage" / "e2e.json"])
     assert len(results) == 1
     assert results[0].layer == "e2e"
     assert tag in results[0].tags
@@ -46,7 +46,7 @@ def test_parse_e2e_results_extracts_tags(tag):
 
 @pytest.mark.parametrize("tag", ["@FC-001"])
 def test_parse_junit_results_extracts_tags(tag):
-    results = _parse_junit_results([FIXTURES / "phase2" / "unit.xml"])
+    results = _parse_junit_results([FIXTURES / "unit_linking" / "unit.xml"])
     assert len(results) == 1
     assert results[0].layer == "unit"
     assert tag in results[0].tags
@@ -126,7 +126,7 @@ def test_parse_e2e_results_passed_failed_skipped(tag):
 
 @pytest.mark.parametrize("linking_tag", ["@FC-005"])
 def test_require_tags_excluded_from_linking(linking_tag):
-    scenarios = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")
+    scenarios = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
     assert linking_tag in scenario.tags
@@ -136,7 +136,7 @@ def test_require_tags_excluded_from_linking(linking_tag):
 
 @pytest.mark.parametrize("tag", ["@FC-005"])
 def test_require_tags_stored_as_required_layers(tag):
-    scenarios = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")
+    scenarios = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
     layers = [r.layer for r in scenario.required_layers]
@@ -148,7 +148,7 @@ def test_require_tags_stored_as_required_layers(tag):
 @pytest.mark.parametrize("tag", ["@FC-005"])
 def test_require_layer_status_missing_e2e(tag, tmp_path):
     from unified_test_tracer.models import ScenarioView, Scenario
-    scenario = _parse_feature_file(FIXTURES / "phase4" / "features" / "login.feature")[0]
+    scenario = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")[0]
     unit_result = TestResult(layer="unit", name="test", tags=["@FC-005"], status="passed")
     view = ScenarioView(scenario=scenario, linked_results=[unit_result])
     status = _required_status(view)

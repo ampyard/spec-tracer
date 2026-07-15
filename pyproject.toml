@@ -1,7 +1,7 @@
 [project]
 name = "spec-tracer"
 version = "0.2.0"
-description = "CLI tool that collates test results from **Unit, Integration, and E2E** test suites into a single HTML report."
+description = "CLI tool that collates test results from **Unit, Integration, and E2E** test suites into a single HTML report, with an optional machine-readable JSON report for CI automation."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

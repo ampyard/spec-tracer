@@ -43,6 +43,7 @@
       <a href="#config-reference">Full Reference</a>
       <a href="#health-checks">Health Checks</a>
       <a href="#module-scope">Module Scope</a>
+      <a href="#json-report">JSON Report</a>
       <a href="#examples">Examples</a>
     </nav>
   </aside>
@@ -94,6 +95,7 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
   },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
+  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./report.json"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">false</span>,
   <span class="hl-prop">"health_checks"</span>: {
     <span class="hl-prop">"progress_threshold_green"</span>: <span class="hl-num">80</span>,
@@ -190,6 +192,12 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
           <td>Output path for the HTML report. Parent directories are auto-created.</td>
         </tr>
         <tr>
+          <td><code>output_json</code></td>
+          <td><span class="badge badge-pink">No</span></td>
+          <td><code>string</code></td>
+          <td>Output path for a machine-readable JSON report. Omit to skip JSON output (default, fully backward compatible). Same directory-creation/overwrite semantics as <code>output</code>.</td>
+        </tr>
+        <tr>
           <td><code>error_on_failure</code></td>
           <td><span class="badge badge-pink">No</span></td>
           <td><code>boolean</code></td>
@@ -268,6 +276,42 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
     </div>
 
     <p><code>@require-e2e</code> does not accept a module suffix &mdash; E2E scenarios typically span multiple modules.</p>
+
+    <h2 id="json-report">Machine-Readable JSON Report</h2>
+    <p>Set <code>output_json</code> to also emit a JSON file conforming to <code>spectracer-report.schema.json</code> (Draft 7, shipped in the repo). It's built from the same internal data as the HTML report, so the two can never drift apart.</p>
+
+    <div class="code-header"><span>spectracer.config.json</span></div>
+<pre><code>{
+  <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
+  <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
+  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
+  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./report.json"</span>
+}</code></pre>
+
+    <table>
+      <thead>
+        <tr><th>Top-level key</th><th>Contents</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>summary.coverage</code></td><td>The headline <code>tested</code> / <code>total</code> / <code>percent</code> metric</td></tr>
+        <tr><td><code>summary.pyramid</code></td><td>Per-layer test count, duration (ms), and pass rate</td></tr>
+        <tr><td><code>summary.health</code></td><td><code>status</code> (<code>green</code>/<code>amber</code>/<code>red</code>) and <code>reasons[]</code>, derived from the same health checks shown on the dashboard</td></tr>
+        <tr><td><code>features[]</code></td><td>Every feature, with <code>scenarios[]</code> containing tags, layer <code>requirements[]</code>, and linked <code>results[]</code></td></tr>
+        <tr><td><code>unlinkedTests[]</code></td><td>Test results whose tags matched no scenario</td></tr>
+        <tr><td><code>config</code></td><td>Verbatim echo of the resolved config, for provenance if the JSON is archived independently of the repo</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Omitted, not null</strong>
+      <code>duration</code> and <code>failureMessage</code> on a result are omitted entirely when not available from the underlying JUnit/Cucumber data, rather than emitted as <code>null</code>.
+    </div>
+
+    <div class="callout callout-success">
+      <strong>&#10003; Backward compatible</strong>
+      Leaving <code>output_json</code> out of the config changes nothing &mdash; no JSON file is written and the HTML report behaves exactly as before.
+    </div>
 
     <h2 id="examples">Configuration Examples</h2>
 

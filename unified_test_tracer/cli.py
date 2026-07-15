@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, List
@@ -9,6 +10,7 @@ from unified_test_tracer.collectors import FileCollector
 from unified_test_tracer.linker import ResultLinker
 from unified_test_tracer.parsers import CucumberParser, FeatureParser, JunitParser
 from unified_test_tracer.renderers import HtmlRenderer
+from unified_test_tracer.report_model import build_report
 
 DEFAULT_CONFIG_NAME = "spectracer.config.json"
 
@@ -42,15 +44,21 @@ def _load_logo(config_dir: Path) -> str:
     return ""
 
 
-def _collect_and_parse_features(paths: List[str]) -> List:
+def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
     files = FileCollector.feature_files(paths)
     if not files:
         raise FileNotFoundError("No feature files were found")
     scenarios = []
+    feature_files: Dict[str, str] = {}
     parser = FeatureParser()
+    resolved_base = base_dir.resolve()
     for f in files:
-        scenarios.extend(parser.parse(f))
-    return scenarios
+        parsed = parser.parse(f)
+        relative = os.path.relpath(f, resolved_base)
+        for scenario in parsed:
+            feature_files.setdefault(scenario.feature, relative.replace("\\", "/"))
+        scenarios.extend(parsed)
+    return scenarios, feature_files
 
 
 def _collect_and_parse_junit_results(entries: Dict[str, List[str]], parser: JunitParser, layer: str) -> List:
@@ -70,7 +78,7 @@ def main(argv: List[str] | None = None) -> int:
     config_path = _find_config_path(argv)
     config = _load_config(config_path)
 
-    scenarios = _collect_and_parse_features(config["features"])
+    scenarios, feature_files = _collect_and_parse_features(config["features"], config_path.parent)
 
     junit_parser = JunitParser()
     unit_results = _collect_and_parse_junit_results(config.get("unit", {}), junit_parser, "unit")
@@ -117,6 +125,20 @@ def main(argv: List[str] | None = None) -> int:
     output_path = Path(config["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
+
+    if config.get("output_json"):
+        report = build_report(
+            config,
+            views,
+            stats,
+            layer_stats,
+            health_checks,
+            unlinked_results,
+            feature_files=feature_files,
+        )
+        output_json_path = Path(config["output_json"])
+        output_json_path.parent.mkdir(parents=True, exist_ok=True)
+        output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     if config.get("error_on_failure", False) and any(result.status == "failed" for result in results):
         return 1

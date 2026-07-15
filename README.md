@@ -10,7 +10,7 @@
 </p>
 </div>
 
-A CLI tool that takes your Gherkin `.feature` files as the source of truth for what needs testing, then collates test results from your **Unit**, **Integration**, and **E2E** suites into a single, self-contained HTML report.
+A CLI tool that takes your Gherkin `.feature` files as the source of truth for what needs testing, then collates test results from your **Unit**, **Integration**, and **E2E** suites into a single, self-contained HTML report — plus an optional machine-readable JSON twin for CI automation.
 
 Feature files define the scope. Tags on scenarios link them to test results across layers. The report shows:
 
@@ -18,6 +18,8 @@ Feature files define the scope. Tags on scenarios link them to test results acro
 - Where that coverage exists across layers (per-scenario pass/fail/skip breakdown).
 - The overall test pyramid — test count, duration, and pass rate per layer.
 - Every failure's stack trace, in one place.
+
+An optional JSON report (conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json)) mirrors the same data for scripting — PR bots, custom gating, dashboards — without scraping HTML.
 
 The tool is tech-stack agnostic: it only needs Gherkin `.feature` files, JUnit XML, and Cucumber JSON, so it works regardless of what languages or frameworks produced them.
 
@@ -128,6 +130,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
   },
   "e2e": ["./reports/e2e.json"],
   "output": "./report.html",
+  "output_json": "./report.json",
   "error_on_failure": false,
   "health_checks": {
     "progress_threshold_green": 80,
@@ -145,6 +148,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `integration` | No | Same shape as `unit`, matched against `@require-integration` / `@require-integration:<module>` tags. |
 | `e2e` | No | Array of Cucumber JSON file/directory paths. E2E results are never module-scoped. |
 | `output` | Yes | Path for the generated HTML report. Created if the parent directory doesn't exist; overwritten if it already exists. |
+| `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. Health checks never affect the exit code — this is the only thing that does. |
 | `health_checks` | No | Overrides for the default thresholds shown above. |
 
@@ -157,6 +161,27 @@ The generated HTML is a single self-contained file (all CSS/JS inlined — no ex
 3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status with failure stack traces.
 4. **Detailed Failure Breakdown** — every failed test across all layers, with feature/scenario context and full stack trace on expand.
 5. **Unlinked Tests** — test results whose tags didn't match any scenario, to help catch orphaned or mis-tagged tests.
+
+## Machine-Readable JSON Report
+
+Setting `output_json` in the config produces a JSON file alongside the HTML report, built from the exact same internal data — the two outputs can never drift apart. It conforms to [`spectracer-report.schema.json`](spectracer-report.schema.json) (Draft 7), which is the authoritative contract; the highlights:
+
+- `summary.coverage` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
+- `features[].scenarios[].results[]` — every linked test result per scenario, with `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
+- `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page.
+- `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.
+
+```json
+{
+  "features": ["./features"],
+  "unit": { "": ["./reports/unit.xml"] },
+  "e2e": ["./reports/e2e.json"],
+  "output": "./report.html",
+  "output_json": "./report.json"
+}
+```
+
+Useful for PR bots, custom CI gating beyond `error_on_failure`, or feeding coverage numbers into a dashboard — without scraping the HTML.
 
 ## Behavior Reference
 

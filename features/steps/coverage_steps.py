@@ -5,10 +5,11 @@ import uuid
 from pathlib import Path
 
 from behave import given, when, then
-
+from jsonschema import Draft7Validator
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "tests" / "fixtures"
+SCHEMA = json.loads((ROOT / "spectracer-report.schema.json").read_text(encoding="utf-8"))
 
 TAG_FIXTURES = {
     "@FC-001": "fc001",
@@ -68,6 +69,11 @@ def step_integration_scoped_to_module(context, module):
     context.integration_module = module
 
 
+@given("the config requests a JSON report")
+def step_request_json_report(context):
+    context.output_json = str(ROOT / "reports" / f"e2e-report-{uuid.uuid4().hex}.json")
+
+
 def _build_config(context) -> dict:
     config = {
         "features": [context.features],
@@ -81,6 +87,8 @@ def _build_config(context) -> dict:
         config["integration"] = {module: [context.integration]}
     if hasattr(context, "e2e"):
         config["e2e"] = [context.e2e]
+    if hasattr(context, "output_json"):
+        config["output_json"] = context.output_json
     return config
 
 
@@ -134,3 +142,19 @@ def step_exit_code(context, code):
 def step_report_contains(context, text):
     content = context.output_path.read_text(encoding="utf-8")
     assert text in content, f"Expected {text!r} in report"
+
+
+@then("the JSON report file should exist")
+def step_json_report_exists(context):
+    assert Path(context.output_json).exists()
+
+
+@then("the JSON report file should not exist")
+def step_json_report_not_exists(context):
+    assert not hasattr(context, "output_json")
+
+
+@then("the JSON report should conform to the SpecTracer report schema")
+def step_json_report_conforms(context):
+    report = json.loads(Path(context.output_json).read_text(encoding="utf-8"))
+    Draft7Validator(SCHEMA).validate(report)

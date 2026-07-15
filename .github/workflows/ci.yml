@@ -95,3 +95,8 @@ jobs:
         with:
           name: reports
           path: reports/
+
+      - name: View spectracer-report.json link
+        if: always()
+        run: |
+          echo "🔗 https://artifact.ci/artifact/view/${{ github.repository }}/run/${{ github.run_id }}.${{ github.run_attempt }}/reports"     

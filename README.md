@@ -40,6 +40,14 @@ uv sync
 
 This installs the tool along with its only runtime dependency, Jinja2.
 
+To build a wheel for local testing:
+
+```bash
+uv build
+```
+
+The wheel is written to `dist/unified_test_tracer-*.whl`. Install it with `uv pip install dist/*.whl`.
+
 ## Quick Start
 
 1. Write `.feature` files describing your scenarios, tagged so test results can link back to them (see [Tagging Convention](#tagging-convention) below).

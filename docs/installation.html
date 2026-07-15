@@ -63,19 +63,25 @@
     </div>
 
     <h2 id="install">Install SpecTracer</h2>
-    <p>Clone the repository and install dependencies:</p>
+    <p>The easiest way is from PyPI:</p>
 
+    <div class="code-header"><span>pip install</span></div>
+<pre><code>pip install spec-tracer</code></pre>
+
+    <p>Or with uv:</p>
+    <div class="code-header"><span>uv pip install</span></div>
+<pre><code>uv pip install spec-tracer</code></pre>
+
+    <p>Once installed, the <code>spec-tracer</code> CLI is available globally.</p>
+
+    <h3>From source</h3>
+    <p>Clone the repository and install dependencies:</p>
     <div class="code-header"><span>Clone &amp; install</span></div>
 <pre><code>git clone https://github.com/ampyard/spec-tracer.git
 <span class="hl-kw">cd</span> spec-tracer
 uv sync</code></pre>
 
-    <p>That's it. <code>uv sync</code> reads <code>pyproject.toml</code> and installs the only runtime dependency — <strong>Jinja2</strong> for HTML templating — plus dev dependencies for running the tool's own test suite.</p>
-
-    <h3>Alternative: Install via pip</h3>
-    <p>If you prefer pip over uv:</p>
-    <div class="code-header"><span>pip install</span></div>
-<pre><code>pip install jinja2</code></pre>
+    <p><code>uv sync</code> reads <code>pyproject.toml</code> and installs the only runtime dependency — <strong>Jinja2</strong> for HTML templating — plus dev dependencies for running the tool's own test suite.</p>
 
     <h2 id="verify">Verify Installation</h2>
     <p>Run the tool against the included sample data to verify everything works:</p>

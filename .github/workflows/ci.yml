@@ -95,3 +95,15 @@ jobs:
         with:
           name: reports
           path: reports/
+
+      - name: View SpecTracer reports
+        if: always()
+        shell: bash
+        run: |
+          echo "🔗 HTML Report:"
+          echo "https://artifact.ci/artifact/blob/${{ github.repository }}/run/${{ github.run_id }}.${{ github.run_attempt }}/reports/spectracer-report.html"
+
+          if [ -f reports/spectracer-report.json ]; then
+            echo "🔗 JSON Report:"
+            echo "https://artifact.ci/artifact/blob/${{ github.repository }}/run/${{ github.run_id }}.${{ github.run_attempt }}/reports/spectracer-report.json"
+          fi

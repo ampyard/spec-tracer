@@ -89,6 +89,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SpecTracer</title>
+  {% if logo_data_uri %}<link rel="icon" href="{{ logo_data_uri }}">{% endif %}
   <style>
     :root {
       color-scheme: light dark;

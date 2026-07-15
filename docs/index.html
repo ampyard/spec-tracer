@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpecTracer — Trace coverage across every layer of your stack</title>
   <meta name="description" content="SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report — with an optional machine-readable JSON report for CI tooling.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
   <div class="hero-glow"></div>
   <div class="hero-content">
     <img src="logo.png" class="hero-logo animate-in" alt="SpecTracer">
-    <div class="hero-badge animate-in">&#9670; v0.1.0 &mdash; MIT Licensed</div>
+    <div class="hero-badge animate-in">&#9670; v0.2.0 &mdash; MIT Licensed</div>
     <h1 class="animate-in animate-in-d1">One report to<br>trace all your tests</h1>
     <p class="animate-in animate-in-d2">SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report &mdash; plus an optional schema-validated JSON report for scripts and CI tooling. Tech-stack agnostic.</p>
     <div class="hero-actions animate-in animate-in-d3">
@@ -103,7 +103,7 @@
         <div class="step-num">3</div>
         <div class="step-body">
           <h3>Generate the Report</h3>
-          <p>Run <code>uv run python build_pyramid.py</code>. SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
+           <p>Run <code>uv run spec-tracer</code> (or <code>uv run python build_pyramid.py</code>). SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
         </div>
       </div>
     </div>
@@ -117,29 +117,39 @@
       <p>Get a report generated in under a minute.</p>
     </div>
     <div class="code-header"><span>Install &amp; run</span></div>
-<pre><code><span class="hl-com"># Clone and install</span>
-git clone https://github.com/ampyard/spec-tracer.git
-<span class="hl-kw">cd</span> spec-tracer
-uv sync
+<pre><code><span class="hl-com"># Install</span>
+pip install spec-tracer
 
-<span class="hl-com"># Run your tests with JUnit/Cucumber output</span>
-uv run pytest tests/unit --junitxml=reports/unit.xml
-uv run pytest tests/integration --junitxml=reports/int.xml
-uv run behave features/ --format json -o reports/e2e.json
+<span class="hl-com"># Write Gherkin feature files in ./features/</span>
+<span class="hl-com"># Tag each scenario with an ID like @FC-1</span>
+
+<span class="hl-com"># Run your tests with JUnit XML or Cucumber JSON output</span>
+pytest tests/ --junitxml=reports/tests.xml
+behave features/ --format json -o reports/e2e.json
+
+<span class="hl-com"># Create spectracer.config.json:</span>
+cat &gt; spectracer.config.json &lt;&lt;EOF
+{
+  "features": ["./features"],
+  "unit": { "": ["./reports/tests.xml"] },
+  "e2e": ["./reports/e2e.json"],
+  "output": "./reports/spectracer-report.html"
+}
+EOF
 
 <span class="hl-com"># Generate the report</span>
-uv run python build_pyramid.py
+spec-tracer
 
-<span class="hl-com"># Open report.html in your browser</span></code></pre>
+<span class="hl-com"># Open reports/spectracer-report.html in your browser</span></code></pre>
 
 <div class="callout callout-info" style="margin-top: 1.5rem;">
   <strong>&#8505; No CLI flags</strong>
-  SpecTracer is configured entirely through a JSON file. Drop a <code>spectracer.config.json</code> at your project root and just run the tool &mdash; no flags needed.
+  SpecTracer is configured entirely through a JSON file. Drop a <code>spectracer.config.json</code> at your project root and run <code>spec-tracer</code> &mdash; no flags needed.
 </div>
 
 <div class="callout callout-info" style="margin-top: 1rem;">
   <strong>&#8505; Want machine-readable output too?</strong>
-  Add <code>"output_json": "./reports/spectracer-report.json"</code> to your config. It's optional, additive, and validated against a <a href="https://github.com/ampyard/spec-tracer/blob/main/spectracer-report.schema.json">published JSON Schema</a> &mdash; perfect for PR bots, custom CI gates, or dashboards. See <a href="usage.html#json-report">JSON Report</a> for details.
+  Add <code>"output_json": "./reports/spectracer-report.json"</code> to your config. It's optional, additive, and validated against the shipped <a href="https://github.com/ampyard/spec-tracer/blob/main/spectracer-report.schema.json">JSON Schema</a> &mdash; perfect for PR bots, custom CI gates, or dashboards. See <a href="usage.html#json-report">JSON Report</a> for details.
 </div>
   </div>
 </section>
@@ -148,7 +158,7 @@ uv run python build_pyramid.py
   <div class="section-inner">
     <div class="section-header">
       <h2>What You Get</h2>
-      <p>The generated report is a single self-contained HTML file with five sections &mdash; plus an optional JSON report carrying the same data for tooling.</p>
+      <p>The generated report is a single HTML file with all CSS and JS inlined (a CDN font loads gracefully with a system fallback) and five sections &mdash; plus an optional JSON report carrying the same data for tooling.</p>
     </div>
     <div class="feature-grid">
       <div class="feature-card">

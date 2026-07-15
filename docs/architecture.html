@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Architecture — SpecTracer</title>
   <meta name="description" content="How SpecTracer works internally: pipeline, parsers, tag linking, aggregation, and rendering.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -76,9 +76,9 @@
                                |
                     +----------+----------+
                     |                     |
-              <span class="hl-section">HtmlRenderer</span>          <span class="hl-section">build_report()</span>
-                    |                     |
-              <span class="hl-str">report.html</span>          <span class="hl-str">report.json</span> (optional)</code></pre>
+               <span class="hl-section">HtmlRenderer</span>          <span class="hl-section">build_report()</span>
+                     |                     |
+               <span class="hl-str">spectracer-report.html</span>   <span class="hl-str">spectracer-report.json</span> (optional)</code></pre>
 
     <h2 id="modules">Modules</h2>
 
@@ -104,9 +104,14 @@
         <p>Computes coverage stats, layer breakdowns, feature trees, health checks, and unlinked results. 188 lines of pure logic.</p>
       </div>
       <div class="feature-card">
+        <div class="feature-icon">&#128451;</div>
+        <h4>collectors.py</h4>
+        <p>File discovery: resolves feature file, JUnit XML, and Cucumber JSON paths with recursive directory scanning. 44 lines.</p>
+      </div>
+      <div class="feature-card">
         <div class="feature-icon">&#128187;</div>
         <h4>renderers.py</h4>
-        <p>Jinja2 template with 845 lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
+        <p>Jinja2 template with 760 lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128203;</div>
@@ -200,7 +205,7 @@
       <li><strong>Data:</strong> All report data is embedded as JSON in a <code>&lt;script&gt;</code> tag</li>
     </ul>
 
-    <p>The report file has zero external dependencies &mdash; it works offline, on any OS, in any modern browser.</p>
+    <p>The report file loads a monospace font from a CDN (Cascadia Mono via jsDelivr) but degrades gracefully to system <code>ui-monospace</code> if offline. No other external dependencies &mdash; it works on any OS in any modern browser.</p>
 
     <h2 id="json-report-model">JSON Report Model</h2>
     <p><code>report_model.build_report()</code> takes the exact same <code>views</code>, <code>stats</code>, <code>layer_stats</code>, <code>health_checks</code>, and <code>unlinked_results</code> that <code>HtmlRenderer.render()</code> consumes and reshapes them into the dict defined by <code>spectracer-report.schema.json</code>. There is no second parsing or aggregation path &mdash; if it were, the HTML and JSON could disagree.</p>
@@ -218,10 +223,10 @@
     <p>Written to disk only when <code>output_json</code> is set in the config &mdash; omit it and <code>cli.py</code> skips this step entirely, leaving HTML-only behavior unchanged.</p>
 
     <h2 id="data-flow">Data Flow</h2>
-    <p>Here's exactly what happens when you run <code>uv run python build_pyramid.py</code>:</p>
+    <p>Here's exactly what happens when you run <code>uv run spec-tracer</code> (or <code>uv run python build_pyramid.py</code>):</p>
     <ol>
       <li><strong>Config loading</strong> &mdash; <code>cli.py</code> discovers and reads the JSON config file. Validates required keys (<code>features</code>, <code>output</code>).</li>
-      <li><strong>File collection</strong> &mdash; <code>FileCollector</code> resolves glob patterns and directory recursion for feature files, JUnit XML, and Cucumber JSON paths.</li>
+      <li><strong>File collection</strong> &mdash; <code>FileCollector</code> (<code>collectors.py</code>) resolves literal file paths and recursively searches directories for <code>.feature</code>, <code>.xml</code>, and <code>.json</code> files.</li>
       <li><strong>Parsing</strong> &mdash; Each file type is parsed by its dedicated parser. Scenarios and test results are extracted into typed data classes.</li>
       <li><strong>Linking</strong> &mdash; <code>ResultLinker</code> cross-references scenario tags against test result tags. OR logic: any shared tag creates a link.</li>
       <li><strong>Aggregation</strong> &mdash; <code>ReportAggregator</code> computes all stats, views, breakdowns, and health checks from the linked data.</li>
@@ -264,7 +269,7 @@
 uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
 
-uv run python build_pyramid.py
+uv run spec-tracer
 <span class="hl-com"># Output: reports/spectracer-report.html — a self-report
 # Output: reports/spectracer-report.json — same self-report, machine-readable</span></code></pre>
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Usage &amp; Configuration — SpecTracer</title>
   <meta name="description" content="Complete guide to running SpecTracer and configuring the coverage report.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -58,9 +58,12 @@
     <div class="code-header"><span>Basic usage</span></div>
 <pre><code><span class="hl-com"># Auto-discover spectracer.config.json in current directory</span>
 uv run python build_pyramid.py
+<span class="hl-com"># Or using the installed CLI:</span>
+uv run spec-tracer
 
 <span class="hl-com"># Point at an explicit config file</span>
-uv run python build_pyramid.py path/to/other-config.json</code></pre>
+uv run python build_pyramid.py path/to/other-config.json
+uv run spec-tracer path/to/other-config.json</code></pre>
 
     <p>That's the entire CLI surface &mdash; one command, one optional argument. No <code>--help</code> flags, no subcommands, no environment variables.</p>
 
@@ -94,8 +97,8 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/integration.xml"</span>]
   },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
-  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./report.json"</span>,
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
+  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">false</span>,
   <span class="hl-prop">"health_checks"</span>: {
     <span class="hl-prop">"progress_threshold_green"</span>: <span class="hl-num">80</span>,
@@ -231,8 +234,8 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
           <td>Pyramid Ratio</td>
           <td>Unit count vs Integration + E2E count</td>
           <td>Unit &gt; I+E</td>
-          <td>&mdash;</td>
-          <td>Unit &le; I+E</td>
+          <td>Unit = I+E (exact parity)</td>
+          <td>Unit &lt; I+E (inverted)</td>
         </tr>
         <tr>
           <td>End to end Runtime</td>
@@ -285,8 +288,8 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
   <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
   <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
-  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./report.json"</span>
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
+  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>
 }</code></pre>
 
     <table>
@@ -320,7 +323,7 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
 <pre><code>{
   <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>
 }</code></pre>
 
     <h3>Full stack (three layers)</h3>
@@ -330,7 +333,7 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
   <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
   <span class="hl-prop">"integration"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/int.xml"</span>] },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">true</span>
 }</code></pre>
 
@@ -348,7 +351,7 @@ uv run python build_pyramid.py path/to/other-config.json</code></pre>
     <span class="hl-str">"billing"</span>: [<span class="hl-str">"./modules/billing/reports/int.xml"</span>]
   },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>,
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"health_checks"</span>: {
     <span class="hl-prop">"progress_threshold_green"</span>: <span class="hl-num">90</span>,
     <span class="hl-prop">"progress_threshold_amber"</span>: <span class="hl-num">70</span>,

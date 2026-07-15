@@ -52,7 +52,7 @@ jobs:
       - name: Update version in docs badge
         run: |
           V=v${{ steps.version.outputs.version }}
-          sed -i "s|hero-badge\">\&[#]9670; v[0-9.]\+|hero-badge\">&#9670; $V|" docs/index.html
+          sed -i "s|\(hero-badge[^\"]*\"[^>]*>\) *&#9670; v[0-9.]\+|\1\&#9670; $V|" docs/index.html
 
       - name: Build wheel
         run: uv build

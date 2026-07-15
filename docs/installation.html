@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Installation — SpecTracer</title>
   <meta name="description" content="Install SpecTracer and set up your first coverage trace report.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,7 +63,6 @@
     </div>
 
     <h2 id="install">Install SpecTracer</h2>
-    <p>The easiest way is from PyPI:</p>
 
     <div class="code-header"><span>pip install</span></div>
 <pre><code>pip install spec-tracer</code></pre>
@@ -81,7 +80,7 @@
 <span class="hl-kw">cd</span> spec-tracer
 uv sync</code></pre>
 
-    <p><code>uv sync</code> reads <code>pyproject.toml</code> and installs the only runtime dependency — <strong>Jinja2</strong> for HTML templating — plus dev dependencies for running the tool's own test suite.</p>
+    <p><code>uv sync</code> reads <code>pyproject.toml</code> and installs runtime dependencies (<strong>Jinja2</strong> for HTML templating, <strong>behave-modern-html-report</strong>, <strong>pytest-html</strong>) plus dev dependencies for the test suite.</p>
 
     <h2 id="verify">Verify Installation</h2>
     <p>Run the tool against the included sample data to verify everything works:</p>
@@ -94,6 +93,8 @@ uv run behave features/ --format json -o reports/e2e.json 2&gt; nul
 
 <span class="hl-com"># Generate a report</span>
 uv run python build_pyramid.py
+<span class="hl-com"># Or using the installed CLI entry point:</span>
+uv run spec-tracer
 
 <span class="hl-com"># Open reports/spectracer-report.html in your browser</span></code></pre>
 
@@ -115,9 +116,9 @@ uv run python build_pyramid.py
     unit.xml
     integration.xml
     e2e.json
-  <span class="hl-section">spectracer.config.json</span>      <span class="hl-com"># Tool configuration (required)</span>
-  build_pyramid.py              <span class="hl-com"># Entry point (from cloned repo)</span>
-  report.html                   <span class="hl-com"># Generated output (gitignore this)</span></code></pre>
+    <span class="hl-section">spectracer.config.json</span>      <span class="hl-com"># Tool configuration (required)</span>
+    build_pyramid.py              <span class="hl-com"># Entry point (from cloned repo, or use `uv run spec-tracer`)</span>
+    reports/spectracer-report.html   <span class="hl-com"># Generated output (gitignore this)</span></code></pre>
 
     <table>
       <thead>
@@ -131,8 +132,8 @@ uv run python build_pyramid.py
         <tr><td><code>features/</code></td><td>Gherkin <code>.feature</code> files defining all scenarios</td><td>Commit</td></tr>
         <tr><td><code>reports/</code></td><td>JUnit XML / Cucumber JSON from test runs</td><td>Ignore</td></tr>
         <tr><td><code>spectracer.config.json</code></td><td>Configuration file (auto-discovered)</td><td>Commit</td></tr>
-        <tr><td><code>report.html</code></td><td>Generated self-contained HTML report</td><td>Ignore</td></tr>
-        <tr><td><code>report.json</code></td><td>Optional machine-readable JSON report (if <code>output_json</code> is set)</td><td>Ignore</td></tr>
+        <tr><td><code>reports/spectracer-report.html</code></td><td>Generated self-contained HTML report</td><td>Ignore</td></tr>
+        <tr><td><code>reports/spectracer-report.json</code></td><td>Optional machine-readable JSON report (if <code>output_json</code> is set)</td><td>Ignore</td></tr>
       </tbody>
     </table>
 
@@ -149,14 +150,16 @@ uv run python build_pyramid.py
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/integration.xml"</span>]
   },
   <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
-  <span class="hl-prop">"output"</span>: <span class="hl-str">"./report.html"</span>
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>
 }</code></pre>
 
     <p>Only <code>features</code> and <code>output</code> are required. Add test result paths as your pipeline generates them.</p>
 
+    <p>Run the tool with <code>uv run python build_pyramid.py</code> (or <code>uv run spec-tracer</code> using the installed CLI).</p>
+
     <div class="callout callout-info">
       <strong>&#8505; Also want JSON?</strong>
-      Add an optional <code>"output_json": "./report.json"</code> key alongside <code>output</code> to additionally emit a schema-validated JSON report for scripts and CI tooling. See <a href="usage.html#json-report">JSON Report</a> for details.
+      Add an optional <code>"output_json": "./reports/spectracer-report.json"</code> key alongside <code>output</code> to additionally emit a schema-validated JSON report for scripts and CI tooling. See <a href="usage.html#json-report">JSON Report</a> for details.
     </div>
 
     <h2 id="next-steps">Next Steps</h2>

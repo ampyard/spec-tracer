@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CI/CD Integration — SpecTracer</title>
   <meta name="description" content="Integrate SpecTracer into your CI/CD pipeline: GitHub Actions, GitLab CI, Jenkins, and team workflows.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -80,17 +80,17 @@
         <span class="hl-section">run:</span> uv run behave features/ --format json -o reports/e2e.json
 
       - <span class="hl-section">name:</span> Generate SpecTracer report
-        <span class="hl-section">run:</span> uv run python build_pyramid.py
+        <span class="hl-section">run:</span> uv run spec-tracer
 
       - <span class="hl-section">name:</span> Upload report as artifact
         <span class="hl-section">uses:</span> actions/upload-artifact@v4
         <span class="hl-section">with:</span>
           name: coverage-report
-          path: report.html</code></pre>
+          path: reports/spectracer-report.html</code></pre>
 
     <div class="callout callout-info">
-      <strong>&#8505; Report is self-contained</strong>
-      The HTML file includes all CSS and JS inline. You can download it from the Actions run page and open it directly in a browser — no server needed.
+      <strong>&#8505; Report is nearly self-contained</strong>
+      The HTML file includes all CSS and JS inline (a monospace font is loaded from a CDN but falls back gracefully). You can download it from the Actions run page and open it directly in a browser — no server needed.
     </div>
 
     <h3>PR Comment with Report Link</h3>
@@ -168,10 +168,10 @@
     - e2e-tests
   <span class="hl-section">script:</span>
     - uv sync
-    - uv run python build_pyramid.py
+    - uv run spec-tracer
   <span class="hl-section">artifacts:</span>
     <span class="hl-section">paths:</span>
-      - report.html
+      - reports/spectracer-report.html
     <span class="hl-section">expose_as:</span> Coverage Report</code></pre>
 
     <h2 id="jenkins">Jenkins</h2>
@@ -207,13 +207,13 @@
         }
         <span class="hl-section">stage</span>(<span class="hl-str">'Generate Report'</span>) {
             <span class="hl-section">steps</span> {
-                sh <span class="hl-str">'uv run python build_pyramid.py'</span>
+                sh <span class="hl-str">'uv run spec-tracer'</span>
             }
         }
     }
     <span class="hl-section">post</span> {
         <span class="hl-section">success</span> {
-            <span class="hl-section">archiveArtifacts</span> artifacts: <span class="hl-str">'report.html'</span>,
+            <span class="hl-section">archiveArtifacts</span> artifacts: <span class="hl-str">'reports/spectracer-report.html'</span>,
                 fingerprint: <span class="hl-kw">true</span>
         }
     }

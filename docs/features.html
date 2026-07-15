@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Features — SpecTracer</title>
   <meta name="description" content="Detailed walkthrough of every SpecTracer feature: coverage dashboard, test pyramid, health checks, module-scoped requirements, and more.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
+  <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -52,10 +52,11 @@
 
   <main class="page-content">
     <h1>Features</h1>
-    <p class="subtitle">SpecTracer generates a single self-contained HTML report with five interactive sections and intelligent health indicators. All CSS and JS are inlined — the report is safe to email, archive, or publish as a CI artifact.</p>
+    <p class="subtitle">SpecTracer generates a single HTML report with five interactive sections and intelligent health indicators. All CSS and JS are inlined (a CDN font loads with a system fallback) — the report is safe to email, archive, or publish as a CI artifact.</p>
 
     <h2 id="dashboard">Coverage Progress Dashboard</h2>
     <p>The first thing visible in the report — designed for daily standup discussion. It answers the single most important question: <strong>what percentage of our scenarios actually have test coverage?</strong></p>
+    <p><img src="report-hero.png" alt="Coverage Progress Dashboard with headline metric and health check cards" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin:1rem 0;"></p>
 
     <div class="feature-block">
       <h3>&#9679; Headline Metric</h3>
@@ -75,40 +76,12 @@
 
     <div class="feature-block">
       <h3>&#9881; Health Check Cards</h3>
-      <p>Four health indicator cards sit below the progress bar:</p>
-      <div class="health-grid">
-        <div class="health-card">
-          <div class="health-icon">&#9679;</div>
-          <div class="health-value">80%</div>
-          <div class="health-label">Progress Threshold</div>
-        </div>
-        <div class="health-card">
-          <div class="health-icon">&#9650;</div>
-          <div class="health-value">&#10003;</div>
-          <div class="health-label">Pyramid Ratio</div>
-        </div>
-        <div class="health-card">
-          <div class="health-icon">&#9201;</div>
-          <div class="health-value">12m</div>
-          <div class="health-label">End to end Runtime</div>
-        </div>
-        <div class="health-card">
-          <div class="health-icon">&#9872;</div>
-          <div class="health-value">0</div>
-          <div class="health-label">Unlinked Tests</div>
-        </div>
-      </div>
-      <p>Each card shows its status (<span class="badge badge-green">pass</span> / <span class="badge badge-amber">warn</span> / <span class="badge badge-red">fail</span>) at a glance.</p>
+      <p>Four health indicator cards sit below the progress bar. Each card shows its status (<span class="badge badge-green">pass</span> / <span class="badge badge-amber">warn</span> / <span class="badge badge-red">fail</span>) at a glance with a colored left border.</p>
     </div>
 
     <h2 id="pyramid">Test Pyramid Dashboard</h2>
     <p>A 3-tier visualization of your test suite distribution. This is the fastest way to spot an <strong>inverted pyramid</strong> — where you have more E2E tests than unit tests.</p>
-
-    <div class="pyramid-viz">
-      <div class="pyramid-tier pyramid-e2e" title="E2E: 12 tests, 3.2m">E2E &mdash; 12 tests &middot; 3.2m</div>
-      <div class="pyramid-tier pyramid-integration" title="Integration: 48 tests, 1.1m">Integration &mdash; 48 tests &middot; 1.1m</div>
-      <div class="pyramid-tier pyramid-unit" title="Unit: 156 tests, 0.4m">Unit &mdash; 156 tests &middot; 0.4m</div>
-    </div>
+    <p><img src="report-pyramid.png" alt="Test Pyramid dashboard showing horizontal tier bars with pass/fail/skip percentages" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin:1rem 0;"></p>
 
     <div class="feature-block">
       <h3>&#9650; Per-Layer Metrics</h3>
@@ -134,21 +107,11 @@
 
     <h2 id="feature-matrix">Feature Traceability &amp; Scenario Matrix</h2>
     <p>A searchable, sortable tree that shows every feature, every scenario, and every layer's test results:</p>
+    <p><img src="report-features.png" alt="Feature Breakdown tree view with search bar, sortable columns, and expandable scenario rows" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin:1rem 0;"></p>
 
     <div class="feature-block">
       <h3>&#9776; Tree View</h3>
-<pre><code>Feature: User Login
-  [=== 75% coverage ===] (3 of 4 scenarios tested)
-
-  &#9500;&#9472; Scenario: Successful login (tested)
-  &#9474;   Required: <span class="hl-str">unit &#10003;</span>  <span class="hl-str">integration &#10003;</span>  <span class="hl-str">e2e &#10003;</span>
-  &#9474;   Unit: 3 passed &middot; 0.4s
-  &#9474;   Integration: 1 passed &middot; 2.1s
-  &#9474;   E2E: 2 passed &middot; 12.3s
-  &#9474;
-  &#9492;&#9472; Scenario: Invalid password (no coverage)
-      Required: none
-      (No test results found)</code></pre>
+      <p>Features are shown as collapsible rows. Expand a feature to see its scenarios and their required-layer status. Expand a scenario to see linked test results per layer with pass/fail/skip badges.</p>
     </div>
 
     <div class="feature-block">
@@ -188,7 +151,9 @@
     </div>
 
     <h2 id="unlinked">Unlinked Tests</h2>
-    <p>Every test result whose tags didn't match any scenario ends up here. This is invaluable for catching:</p>
+    <p>Test results whose tags didn't match any scenario and carry an <code>@FC-*</code> tag end up here. Results without any <code>@FC-*</code> tag are silently excluded — the tool assumes non-<code>@FC</code> tags are generic (like <code>@smoke</code> or <code>@regression</code>) and not worth reporting as orphans.</p>
+
+    <p>This is invaluable for catching:</p>
     <ul>
       <li><strong>Orphaned tests</strong> — tests that were written for a scenario that no longer exists</li>
       <li><strong>Mis-tagged tests</strong> — tests with typos in their tags (<code>@FC-42</code> vs <code>@FC-43</code>)</li>
@@ -232,28 +197,28 @@
     <p>Fully opt-in and backward compatible: omit <code>output_json</code> and nothing changes.</p>
 
     <h2 id="health-checks">Health Checks</h2>
-    <p>Four visual health indicators sit at the top of the report. They are <strong>purely visual</strong> — they never affect the exit code.</p>
+    <p>Four visual health indicators on the Dashboard section. They are <strong>purely visual</strong> — they never affect the exit code. Each card has a colored left border reflecting its status.</p>
 
     <div class="feature-grid">
       <div class="feature-card">
         <div class="feature-icon">&#9679;</div>
         <h4>Progress</h4>
-        <p>% of scenarios with at least one linked test. Thresholds configured via <code>health_checks</code> in config.</p>
+        <p>% of scenarios with at least one linked test. Pass/amber/fail thresholds configured via <code>health_checks</code> in config (defaults: green 80%, amber 50%).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9650;</div>
         <h4>Pyramid Ratio</h4>
-        <p>Pass if Unit count &gt; Integration + E2E count. Fail if the pyramid is inverted.</p>
+        <p>Pass when Unit &gt; I+E. Amber at exact parity (Unit = I+E). Fail when Unit &lt; I+E (inverted pyramid).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9201;</div>
         <h4>End to end Runtime</h4>
-        <p>Warns/fails if E2E duration exceeds configurable thresholds. Defaults: 10min amber, 30min red.</p>
+        <p>Total E2E duration. Pass under amber threshold (default 10 min), amber between amber and red, fail over red threshold (default 30 min).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
-        <p>Pass at 0, warn at 1&ndash;3, fail at 4+. Helps enforce tag hygiene.</p>
+        <p>Orphaned test results with <code>@FC-*</code> tags that didn't match any scenario. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
       </div>
     </div>
 
@@ -315,12 +280,13 @@
         <tr><td>Missing <code>features</code> or <code>output</code></td><td>Errors out — both are required</td></tr>
         <tr><td>Empty/missing test result path</td><td>Silently ignored (zero tests for that layer)</td></tr>
         <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
-        <tr><td>Test matches no scenario</td><td>Listed in "Unlinked Tests"</td></tr>
+        <tr><td>Test matches no scenario (with <code>@FC-*</code> tag)</td><td>Listed in "Unlinked Tests"</td></tr>
+        <tr><td>Test matches no scenario (no <code>@FC-*</code> tag)</td><td>Silently excluded — only <code>@FC-*</code> orphans are reported</td></tr>
         <tr><td>Scenario matches no test</td><td>Shown as "untested"</td></tr>
         <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
         <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>
         <tr><td>Tag collisions</td><td>Result links to ALL matching scenarios</td></tr>
-        <tr><td>Unicode / special characters</td><td>Preserved, HTML-escaped</td></tr>
+        <tr><td>Unicode / special characters</td><td>Preserved as-is (Jinja2 autoescape is off; scenario names and tags render raw)</td></tr>
       </tbody>
     </table>
 

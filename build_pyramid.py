@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
-from unified_test_tracer.cli import main
+from spec_tracer.cli import main
 
 if __name__ == "__main__":
     try:

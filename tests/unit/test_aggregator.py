@@ -1,7 +1,7 @@
 import pytest
 
-from unified_test_tracer.aggregator import ReportAggregator
-from unified_test_tracer.models import Scenario, ScenarioView, TestResult
+from spec_tracer.aggregator import ReportAggregator
+from spec_tracer.models import Scenario, ScenarioView, TestResult
 
 
 def _view(feature, name, results=None):
@@ -129,7 +129,7 @@ def test_health_checks_pyramid_warns_when_at_parity(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
-def test_health_checks_e2e_runtime_passes_when_below_amber(tag):
+def test_health_checks_end_to_end_runtime_passes_when_below_amber(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=300)]),
@@ -139,11 +139,11 @@ def test_health_checks_e2e_runtime_passes_when_below_amber(tag):
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
-    assert health["e2e_runtime"]["status"] == "pass"
+    assert health["end_to_end_runtime"]["status"] == "pass"
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
-def test_health_checks_e2e_runtime_warns_when_between_amber_and_red(tag):
+def test_health_checks_end_to_end_runtime_warns_when_between_amber_and_red(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=900)]),
@@ -153,11 +153,11 @@ def test_health_checks_e2e_runtime_warns_when_between_amber_and_red(tag):
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
-    assert health["e2e_runtime"]["status"] == "warn"
+    assert health["end_to_end_runtime"]["status"] == "warn"
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
-def test_health_checks_e2e_runtime_fails_when_exceeds_red(tag):
+def test_health_checks_end_to_end_runtime_fails_when_exceeds_red(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=2000)]),
@@ -167,7 +167,7 @@ def test_health_checks_e2e_runtime_fails_when_exceeds_red(tag):
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
-    assert health["e2e_runtime"]["status"] == "fail"
+    assert health["end_to_end_runtime"]["status"] == "fail"
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])

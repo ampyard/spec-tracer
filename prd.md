@@ -184,7 +184,7 @@ A "Health Check" banner at the top of the report shows:
 |---|---|---|---|
 | Progress | % of scenarios with >=1 linked test | Pass / Warn / Fail (configurable thresholds) |
 | Pyramid Ratio | Unit count vs Integration + E2E count | Pass / Warn / Fail |
-| E2E Runtime | E2E total duration in seconds | Pass / Warn / Fail (configurable thresholds, defaults: warn @ 10min, fail @ 30min) |
+| End to end Runtime | E2E total duration in seconds | Pass / Warn / Fail (configurable thresholds, defaults: warn @ 10min, fail @ 30min) |
 
 Health checks are **visual indicators only** — they do not affect the exit code. Exit code is controlled solely by `error_on_failure` in the config file.
 
@@ -327,7 +327,7 @@ Where `spectracer.config.json` contains:
 - `@require-e2e` intentionally stays unscoped (no module suffix) since E2E scenarios typically span modules.
 
 #### Phase 5: Report Polish
-- Pyramid visualization, health checks (inverted pyramid, E2E runtime), failure accordion, tag filter JS.
+- Pyramid visualization, health checks (inverted pyramid, End to end Runtime), failure accordion, tag filter JS.
 - Each feature driven by a behave scenario first (validate the HTML contains the new UI elements).
 
 #### Phase 7: Config-File-Only CLI

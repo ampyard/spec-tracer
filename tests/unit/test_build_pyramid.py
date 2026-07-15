@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from unified_test_tracer.parsers import FeatureParser, JunitParser, CucumberParser
-from unified_test_tracer.models import TestResult
-from unified_test_tracer.renderers import _required_status
-from unified_test_tracer.cli import _collect_and_parse_features, _collect_and_parse_junit_results, _load_config
+from spec_tracer.parsers import FeatureParser, JunitParser, CucumberParser
+from spec_tracer.models import TestResult
+from spec_tracer.renderers import _required_status
+from spec_tracer.cli import _collect_and_parse_features, _collect_and_parse_junit_results, _load_config
 
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
@@ -147,7 +147,7 @@ def test_require_tags_stored_as_required_layers(tag):
 
 @pytest.mark.parametrize("tag", ["@FC-005"])
 def test_require_layer_status_missing_e2e(tag, tmp_path):
-    from unified_test_tracer.models import ScenarioView, Scenario
+    from spec_tracer.models import ScenarioView, Scenario
     scenario = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")[0]
     unit_result = TestResult(layer="unit", name="test", tags=["@FC-005"], status="passed")
     view = ScenarioView(scenario=scenario, linked_results=[unit_result])

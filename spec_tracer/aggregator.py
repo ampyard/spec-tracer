@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List
 
-from unified_test_tracer.models import Scenario, ScenarioView, TestResult
+from spec_tracer.models import Scenario, ScenarioView, TestResult
 
 
 class ReportAggregator:
@@ -143,13 +143,13 @@ class ReportAggregator:
         e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
         if e2e_duration <= e2e_duration_amber_seconds:
             e2e_status = "pass"
-            e2e_message = "E2E runtime is within the healthy envelope."
+            e2e_message = "End to end Runtime is within the healthy envelope."
         elif e2e_duration <= e2e_duration_red_seconds:
             e2e_status = "warn"
-            e2e_message = "E2E runtime is getting slow."
+            e2e_message = "End to end Runtime is getting slow."
         else:
             e2e_status = "fail"
-            e2e_message = "E2E runtime exceeds the configured threshold."
+            e2e_message = "End to end Runtime exceeds the configured threshold."
 
         if unlinked_count == 0:
             unlinked_status = "pass"
@@ -173,7 +173,7 @@ class ReportAggregator:
                     {"name": "unit", "count": unit_count},
                 ],
             },
-            "e2e_runtime": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s"},
+            "end_to_end_runtime": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s"},
             "unlinked": {"status": unlinked_status, "message": unlinked_message, "value": str(unlinked_count)},
         }
 

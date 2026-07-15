@@ -5,12 +5,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List
 
-from unified_test_tracer.aggregator import ReportAggregator
-from unified_test_tracer.collectors import FileCollector
-from unified_test_tracer.linker import ResultLinker
-from unified_test_tracer.parsers import CucumberParser, FeatureParser, JunitParser
-from unified_test_tracer.renderers import HtmlRenderer
-from unified_test_tracer.report_model import build_report
+from spec_tracer.aggregator import ReportAggregator
+from spec_tracer.collectors import FileCollector
+from spec_tracer.linker import ResultLinker
+from spec_tracer.parsers import CucumberParser, FeatureParser, JunitParser
+from spec_tracer.renderers import HtmlRenderer
+from spec_tracer.report_model import build_report
 
 DEFAULT_CONFIG_NAME = "spectracer.config.json"
 

@@ -1,7 +1,7 @@
 import pytest
 
-from unified_test_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
-from unified_test_tracer.report_model import build_report
+from spec_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
+from spec_tracer.report_model import build_report
 
 
 def _view(feature, name, tags=None, required_layers=None, results=None):

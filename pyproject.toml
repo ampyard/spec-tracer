@@ -1,5 +1,5 @@
 [project]
-name = "unified-test-tracer"
+name = "spec-tracer"
 version = "0.1.0"
 description = "CLI tool that collates test results from **Unit, Integration, and E2E** test suites into a single HTML report."
 requires-python = ">=3.12"
@@ -9,7 +9,7 @@ dependencies = [
   "pytest-html>=4.2.0",
 ]
 [project.scripts]
-unified-test-tracer = "unified_test_tracer.cli:main"
+spec-tracer = "spec_tracer.cli:main"
 
 [dependency-groups]
 dev = [

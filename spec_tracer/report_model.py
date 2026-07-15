@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from unified_test_tracer.models import ScenarioView, TestResult
+from spec_tracer.models import ScenarioView, TestResult
 
 SCHEMA_VERSION = "1"
 

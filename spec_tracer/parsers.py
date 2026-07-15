@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
 
-from unified_test_tracer.models import RequiredLayer, Scenario, TestResult
+from spec_tracer.models import RequiredLayer, Scenario, TestResult
 
 _REQUIRE_SCOPED_PATTERN = re.compile(r"@require-(unit|integration)(?::([\w.-]+))?$", re.IGNORECASE)
 _REQUIRE_E2E_PATTERN = re.compile(r"@require-e2e$", re.IGNORECASE)

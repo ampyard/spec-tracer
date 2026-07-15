@@ -1,7 +1,7 @@
 import pytest
 
-from unified_test_tracer.models import Scenario, ScenarioView, TestResult
-from unified_test_tracer.renderers import HtmlRenderer, _format_duration, _status_class, _status_label
+from spec_tracer.models import Scenario, ScenarioView, TestResult
+from spec_tracer.renderers import HtmlRenderer, _format_duration, _status_class, _status_label
 
 
 def _build_views():

@@ -5,7 +5,7 @@ try:
 except ImportError:
     Template = None
 
-from unified_test_tracer.models import ScenarioView, TestResult
+from spec_tracer.models import ScenarioView, TestResult
 
 LOGO_DATA_URI = ""
 

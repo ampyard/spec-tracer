@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from unified_test_tracer.models import Scenario, TestResult
+from spec_tracer.models import Scenario, TestResult
 
 
 class ResultLinker:

@@ -35,10 +35,24 @@ The tool is tech-stack agnostic: it only needs Gherkin `.feature` files, JUnit X
 Requires Python 3.12+.
 
 ```bash
-uv sync
+pip install spec-tracer
 ```
 
-This installs the tool along with its only runtime dependency, Jinja2.
+Or with uv:
+
+```bash
+uv pip install spec-tracer
+```
+
+Once installed, the `spec-tracer` CLI is available globally.
+
+### From source
+
+```bash
+git clone https://github.com/ampyard/spec-tracer.git
+cd spec-tracer
+uv sync
+```
 
 To build a wheel for local testing:
 
@@ -46,7 +60,7 @@ To build a wheel for local testing:
 uv build
 ```
 
-The wheel is written to `dist/unified_test_tracer-*.whl`. Install it with `uv pip install dist/*.whl`.
+The wheel is written to `dist/spec_tracer-*.whl`. Install it with `uv pip install dist/*.whl`.
 
 ## Quick Start
 

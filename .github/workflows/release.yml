@@ -59,12 +59,18 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
       - name: Commit and tag
         run: |
+          git add pyproject.toml docs/index.html
+          if git diff --cached --quiet; then
+            echo "No version files changed — skipping commit"
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml docs/index.html
           git commit -m "chore: bump version to v${{ steps.version.outputs.version }}"
           git tag "v${{ steps.version.outputs.version }}"
           git push origin HEAD --tags

@@ -2,6 +2,7 @@
 name = "spec-tracer"
 version = "0.1.0"
 description = "CLI tool that collates test results from **Unit, Integration, and E2E** test suites into a single HTML report."
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "behave-modern-html-report>=2.2.2",

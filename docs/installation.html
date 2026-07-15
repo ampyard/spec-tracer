@@ -126,6 +126,7 @@ uv run python build_pyramid.py
         <tr><td><code>reports/</code></td><td>JUnit XML / Cucumber JSON from test runs</td><td>Ignore</td></tr>
         <tr><td><code>spectracer.config.json</code></td><td>Configuration file (auto-discovered)</td><td>Commit</td></tr>
         <tr><td><code>report.html</code></td><td>Generated self-contained HTML report</td><td>Ignore</td></tr>
+        <tr><td><code>report.json</code></td><td>Optional machine-readable JSON report (if <code>output_json</code> is set)</td><td>Ignore</td></tr>
       </tbody>
     </table>
 
@@ -146,6 +147,11 @@ uv run python build_pyramid.py
 }</code></pre>
 
     <p>Only <code>features</code> and <code>output</code> are required. Add test result paths as your pipeline generates them.</p>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Also want JSON?</strong>
+      Add an optional <code>"output_json": "./report.json"</code> key alongside <code>output</code> to additionally emit a schema-validated JSON report for scripts and CI tooling. See <a href="usage.html#json-report">JSON Report</a> for details.
+    </div>
 
     <h2 id="next-steps">Next Steps</h2>
     <ul>

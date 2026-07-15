@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpecTracer — Trace coverage across every layer of your stack</title>
-  <meta name="description" content="SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report.">
+  <meta name="description" content="SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report — with an optional machine-readable JSON report for CI tooling.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23A152EF'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-weight='bold'>ST</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,7 @@
     <img src="logo.png" class="hero-logo animate-in" alt="SpecTracer">
     <div class="hero-badge animate-in">&#9670; v1.0 &mdash; MIT Licensed</div>
     <h1 class="animate-in animate-in-d1">One report to<br>trace all your tests</h1>
-    <p class="animate-in animate-in-d2">SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report. Tech-stack agnostic.</p>
+    <p class="animate-in animate-in-d2">SpecTracer takes your Gherkin feature files as the source of truth and collates Unit, Integration, and E2E test results into a single, self-contained HTML report &mdash; plus an optional schema-validated JSON report for scripts and CI tooling. Tech-stack agnostic.</p>
     <div class="hero-actions animate-in animate-in-d3">
       <a href="installation.html" class="btn btn-primary">Get Started &rarr;</a>
       <a href="https://github.com/ampyard/spec-tracer" class="btn btn-secondary">GitHub</a>
@@ -103,7 +103,7 @@
         <div class="step-num">3</div>
         <div class="step-body">
           <h3>Generate the Report</h3>
-          <p>Run <code>uv run python build_pyramid.py</code>. SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections.</p>
+          <p>Run <code>uv run python build_pyramid.py</code>. SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
         </div>
       </div>
     </div>
@@ -136,6 +136,11 @@ uv run python build_pyramid.py
   <strong>&#8505; No CLI flags</strong>
   SpecTracer is configured entirely through a JSON file. Drop a <code>spectracer.config.json</code> at your project root and just run the tool &mdash; no flags needed.
 </div>
+
+<div class="callout callout-info" style="margin-top: 1rem;">
+  <strong>&#8505; Want machine-readable output too?</strong>
+  Add <code>"output_json": "./reports/spectracer-report.json"</code> to your config. It's optional, additive, and validated against a <a href="https://github.com/ampyard/spec-tracer/blob/main/spectracer-report.schema.json">published JSON Schema</a> &mdash; perfect for PR bots, custom CI gates, or dashboards. See <a href="usage.html#json-report">JSON Report</a> for details.
+</div>
   </div>
 </section>
 
@@ -143,7 +148,7 @@ uv run python build_pyramid.py
   <div class="section-inner">
     <div class="section-header">
       <h2>What You Get</h2>
-      <p>The generated report is a single self-contained HTML file with five sections.</p>
+      <p>The generated report is a single self-contained HTML file with five sections &mdash; plus an optional JSON report carrying the same data for tooling.</p>
     </div>
     <div class="feature-grid">
       <div class="feature-card">
@@ -175,6 +180,11 @@ uv run python build_pyramid.py
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
         <p>Test results whose tags don't match any scenario. Catch orphaned or mis-tagged tests that would otherwise go unnoticed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9776;</div>
+        <h4>JSON Report</h4>
+        <p>Set <code>output_json</code> and get the same coverage, pyramid, health, and traceability data as schema-validated JSON &mdash; built from the same data model as the HTML report, so the two never drift.</p>
       </div>
     </div>
   </div>

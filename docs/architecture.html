@@ -199,8 +199,8 @@
     <h2 id="renderer">Renderer</h2>
     <p>The <code>HtmlRenderer</code> uses Jinja2 to produce a single self-contained HTML file. Everything is inlined:</p>
     <ul>
-      <li><strong>CSS:</strong> Full stylesheet with dark mode support via <code>prefers-color-scheme: dark</code></li>
-      <li><strong>JavaScript:</strong> Client-side hash routing (<code>#/</code>, <code>#/pyramid</code>, etc.), sortable tables, search/filter</li>
+      <li><strong>CSS:</strong> Full stylesheet with light/dark themes via <code>data-theme</code>, falling back to <code>prefers-color-scheme</code></li>
+      <li><strong>JavaScript:</strong> Client-side hash routing (<code>#/</code>, <code>#/pyramid</code>, etc.), theme toggle (persisted in <code>localStorage</code>), sortable tables, search/filter</li>
       <li><strong>Logo:</strong> Optional base64-encoded PNG</li>
       <li><strong>Data:</strong> All report data is embedded as JSON in a <code>&lt;script&gt;</code> tag</li>
     </ul>

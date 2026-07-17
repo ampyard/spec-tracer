@@ -90,9 +90,20 @@ _TEMPLATE_STR = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SpecTracer</title>
   {% if logo_data_uri %}<link rel="icon" href="{{ logo_data_uri }}">{% endif %}
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('st-theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   <style>
     :root {
-      color-scheme: light dark;
+      color-scheme: light;
       --page: #f9f9f7;
       --surface: #ffffff;
       --surface-alt: #f4f6f5;
@@ -130,8 +141,10 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       src: url(https://cdn.jsdelivr.net/fontsource/fonts/cascadia-mono:vf@latest/latin-wght-normal.woff2) format('woff2-variations');
       unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
     }
+    /* System dark when user has not picked an explicit theme */
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
         --page: #0d0d0d;
         --surface: #1a1a19;
         --surface-alt: #202020;
@@ -158,6 +171,34 @@ _TEMPLATE_STR = """<!DOCTYPE html>
         --shadow-2: 0 1px 3px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.35);
       }
     }
+    /* Explicit dark override (also covers light system preference) */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-alt: #202020;
+      --text: #ffffff;
+      --text-soft: #c3c2b7;
+      --muted: #898781;
+      --primary: #3987e5;
+      --primary-soft: rgba(57, 135, 229, 0.16);
+      --unit: #3987e5;
+      --unit-soft: rgba(57, 135, 229, 0.16);
+      --integration: #9085e9;
+      --integration-soft: rgba(144, 133, 233, 0.18);
+      --e2e: #199e70;
+      --e2e-soft: rgba(25, 158, 112, 0.18);
+      --danger: #e66767;
+      --danger-soft: rgba(230, 103, 103, 0.16);
+      --success: #0ca30c;
+      --success-soft: rgba(12, 163, 12, 0.16);
+      --warning: #fab219;
+      --warning-soft: rgba(250, 178, 25, 0.16);
+      --border: #2c2c2a;
+      --border-strong: rgba(255, 255, 255, 0.10);
+      --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-2: 0 1px 3px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.35);
+    }
     * { box-sizing: border-box; }
     ::selection { background: var(--primary-soft); color: var(--primary); }
     body {
@@ -182,6 +223,34 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     }
     .app-header .logo { height: 32px; width: auto; border-radius: 6px; }
     .app-title { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+    .theme-toggle {
+      margin-left: auto;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-soft);
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: color 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+    }
+    .theme-toggle:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: var(--shadow-1);
+    }
+    .theme-toggle:focus-visible {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
     .app-nav {
       display: flex;
       gap: 4px;
@@ -370,7 +439,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .col-status { flex: 0 0 110px; width: 110px; min-width: 0; overflow: hidden; }
     .col-status .badge { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
     .col-expected, .col-actual { flex: 0 0 90px; width: 90px; text-align: center; }
-    .col-duration, .col-coverage { flex: 0 0 100px; width: 100px; }
+    .col-duration { flex: 0 0 100px; width: 100px; }
     .tree-caret {
       display: inline-flex;
       align-items: center;
@@ -384,7 +453,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     }
     .tree-caret::before { content: "+"; }
     details.tree-row[open] > summary .tree-caret::before { content: "−"; }
-    .col-expected, .col-actual, .col-duration, .col-coverage {  ui-monospace, SFMono-Regular, monospace; font-size: 0.8rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+    .col-expected, .col-actual, .col-duration {  ui-monospace, SFMono-Regular, monospace; font-size: 0.8rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
     .required-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; padding-left: 32px; }
     .required-label { color: var(--text-soft); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .required-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 600; text-transform: uppercase; }
@@ -417,7 +486,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       .table-row { grid-template-columns: 1fr; }
       .col-status { flex-basis: 90px; width: 90px; }
       .col-expected, .col-actual { flex-basis: 60px; width: 60px; }
-      .col-duration, .col-coverage { flex-basis: 70px; width: 70px; }
+      .col-duration { flex-basis: 70px; width: 70px; }
     }
   </style>
 </head>
@@ -425,6 +494,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
   <header class="app-header">
     {% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}" alt="Logo">{% endif %}
     <span class="app-title">SpecTracer</span>
+    <button type="button" class="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark theme">&#9788;</button>
   </header>
   <nav class="app-nav">
     <a class="nav-link" data-route="/" href="#/">Dashboard</a>
@@ -534,7 +604,6 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             <div class="col-expected">Expected</div>
             <div class="col-actual">Actual</div>
             <button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>
-            <button type="button" class="sort-btn col-coverage" data-sort-key="coverage">Coverage % <span class="sort-caret">&#9660;</span></button>
           </div>
           <div class="tree-root" data-tree-group>
             {% for feature_name, feature_views in views | sort(attribute='scenario.feature') | groupby('scenario.feature') %}
@@ -549,14 +618,13 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             {% for r in view.linked_results %}{% set feature_ns.total = feature_ns.total + r.duration %}{% endfor %}
             {% endfor %}
             {% set fstatus = feature_status(feature_views) %}
-            <details class="tree-row level-1" data-sort-name="{{ feature_name }}" data-sort-status="{{ feature_pct }}" data-sort-duration="{{ feature_ns.total }}" data-sort-coverage="{{ feature_pct }}" data-search="{{ feature_name | lower }}">
+            <details class="tree-row level-1" data-sort-name="{{ feature_name }}" data-sort-status="{{ feature_pct }}" data-sort-duration="{{ feature_ns.total }}" data-search="{{ feature_name | lower }}">
               <summary>
-                <span class="col-name lvl-1"><span class="tree-caret"></span><span class="name-text"><strong>{{ feature_name }}</strong></span></span>
+                <span class="col-name lvl-1"><span class="tree-caret"></span><span class="pill"><strong>Feature</strong></span><span class="name-text"><strong>{{ feature_name }}</strong></span></span>
                 <span class="col-status"><span class="badge {{ fstatus.cls }}">{{ fstatus.word }}</span></span>
                 <span class="col-expected">{{ feature_ns.expected }}</span>
                 <span class="col-actual">{{ feature_ns.actual }}</span>
                 <span class="col-duration">{{ format_duration(feature_ns.total) }}</span>
-                <span class="col-coverage">{{ feature_pct }}%</span>
               </summary>
               <div class="tree-children" data-tree-group>
                 {% for view in feature_views %}
@@ -564,14 +632,13 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                 {% set scenario_expected = expected_test_count(view.scenario) %}
                 {% set scenario_actual = view.linked_results | length %}
                 {% set sstatus = scenario_status(view) %}
-                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_tested else 0 }}" data-sort-duration="{{ scenario_duration }}" data-sort-coverage="{{ 100 if view.is_tested else 0 }}" data-search="{{ view.scenario.name | lower }}">
+                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_tested else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
                   <summary>
-                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="name-text">{{ view.scenario.name }}</span></span>
+                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span><span class="name-text">{{ view.scenario.name }}</span></span>
                     <span class="col-status"><span class="badge {{ sstatus.cls }}">{{ sstatus.word }}</span></span>
                     <span class="col-expected">{{ scenario_expected }}</span>
                     <span class="col-actual">{{ scenario_actual }}</span>
                     <span class="col-duration">{{ format_duration(scenario_duration) }}</span>
-                    <span class="col-coverage">&mdash;</span>
                   </summary>
                   <div class="tree-children" data-tree-group>
                     {% set req_layers = required_layers(view) %}
@@ -594,13 +661,12 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                     {% endif %}
                     {% if view.linked_results %}
                     {% for result in view.linked_results %}
-                    <div class="tree-row level-3 leaf" data-sort-name="{{ result.name }}" data-sort-status="{{ status_rank(result.status) }}" data-sort-duration="{{ result.duration }}" data-sort-coverage="0" data-search="{{ result.name | lower }}">
+                    <div class="tree-row level-3 leaf" data-sort-name="{{ result.name }}" data-sort-status="{{ status_rank(result.status) }}" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }}">
                       <span class="col-name lvl-3"><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span></span>
                       <span class="col-status"><span class="badge {{ _status_class(result.status) }}">{{ _status_label(result.status) }}</span></span>
                       <span class="col-expected">&mdash;</span>
                       <span class="col-actual">&mdash;</span>
                       <span class="col-duration">{{ format_duration(result.duration) }}</span>
-                      <span class="col-coverage">&mdash;</span>
                     </div>
                     {% endfor %}
                     {% else %}
@@ -636,37 +702,33 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             <button type="button" class="sort-btn col-name" data-sort-key="name">Name <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-status" data-sort-key="status">Status <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>
-            <button type="button" class="sort-btn col-coverage" data-sort-key="coverage">Coverage % <span class="sort-caret">&#9660;</span></button>
           </div>
           <div class="tree-root" data-tree-group>
             {% for feature in failure_breakdown %}
             {% set feature_ns = namespace(total=0) %}
             {% for s in feature.scenarios %}{% for r in s.failed_results %}{% set feature_ns.total = feature_ns.total + r.duration %}{% endfor %}{% endfor %}
-            <details class="tree-row level-1" data-sort-name="{{ feature.name }}" data-sort-status="{{ feature.failed_count }}" data-sort-duration="{{ feature_ns.total }}" data-sort-coverage="{{ feature.failed_count }}" data-search="{{ feature.name | lower }}">
+            <details class="tree-row level-1" data-sort-name="{{ feature.name }}" data-sort-status="{{ feature.failed_count }}" data-sort-duration="{{ feature_ns.total }}" data-search="{{ feature.name | lower }}">
               <summary>
-                <span class="col-name lvl-1"><span class="tree-caret"></span><span class="name-text"><strong>{{ feature.name }}</strong></span></span>
+                <span class="col-name lvl-1"><span class="tree-caret"></span><span class="pill"><strong>Feature</strong></span><span class="name-text"><strong>{{ feature.name }}</strong></span></span>
                 <span class="col-status"><span class="badge failed">{{ feature.failed_count }} failing</span></span>
                 <span class="col-duration">{{ format_duration(feature_ns.total) }}</span>
-                <span class="col-coverage">&mdash;</span>
               </summary>
               <div class="tree-children" data-tree-group>
                 {% for s in feature.scenarios %}
                 {% set scenario_duration = s.failed_results | sum(attribute='duration') %}
-                <details class="tree-row level-2" data-sort-name="{{ s.view.scenario.name }}" data-sort-status="{{ s.failed_results | length }}" data-sort-duration="{{ scenario_duration }}" data-sort-coverage="0" data-search="{{ (s.view.scenario.name ~ ' ' ~ (s.view.scenario.tags | join(' '))) | lower }}">
+                <details class="tree-row level-2" data-sort-name="{{ s.view.scenario.name }}" data-sort-status="{{ s.failed_results | length }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ (s.view.scenario.name ~ ' ' ~ (s.view.scenario.tags | join(' '))) | lower }}">
                   <summary>
-                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="name-text">{{ s.view.scenario.name }}</span></span>
+                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span><span class="name-text">{{ s.view.scenario.name }}</span></span>
                     <span class="col-status"><span class="badge failed">{{ s.failed_results | length }} failing</span></span>
                     <span class="col-duration">{{ format_duration(scenario_duration) }}</span>
-                    <span class="col-coverage">&mdash;</span>
                   </summary>
                   <div class="tree-children" data-tree-group>
                     {% for result in s.failed_results %}
-                    <details class="tree-row level-3" data-sort-name="{{ result.name }}" data-sort-status="0" data-sort-duration="{{ result.duration }}" data-sort-coverage="0" data-search="{{ result.name | lower }}">
+                    <details class="tree-row level-3" data-sort-name="{{ result.name }}" data-sort-status="0" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }}">
                       <summary>
                         <span class="col-name lvl-3"><span class="tree-caret"></span><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span></span>
                         <span class="col-status"><span class="badge failed">{{ _status_label(result.status) }}</span></span>
                         <span class="col-duration">{{ format_duration(result.duration) }}</span>
-                        <span class="col-coverage">&mdash;</span>
                       </summary>
                       {% if result.failure_message %}
                       <div class="failure-block">{{ result.failure_message }}</div>
@@ -723,6 +785,31 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       '/failures': 'page-failures',
       '/unlinked': 'page-unlinked',
     };
+
+    (function initThemeToggle() {
+      const btn = document.querySelector('.theme-toggle');
+      if (!btn) return;
+
+      function currentTheme() {
+        const attr = document.documentElement.getAttribute('data-theme');
+        if (attr === 'light' || attr === 'dark') return attr;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('st-theme', theme); } catch (e) {}
+        // Sun when dark (click to go light), moon when light (click to go dark)
+        btn.textContent = theme === 'dark' ? '\\u2600' : '\\u263E';
+        btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+        btn.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+      }
+
+      applyTheme(currentTheme());
+      btn.addEventListener('click', () => {
+        applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      });
+    })();
 
     function currentRoute() {
       const path = (window.location.hash || '#/').replace(/^#/, '');

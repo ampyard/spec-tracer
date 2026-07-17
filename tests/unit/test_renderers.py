@@ -50,6 +50,16 @@ def test_render_produces_header_with_title_only_once(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_includes_theme_switcher(tag):
+    html = _render()
+    assert 'class="theme-toggle"' in html
+    assert "localStorage.getItem('st-theme')" in html
+    assert 'data-theme' in html
+    assert ':root[data-theme="dark"]' in html
+    assert ':root:not([data-theme="light"])' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_produces_five_page_containers(tag):
     html = _render()
     for page_id in ["page-dashboard", "page-pyramid", "page-features", "page-failures", "page-unlinked"]:
@@ -90,6 +100,18 @@ def test_render_feature_breakdown_tree_groups_scenarios_by_feature(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_feature_and_scenario_rows_have_type_pills(tag):
+    html = _render()
+    # Feature rows are identified with a pill (like test layers)
+    assert '<span class="pill"><strong>Feature</strong></span>' in html
+    # Scenario rows are identified with a pill
+    assert '<span class="pill"><strong>Scenario</strong></span>' in html
+    # Ensure the pills appear near their names (basic presence check)
+    assert 'Feature</strong></span><span class="name-text"><strong>Alpha Feature' in html
+    assert 'Scenario</strong></span><span class="name-text">Scenario A' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_pyramid_tier_uses_layer_specific_class(tag):
     html = _render()
     assert 'class="tier unit"' in html
@@ -115,7 +137,9 @@ def test_render_tree_table_sort_buttons_present(tag):
     assert 'data-sort-key="name"' in html
     assert 'data-sort-key="status"' in html
     assert 'data-sort-key="duration"' in html
-    assert 'data-sort-key="coverage"' in html
+    assert 'data-sort-key="coverage"' not in html
+    assert "col-coverage" not in html
+    assert "Coverage %" not in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])

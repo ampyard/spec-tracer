@@ -63,7 +63,13 @@ def test_tag_collision_within_feature(tag):
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-003"])
 def test_feature_level_tags_not_inherited(tag):
-    """Tags on Feature: line are NOT inherited by scenarios."""
+    """Tags on Feature: line are NOT inherited by scenarios.
+
+    The scenario ``@FC-001`` links to the matching unit test, so coverage is
+    1/1. The other unit test carries ``@FeatureTag`` (taken from its name), which
+    matches no scenario — it must appear under Unlinked Tests rather than being
+    silently dropped.
+    """
     base = FIXTURES / "feature_tags_not_inherited"
     output = base / "report.html"
     result = run_tool(base / "features", output, unit=base / "unit.xml")
@@ -71,10 +77,11 @@ def test_feature_level_tags_not_inherited(tag):
     content = output.read_text(encoding="utf-8")
     # @FC-001 test should link (scenario-level tag)
     assert "<strong>unit</strong>" in content
-    # @FeatureTag test should NOT link (not on scenario)
-    # Only 1 of 2 tests match, but scenario is tested via @FC-001
+    # Only the @FC-001 scenario exists, and it is tested
     assert "1/1 scenarios tested" in content
-    assert "test_feature_tag_@FeatureTag" not in content
+    # The @FeatureTag test matches no scenario and must be listed as unlinked
+    assert "Unlinked Tests" in content
+    assert "test_feature_tag_@FeatureTag" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-004"])

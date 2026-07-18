@@ -144,6 +144,14 @@ def step_report_contains(context, text):
     assert text in content, f"Expected {text!r} in report"
 
 
+@then('the report should list the unlinked test "{name}"')
+def step_report_lists_unlinked_test(context, name):
+    """The named unlinked test appears in the Unlinked Tests section."""
+    content = context.output_path.read_text(encoding="utf-8")
+    assert "Unlinked Tests" in content, "Report is missing the Unlinked Tests section"
+    assert name in content, f"Expected unlinked test {name!r} to be listed"
+
+
 @then("the JSON report file should exist")
 def step_json_report_exists(context):
     assert Path(context.output_json).exists()

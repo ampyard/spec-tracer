@@ -179,10 +179,20 @@ class ReportAggregator:
 
     @staticmethod
     def unlinked_results(scenarios: List[Scenario], results: List[TestResult]) -> List[TestResult]:
+        """Return results whose tags matched no scenario.
+
+        A result counts as unlinked when it carries at least one tag but none of
+        those tags match a scenario's tags. The ``@FC-``-prefix gate was removed:
+        tagging a test with e.g. ``@smoke``/``@regression`` and failing to link it
+        must surface it as unlinked, exactly as the report's "Unlinked Tests" section
+        promises. Results with no tags at all are excluded because, being tag-based,
+        they can never link to a scenario and would otherwise flood the section with
+        noise from untagged test runners.
+        """
         scenario_tags = {tag for scenario in scenarios for tag in scenario.tags}
         return [
             result
             for result in results
-            if not any(tag in scenario_tags for tag in result.tags)
-            and any(tag.startswith("@FC-") for tag in result.tags)
+            if result.tags
+            and not any(tag in scenario_tags for tag in result.tags)
         ]

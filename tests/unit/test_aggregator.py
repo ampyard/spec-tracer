@@ -181,6 +181,38 @@ def test_unlinked_results_excludes_tags_matching_scenarios(tag):
     assert result == [unlinked]
 
 
+@pytest.mark.parametrize("tag", ["@FC-008"])
+def test_unlinked_results_surfaces_non_fc_tags(tag):
+    """A result tagged with a non-@FC tag that matches no scenario is unlinked.
+
+    Regression test for the bug where the tool only reported results carrying an
+    ``@FC-`` prefixed tag as unlinked, silently dropping orphans tagged e.g.
+    ``@smoke``/``@regression``/``@OTHER-999`` that failed to match a scenario.
+    """
+    scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
+    linked = TestResult(layer="unit", name="t1", tags=["@FC-001"])
+    unlinked = TestResult(layer="unit", name="t2", tags=["@regression"])
+
+    result = ReportAggregator.unlinked_results(scenarios, [linked, unlinked])
+
+    assert result == [unlinked]
+
+
+@pytest.mark.parametrize("tag", ["@FC-008"])
+def test_unlinked_results_excludes_tagless_results(tag):
+    """Results carrying no tags are excluded — they can never link to a scenario.
+
+    This keeps untagged test-runner output (e.g. plain pytest) from flooding the
+    Unlinked Tests section as false positives.
+    """
+    scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
+    tagless = TestResult(layer="unit", name="t1", tags=[])
+
+    result = ReportAggregator.unlinked_results(scenarios, [tagless])
+
+    assert result == []
+
+
 @pytest.mark.parametrize("tag", ["@FC-009"])
 def test_health_checks_unlinked_entry_passes_when_zero(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]

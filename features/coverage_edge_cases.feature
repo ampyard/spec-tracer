@@ -34,6 +34,16 @@ Feature: Test Coverage Edge Cases
     Then the exit code should be 0
     And the report should contain "0/1 scenarios tested"
     And the report should contain "untested"
+    And the report should list the unlinked test "test_unrelated_@OTHER-999"
+
+  @FC-EDGE-004b
+  Scenario: Untagged result with no matching scenario still appears as unlinked
+    Given a feature file with scenario tagged "@FC-EDGE-004"
+    And a unit JUnit XML result tagged "@FC-EDGE-004"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "Unlinked Tests"
+    And the report should list the unlinked test "test_unrelated_@OTHER-999"
 
   @FC-EDGE-005
   Scenario: Empty JUnit XML result file produces zero test results

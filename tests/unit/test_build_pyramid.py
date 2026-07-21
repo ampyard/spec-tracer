@@ -173,6 +173,65 @@ def test_require_e2e_accepts_module_suffix(tag):
     assert e2e_req.module == "parsers"
 
 
+@pytest.mark.parametrize("tag", ["@FC-007"])
+def test_parse_e2e_ignores_tag_filtered_unexecuted_scenarios(tag, tmp_path):
+    """Behave tag filters leave non-selected scenarios as skipped without step results."""
+    path = tmp_path / "mixed.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "keyword": "Feature",
+                    "name": "F",
+                    "elements": [
+                        {
+                            "keyword": "Scenario",
+                            "name": "ran",
+                            "tags": [{"name": tag}],
+                            "steps": [
+                                {
+                                    "keyword": "Given",
+                                    "name": "x",
+                                    "result": {"status": "passed", "duration": 1},
+                                }
+                            ],
+                            "status": "passed",
+                        },
+                        {
+                            "keyword": "Scenario",
+                            "name": "tag-filtered never ran",
+                            "tags": [{"name": "@FC-OTHER"}],
+                            "steps": [
+                                {"keyword": "Given", "name": "y", "location": "features/x.feature:1"}
+                            ],
+                            "status": "skipped",
+                        },
+                        {
+                            "keyword": "Scenario",
+                            "name": "real skip",
+                            "tags": [{"name": tag}],
+                            "steps": [
+                                {
+                                    "keyword": "Then",
+                                    "name": "z",
+                                    "result": {"status": "skipped"},
+                                }
+                            ],
+                            "status": "skipped",
+                        },
+                    ],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    results = _parse_e2e_results([path])
+    names = {r.name for r in results}
+    assert names == {"ran", "real skip"}
+    assert {r.status for r in results} == {"passed", "skipped"}
+
+
 @pytest.mark.parametrize("tag", ["@FC-002"])
 def test_parse_junit_results_passed_failed_skipped(tag):
     results = _parse_junit_results([FIXTURES / "fc002" / "unit.xml"])

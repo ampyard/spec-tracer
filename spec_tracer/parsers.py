@@ -129,6 +129,20 @@ class JunitParser(ResultParser):
 
 class CucumberParser(ResultParser):
 
+    @staticmethod
+    def _scenario_was_executed(element: dict) -> bool:
+        """Return False for tag-filtered scenarios that never ran.
+
+        Behave still emits non-selected scenarios as ``status: skipped`` with
+        steps that have no ``result`` object. Real skips include step results
+        (``result.status == "skipped"``), so those remain.
+        """
+        steps = element.get("steps") or []
+        if not steps:
+            # Empty-scenario fixtures used in unit tests: keep unless skipped.
+            return element.get("status", "passed") != "skipped"
+        return any(isinstance(step, dict) and "result" in step for step in steps)
+
     def parse(self, paths: List[Path], layer: str = "e2e", module: str = "") -> List[TestResult]:
         results: List[TestResult] = []
         for path in paths:
@@ -142,11 +156,14 @@ class CucumberParser(ResultParser):
                         continue
                     if element.get("keyword", "").lower() != "scenario":
                         continue
+                    if not self._scenario_was_executed(element):
+                        continue
                     raw_tags = element.get("tags", [])
                     if raw_tags and isinstance(raw_tags[0], dict):
                         tags = [tag.get("name", "") for tag in raw_tags]
+                        tags = [f"@{t}" if t and not t.startswith("@") else t for t in tags]
                     else:
-                        tags = [f"@{tag}" if not tag.startswith("@") else tag for tag in raw_tags]
+                        tags = [f"@{tag}" if not str(tag).startswith("@") else tag for tag in raw_tags]
                     status = element.get("status", "passed")
                     if status == "undefined":
                         status = "skipped"

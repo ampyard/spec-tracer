@@ -58,6 +58,18 @@ def step_e2e_with_tag(context, tag):
     context.e2e = str(FIXTURES / dir_name / "e2e.json")
 
 
+@given('a module-scoped E2E Cucumber JSON result tagged "{tag}" for module "{module}"')
+def step_e2e_with_tag_and_module(context, tag, module):
+    dir_name = TAG_FIXTURES.get(tag, "module_scope")
+    context.e2e = str(FIXTURES / dir_name / (module + "_e2e.json"))
+    context.e2e_module = module
+
+
+@given('the E2E result is scoped to module "{module}"')
+def step_e2e_scoped_to_module(context, module):
+    context.e2e_module = module
+
+
 @given('an integration JUnit XML result tagged "{tag}"')
 def step_integration_with_tag(context, tag):
     dir_name = TAG_FIXTURES.get(tag, "integration_linking")
@@ -86,7 +98,8 @@ def _build_config(context) -> dict:
         module = getattr(context, "integration_module", "")
         config["integration"] = {module: [context.integration]}
     if hasattr(context, "e2e"):
-        config["e2e"] = [context.e2e]
+        module = getattr(context, "e2e_module", "")
+        config["e2e"] = {module: [context.e2e]}
     if hasattr(context, "output_json"):
         config["output_json"] = context.output_json
     return config
@@ -125,6 +138,11 @@ def step_run_tool_with_integration(context):
 
 @when("I run the tool with --features, --unit, and --output")
 def step_run_tool_with_unit(context):
+    _run_tool(context)
+
+
+@when("I run the tool with --features, --e2e, and --output")
+def step_run_tool_with_e2e(context):
     _run_tool(context)
 
 

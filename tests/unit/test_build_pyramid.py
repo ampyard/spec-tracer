@@ -6,7 +6,12 @@ import pytest
 from spec_tracer.parsers import FeatureParser, JunitParser, CucumberParser
 from spec_tracer.models import TestResult
 from spec_tracer.renderers import _required_status
-from spec_tracer.cli import _collect_and_parse_features, _collect_and_parse_junit_results, _load_config
+from spec_tracer.cli import (
+    _collect_and_parse_e2e_results,
+    _collect_and_parse_features,
+    _collect_and_parse_junit_results,
+    _load_config,
+)
 
 
 FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
@@ -104,6 +109,68 @@ def test_collect_and_parse_junit_results_groups_by_module(tag, tmp_path):
     modules = {r.module for r in results}
     assert modules == {"billing", ""}
     assert all(r.layer == "unit" for r in results)
+
+
+@pytest.mark.parametrize("tag", ["@FC-007"])
+def test_collect_and_parse_e2e_results_groups_by_module(tag, tmp_path):
+    module_a = tmp_path / "a.json"
+    module_a.write_text(
+        json.dumps(
+            [
+                {
+                    "keyword": "Feature",
+                    "name": "A",
+                    "elements": [
+                        {
+                            "keyword": "Scenario",
+                            "name": "a",
+                            "tags": [{"name": tag}],
+                            "steps": [],
+                            "status": "passed",
+                        }
+                    ],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    module_b = tmp_path / "b.json"
+    module_b.write_text(
+        json.dumps(
+            [
+                {
+                    "keyword": "Feature",
+                    "name": "B",
+                    "elements": [
+                        {
+                            "keyword": "Scenario",
+                            "name": "b",
+                            "tags": [{"name": tag}],
+                            "steps": [],
+                            "status": "passed",
+                        }
+                    ],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    results = _collect_and_parse_e2e_results(
+        {"parsers": [str(module_a)], "": [str(module_b)]}, _cucumber_parser
+    )
+
+    modules = {r.module for r in results}
+    assert modules == {"parsers", ""}
+    assert all(r.layer == "e2e" for r in results)
+
+
+@pytest.mark.parametrize("tag", ["@FC-007"])
+def test_require_e2e_accepts_module_suffix(tag):
+    scenarios = _parse_feature_file(FIXTURES / "module_scope" / "features" / "parsers.feature")
+    e2e_scenario = next(s for s in scenarios if any(r.layer == "e2e" for r in s.required_layers))
+    e2e_req = next(r for r in e2e_scenario.required_layers if r.layer == "e2e")
+    assert e2e_req.module == "parsers"
 
 
 @pytest.mark.parametrize("tag", ["@FC-002"])

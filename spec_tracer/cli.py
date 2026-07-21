@@ -69,9 +69,12 @@ def _collect_and_parse_junit_results(entries: Dict[str, List[str]], parser: Juni
     return results
 
 
-def _collect_and_parse_e2e_results(paths: List[str], parser: CucumberParser) -> List:
-    files = FileCollector.json_files(paths)
-    return parser.parse(files, layer="e2e")
+def _collect_and_parse_e2e_results(entries: Dict[str, List[str]], parser: CucumberParser) -> List:
+    results = []
+    for module, paths in entries.items():
+        files = FileCollector.json_files(paths)
+        results.extend(parser.parse(files, layer="e2e", module=module))
+    return results
 
 
 def main(argv: List[str] | None = None) -> int:
@@ -85,7 +88,7 @@ def main(argv: List[str] | None = None) -> int:
     integration_results = _collect_and_parse_junit_results(config.get("integration", {}), junit_parser, "integration")
 
     cucumber_parser = CucumberParser()
-    e2e_results = _collect_and_parse_e2e_results(config.get("e2e", []), cucumber_parser)
+    e2e_results = _collect_and_parse_e2e_results(config.get("e2e", {}), cucumber_parser)
 
     results = e2e_results + unit_results + integration_results
 

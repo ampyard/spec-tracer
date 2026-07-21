@@ -86,11 +86,28 @@
         <span class="hl-section">uses:</span> actions/upload-artifact@v4
         <span class="hl-section">with:</span>
           name: coverage-report
-          path: reports/spectracer-report.html</code></pre>
+          path: |
+            reports/spectracer-report.html
+            reports/spectracer-report.json</code></pre>
+
+    <div class="code-header"><span>spectracer.config.json (unscoped layers)</span></div>
+<pre><code>{
+  <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
+  <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
+  <span class="hl-prop">"integration"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/int.xml"</span>] },
+  <span class="hl-prop">"e2e"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>] },
+  <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
+  <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>
+}</code></pre>
 
     <div class="callout callout-info">
       <strong>&#8505; Report is nearly self-contained</strong>
       The HTML file includes all CSS and JS inline (a monospace font is loaded from a CDN but falls back gracefully). You can download it from the Actions run page and open it directly in a browser — no server needed.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Module-scoped E2E</strong>
+      <code>e2e</code> uses the same module-keyed object shape as <code>unit</code> / <code>integration</code>. Split Cucumber JSON by suite (or behave tags) and register each file under a module key; pair with <code>@require-e2e:checkout</code> on scenarios. SpecTracer's own CI does this for modules like <code>linker</code>, <code>parsers</code>, and <code>report_model</code>.
     </div>
 
     <h3>PR Comment with Report Link</h3>
@@ -155,6 +172,7 @@
 <span class="hl-section">e2e-tests:</span>
   <span class="hl-section">stage:</span> test
   <span class="hl-section">script:</span>
+    <span class="hl-com"># Config: "e2e": { "": ["./reports/e2e.json"] } — or split into module keys</span>
     - uv run behave features/ --format json -o reports/e2e.json
   <span class="hl-section">artifacts:</span>
     <span class="hl-section">paths:</span>
@@ -248,9 +266,10 @@
           <tr><th>Pattern</th><th>Example</th><th>Use</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>@FC-&lt;N&gt;</code></td><td><code>@FC-42</code></td><td>Feature-case ID — unique per scenario</td></tr>
-          <tr><td><code>@&lt;module&gt;</code></td><td><code>@billing</code></td><td>Cross-cutting module tag</td></tr>
-          <tr><td><code>@&lt;type&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Test type classification</td></tr>
+          <tr><td><code>@FC-&lt;N&gt;</code></td><td><code>@FC-42</code></td><td>Feature-case ID — unique per scenario (linking)</td></tr>
+          <tr><td><code>@require-&lt;layer&gt;</code></td><td><code>@require-unit</code>, <code>@require-e2e</code></td><td>Required layer coverage (not used for linking)</td></tr>
+          <tr><td><code>@require-&lt;layer&gt;:&lt;module&gt;</code></td><td><code>@require-e2e:checkout</code></td><td>Required layer + module key from config</td></tr>
+          <tr><td><code>@&lt;type&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Optional linking / classification tags</td></tr>
         </tbody>
       </table>
     </div>
@@ -274,7 +293,7 @@
 
     <div class="callout callout-info">
       <strong>&#8505; Use module-scoped requirements for microservices</strong>
-      If your team owns a single service in a multi-service repo, use <code>@require-unit:my-service</code> to ensure your service's unit tests cover its scenarios.
+      If your team owns a single service in a multi-service repo, use <code>@require-unit:my-service</code>, <code>@require-integration:my-service</code>, and/or <code>@require-e2e:my-service</code> so only results registered under that module key satisfy the requirement. Works for unit, integration, and E2E alike.
     </div>
 
     <div class="callout callout-success">

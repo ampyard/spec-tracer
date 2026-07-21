@@ -7,8 +7,9 @@ from typing import List
 
 from spec_tracer.models import RequiredLayer, Scenario, TestResult
 
-_REQUIRE_SCOPED_PATTERN = re.compile(r"@require-(unit|integration)(?::([\w.-]+))?$", re.IGNORECASE)
-_REQUIRE_E2E_PATTERN = re.compile(r"@require-e2e$", re.IGNORECASE)
+_REQUIRE_SCOPED_PATTERN = re.compile(
+    r"@require-(unit|integration|e2e)(?::([\w.-]+))?$", re.IGNORECASE
+)
 
 
 class ResultParser(ABC):
@@ -50,9 +51,6 @@ class FeatureParser:
                         required_layers.append(
                             RequiredLayer(layer=scoped_match.group(1).lower(), module=scoped_match.group(2) or "")
                         )
-                        continue
-                    if _REQUIRE_E2E_PATTERN.match(t):
-                        required_layers.append(RequiredLayer(layer="e2e", module=""))
                         continue
                     linking_tags.append(t)
                 if not required_layers:
@@ -131,7 +129,7 @@ class JunitParser(ResultParser):
 
 class CucumberParser(ResultParser):
 
-    def parse(self, paths: List[Path], layer: str = "e2e") -> List[TestResult]:
+    def parse(self, paths: List[Path], layer: str = "e2e", module: str = "") -> List[TestResult]:
         results: List[TestResult] = []
         for path in paths:
             with path.open("r", encoding="utf-8") as handle:
@@ -172,6 +170,7 @@ class CucumberParser(ResultParser):
                             tags=tags,
                             status=status,
                             duration=duration,
+                            module=module,
                         )
                     )
         return results

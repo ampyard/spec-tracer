@@ -91,7 +91,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128269;</div>
         <h4>parsers.py</h4>
-        <p>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (json module). Total: 177 lines.</p>
+        <p>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (json module). Results carry an optional module key from config.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128279;</div>
@@ -147,7 +147,7 @@
         <li><code>classname</code> attribute on <code>&lt;testcase&gt;</code></li>
         <li><code>&lt;properties&gt;&lt;property&gt;</code> elements inside <code>&lt;testcase&gt;</code></li>
       </ul>
-      <p>Handles <code>&lt;failure&gt;</code>, <code>&lt;error&gt;</code>, and <code>&lt;skipped&gt;</code> child elements for status classification.</p>
+      <p>Handles <code>&lt;failure&gt;</code>, <code>&lt;error&gt;</code>, and <code>&lt;skipped&gt;</code> child elements for status classification. The config module key (e.g. <code>"auth"</code> under <code>unit</code>) is stamped onto each result as <code>module</code>.</p>
     </div>
 
     <div class="feature-block">
@@ -157,6 +157,7 @@
         <li>Scenario-level <code>tags</code> array for linking</li>
         <li>Scenario name and status</li>
         <li>Duration (handles nanosecond-to-second conversion)</li>
+        <li>Module scope from the config key under <code>e2e</code> (same model as unit/integration)</li>
       </ul>
     </div>
 
@@ -225,9 +226,9 @@
     <h2 id="data-flow">Data Flow</h2>
     <p>Here's exactly what happens when you run <code>uv run spec-tracer</code> (or <code>uv run python build_pyramid.py</code>):</p>
     <ol>
-      <li><strong>Config loading</strong> &mdash; <code>cli.py</code> discovers and reads the JSON config file. Validates required keys (<code>features</code>, <code>output</code>).</li>
-      <li><strong>File collection</strong> &mdash; <code>FileCollector</code> (<code>collectors.py</code>) resolves literal file paths and recursively searches directories for <code>.feature</code>, <code>.xml</code>, and <code>.json</code> files.</li>
-      <li><strong>Parsing</strong> &mdash; Each file type is parsed by its dedicated parser. Scenarios and test results are extracted into typed data classes.</li>
+      <li><strong>Config loading</strong> &mdash; <code>cli.py</code> discovers and reads the JSON config file. Validates required keys (<code>features</code>, <code>output</code>). <code>unit</code>, <code>integration</code>, and <code>e2e</code> are module-keyed objects (<code>""</code> = unscoped).</li>
+      <li><strong>File collection</strong> &mdash; <code>FileCollector</code> (<code>collectors.py</code>) resolves literal file paths and recursively searches directories for <code>.feature</code>, <code>.xml</code>, and <code>.json</code> files, once per module key.</li>
+      <li><strong>Parsing</strong> &mdash; Each file type is parsed by its dedicated parser. Scenarios and test results are extracted into typed data classes; results carry the module key they were collected under.</li>
       <li><strong>Linking</strong> &mdash; <code>ResultLinker</code> cross-references scenario tags against test result tags. OR logic: any shared tag creates a link.</li>
       <li><strong>Aggregation</strong> &mdash; <code>ReportAggregator</code> computes all stats, views, breakdowns, and health checks from the linked data.</li>
       <li><strong>Rendering</strong> &mdash; <code>HtmlRenderer</code> feeds the aggregated data into a Jinja2 template and writes the HTML output file.</li>
@@ -238,9 +239,10 @@
     <p>When parsing a <code>.feature</code> file, tags are resolved as follows:</p>
     <ol>
       <li>All tags on lines immediately above a <code>Scenario:</code> line are collected</li>
-      <li>Tags matching the pattern <code>@require-(unit|integration|e2e)(:\w+)?</code> are classified as <strong>layer requirements</strong></li>
+      <li>Tags matching the pattern <code>@require-(unit|integration|e2e)(:module)?</code> are classified as <strong>layer requirements</strong> (optional <code>:module</code> suffix for all three layers)</li>
       <li>All remaining tags become <strong>linking tags</strong></li>
-      <li>If zero requirement tags were found, the scenario defaults to <code>@require-e2e</code></li>
+      <li>If zero requirement tags were found, the scenario defaults to bare <code>@require-e2e</code> (unscoped)</li>
+      <li>A module-scoped requirement is only satisfied by a linked result whose <code>module</code> matches that key; unscoped results never satisfy it</li>
     </ol>
 
     <div class="callout callout-info">
@@ -264,16 +266,22 @@
 
     <p>The CI pipeline runs all three layers, collects the outputs, and feeds them into SpecTracer to generate a <strong>self-report</strong> — a coverage report for SpecTracer itself. Every feature starts as a <code>.feature</code> file, validated by a behave E2E scenario before implementation.</p>
 
-    <div class="code-header"><span>Dogfooding CI pipeline</span></div>
-<pre><code>uv run behave features/ --format json -o reports/e2e.json
-uv run pytest tests/unit --junitxml=reports/unit.xml
+    <div class="code-header"><span>Dogfooding CI pipeline (simplified)</span></div>
+<pre><code>uv run pytest tests/unit --junitxml=reports/unit.xml
 uv run pytest tests/integration --junitxml=reports/int.xml
+
+<span class="hl-com"># E2E is split by module so @require-e2e:&lt;module&gt; can be dogfooded</span>
+uv run behave features/coverage_linking.feature --tags=-@FC-004 -f json -o reports/e2e-linker.json
+uv run behave features/coverage_health.feature -f json -o reports/e2e-aggregator.json
+uv run behave features/coverage_dashboard.feature -f json -o reports/e2e-renderers.json
+uv run behave features/coverage_module_scope.feature -f json -o reports/e2e-parsers.json
+<span class="hl-com"># …plus collectors / report_model / edge splits (see .github/workflows/ci.yml)</span>
 
 uv run spec-tracer
 <span class="hl-com"># Output: reports/spectracer-report.html — a self-report
 # Output: reports/spectracer-report.json — same self-report, machine-readable</span></code></pre>
 
-    <p>SpecTracer's own <code>spectracer.config.json</code> sets <code>output_json</code>, so every self-report run also exercises the JSON code path. Both the integration test suite and the behave suite validate the generated JSON against <code>spectracer-report.schema.json</code> using <code>jsonschema.Draft7Validator</code> &mdash; the schema is enforced by the tool's own tests, not just documented.</p>
+    <p>SpecTracer's own scenarios use module-scoped tags such as <code>@require-e2e:linker</code> and <code>@require-unit:parsers</code>, and <code>spectracer.config.json</code> registers Cucumber JSON under matching module keys. Every self-report run also sets <code>output_json</code>. Both the integration test suite and the behave suite validate the generated JSON against <code>spectracer-report.schema.json</code> using <code>jsonschema.Draft7Validator</code> &mdash; the schema is enforced by the tool's own tests, not just documented.</p>
 
     <div class="callout callout-success">
       <strong>&#10003; What gets measured gets managed</strong>

@@ -1,0 +1,20 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "Module Scoped Layer Requirements",
+    "tags": [],
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "name": "Report requires e2e coverage from the parsers module",
+        "tags": [{"name": "@FC-007"}],
+        "steps": [
+          {"keyword": "Given", "name": "a scenario requiring e2e coverage from module parsers", "result": {"status": "passed"}},
+          {"keyword": "When", "name": "only e2e results exist", "result": {"status": "passed"}},
+          {"keyword": "Then", "name": "the report shows e2e as satisfied", "result": {"status": "passed"}}
+        ],
+        "status": "passed"
+      }
+    ]
+  }
+]

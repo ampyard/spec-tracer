@@ -78,7 +78,7 @@ Feature files and test results connect via **shared tags**.
 ```gherkin
 Feature: User Login
 
-  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e
+  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e:auth
   Scenario: Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
@@ -95,7 +95,7 @@ Feature: User Login
 - **Linking tags** (`@FC-42`, `@regression`): Shared with test results. A test result carrying this tag links to the scenario.
 - **Layer requirement tags** (`@require-unit`, `@require-integration`, `@require-e2e`): Tell the tool which layers are expected to have coverage for this scenario. These are NOT used for linking — test results never carry them. After processing, the tool checks each declared required layer and flags any that have zero linked results.
 
-**Module-scoped requirements:** `@require-unit` and `@require-integration` accept an optional `:modulename` suffix (e.g. `@require-unit:auth`). This is paired with the module-keyed `unit`/`integration` objects in the config file (see section 9) — a module-scoped requirement is only satisfied by a result that came from a source registered under that exact module key. An unscoped result (config key `""`) never satisfies a module-scoped requirement, and a bare `@require-unit` (no module) is satisfied by any linked unit result regardless of module. `@require-e2e` does not accept a module suffix — E2E scenarios typically span multiple modules, so it stays a bare tag.
+**Module-scoped requirements:** `@require-unit`, `@require-integration`, and `@require-e2e` accept an optional `:modulename` suffix (e.g. `@require-unit:auth`, `@require-e2e:checkout`). This is paired with the module-keyed `unit`/`integration`/`e2e` objects in the config file (see section 9) — a module-scoped requirement is only satisfied by a result that came from a source registered under that exact module key. An unscoped result (config key `""`) never satisfies a module-scoped requirement, and a bare `@require-unit` / `@require-e2e` (no module) is satisfied by any linked result for that layer regardless of module.
 
 **In JUnit XML:**
 A unit test with `@FC-42` in its name/properties links to the "Successful login" scenario. An E2E test with `@FC-42` also links.
@@ -202,7 +202,10 @@ JSON format, default filename `spectracer.config.json` at the project root (auto
   "integration": {
     "": ["./reports/int.xml"]
   },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": {
+    "": ["./reports/e2e.json"],
+    "checkout": ["./reports/checkout-e2e.json"]
+  },
   "output": "./report.html",
   "error_on_failure": false,
   "health_checks": {
@@ -219,7 +222,7 @@ JSON format, default filename `spectracer.config.json` at the project root (auto
 | `features` | Yes | Array of Gherkin `.feature` file/directory paths (directories are searched recursively). |
 | `unit` | No | Object keyed by module name. Each value is an array of JUnit XML file/directory paths. Use `""` as the key for unscoped results (not tied to any module). Matches against `@require-unit`/`@require-unit:<module>` tags. |
 | `integration` | No | Same shape as `unit`, matched against `@require-integration`/`@require-integration:<module>` tags. |
-| `e2e` | No | Array of Cucumber JSON file/directory paths. E2E results are never module-scoped (see section 6). |
+| `e2e` | No | Same shape as `unit`, but for Cucumber JSON file/directory paths. Matches against `@require-e2e`/`@require-e2e:<module>` tags. |
 | `output` | Yes | Path for the generated HTML report. |
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
 | `health_checks` | No | Optional thresholds overriding the defaults shown above. |
@@ -282,7 +285,14 @@ Where `spectracer.config.json` contains:
   "features": ["./features"],
   "unit": { "": ["./reports/unit.xml"] },
   "integration": { "": ["./reports/int.xml"] },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": {
+    "linker": ["./reports/e2e-linker.json", "./reports/e2e-linker-edge.json"],
+    "collectors": ["./reports/e2e-collectors.json"],
+    "aggregator": ["./reports/e2e-aggregator.json", "./reports/e2e-aggregator-internals.json"],
+    "renderers": ["./reports/e2e-renderers.json", "./reports/e2e-renderers-internals.json"],
+    "parsers": ["./reports/e2e-parsers.json", "./reports/e2e-parsers-edge.json", "./reports/e2e-parsers-internals.json"],
+    "report_model": ["./reports/e2e-report-model.json"]
+  },
   "output": "./self-report.html",
   "error_on_failure": true
 }
@@ -321,10 +331,10 @@ Where `spectracer.config.json` contains:
 - Dogfooding: self-report shows required-layer status.
 
 #### Phase 6: Module Scoped Layer Requirements
-- Extend `@require-unit`/`@require-integration` with an optional `:modulename` suffix.
-- Extend `--unit`/`--integration` to accept `modulename=path` entries, tagging parsed results with their module.
+- Extend `@require-unit`/`@require-integration`/`@require-e2e` with an optional `:modulename` suffix.
+- Extend `--unit`/`--integration`/`e2e` config entries to accept module-keyed path maps, tagging parsed results with their module.
 - Strict module matching: a module-scoped requirement is only satisfied by a result from the same module.
-- `@require-e2e` intentionally stays unscoped (no module suffix) since E2E scenarios typically span modules.
+- Dogfood: self-report registers E2E Cucumber JSON under module keys (`linker`, `aggregator`, `renderers`, `parsers`) matching the tool's feature areas.
 
 #### Phase 5: Report Polish
 - Pyramid visualization, health checks (inverted pyramid, End to end Runtime), failure accordion, tag filter JS.

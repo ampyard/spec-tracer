@@ -42,8 +42,11 @@
                     }
                 },
                 "e2e": {
-                    "type": "array",
-                    "items": { "type": "string" }
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    }
                 },
                 "output": { "type": "string" },
                 "output_json": { "type": "string" },

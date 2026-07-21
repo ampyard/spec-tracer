@@ -33,7 +33,20 @@ jobs:
         run: uv run pytest tests/integration/ --junitxml=reports/int.xml --html=reports/int.html --self-contained-html -v
 
       - name: Run BDD tests (JSON output)
-        run: uv run behave features/ -f json -o reports/e2e.json -f modern -o reports/e2e-report.html
+        run: |
+          uv run behave features/ -f modern -o reports/e2e-report.html
+          # Module-scoped Cucumber JSON for SpecTracer dogfood
+          uv run behave features/coverage_linking.feature --tags=-@FC-004 -f json -o reports/e2e-linker.json
+          uv run behave features/coverage_edge_cases.feature --tags=-@FC-EDGE-006 -f json -o reports/e2e-linker-edge.json
+          uv run behave features/coverage_linking.feature --tags=@FC-004 -f json -o reports/e2e-collectors.json
+          uv run behave features/coverage_health.feature -f json -o reports/e2e-aggregator.json
+          uv run behave features/coverage_internals.feature --tags=@FC-008 -f json -o reports/e2e-aggregator-internals.json
+          uv run behave features/coverage_dashboard.feature -f json -o reports/e2e-renderers.json
+          uv run behave features/coverage_internals.feature --tags=@FC-009 -f json -o reports/e2e-renderers-internals.json
+          uv run behave features/coverage_module_scope.feature -f json -o reports/e2e-parsers.json
+          uv run behave features/coverage_edge_cases.feature --tags=@FC-EDGE-006 -f json -o reports/e2e-parsers-edge.json
+          uv run behave features/coverage_internals.feature --tags=@FC-007 -f json -o reports/e2e-parsers-internals.json
+          uv run behave features/coverage_json_output.feature -f json -o reports/e2e-report-model.json
 
       - name: Generate SpecTracer report
         if: always()

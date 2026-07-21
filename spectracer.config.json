@@ -2,7 +2,27 @@
   "features": ["./features"],
   "unit": { "": ["./reports/unit.xml"] },
   "integration": { "": ["./reports/int.xml"] },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": {
+    "linker": [
+      "./reports/e2e-linker.json",
+      "./reports/e2e-linker-edge.json"
+    ],
+    "collectors": ["./reports/e2e-collectors.json"],
+    "aggregator": [
+      "./reports/e2e-aggregator.json",
+      "./reports/e2e-aggregator-internals.json"
+    ],
+    "renderers": [
+      "./reports/e2e-renderers.json",
+      "./reports/e2e-renderers-internals.json"
+    ],
+    "parsers": [
+      "./reports/e2e-parsers.json",
+      "./reports/e2e-parsers-edge.json",
+      "./reports/e2e-parsers-internals.json"
+    ],
+    "report_model": ["./reports/e2e-report-model.json"]
+  },
   "output": "./reports/spectracer-report.html",
   "output_json": "./reports/spectracer-report.json",
   "error_on_failure": true

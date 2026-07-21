@@ -139,6 +139,34 @@ def test_requirement_omits_module_key_when_unscoped(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-010"])
+def test_e2e_requirement_satisfied_when_module_matches(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="e2e", module="parsers")],
+        results=[TestResult(layer="e2e", name="t1", status="passed", module="parsers")],
+    )
+
+    report = _build([view])
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req == {"layer": "e2e", "satisfied": True, "module": "parsers"}
+
+
+@pytest.mark.parametrize("tag", ["@FC-010"])
+def test_e2e_requirement_unsatisfied_when_module_does_not_match(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="e2e", module="parsers")],
+        results=[TestResult(layer="e2e", name="t1", status="passed", module="other")],
+    )
+
+    report = _build([view])
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req["satisfied"] is False
+
+
+@pytest.mark.parametrize("tag", ["@FC-010"])
 def test_features_group_scenarios_and_preserve_first_seen_order(tag):
     views = [
         _view("Zebra", "S1"),

@@ -45,7 +45,7 @@ def test_tag_collision_across_features(tag):
     assert "Successful login" in content
     assert "View profile" in content
     assert "<strong>unit</strong>" in content
-    assert "2/2 scenarios complete" in content
+    assert "0/2 scenarios complete" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-002"])
@@ -58,7 +58,7 @@ def test_tag_collision_within_feature(tag):
     content = output.read_text(encoding="utf-8")
     assert "Successful login" in content
     assert "Failed login" in content
-    assert "2/2 scenarios complete" in content
+    assert "0/2 scenarios complete" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-003"])
@@ -66,9 +66,10 @@ def test_feature_level_tags_not_inherited(tag):
     """Tags on Feature: line are NOT inherited by scenarios.
 
     The scenario ``@FC-001`` links to the matching unit test, so coverage is
-    1/1. The other unit test carries ``@FeatureTag`` (taken from its name), which
-    matches no scenario — it must appear under Unlinked Tests rather than being
-    silently dropped.
+    0/1 under the presence-based basis (the linked unit result does not satisfy
+    the default injected ``e2e`` requirement). The other unit test carries
+    ``@FeatureTag`` (taken from its name), which matches no scenario — it must
+    appear under Unlinked Tests rather than being silently dropped.
     """
     base = FIXTURES / "feature_tags_not_inherited"
     output = base / "report.html"
@@ -77,8 +78,8 @@ def test_feature_level_tags_not_inherited(tag):
     content = output.read_text(encoding="utf-8")
     # @FC-001 test should link (scenario-level tag)
     assert "<strong>unit</strong>" in content
-    # Only the @FC-001 scenario exists, and it is tested
-    assert "1/1 scenarios complete" in content
+    # Only the @FC-001 scenario exists, but its default e2e requirement is unmet
+    assert "0/1 scenarios complete" in content
     # The @FeatureTag test matches no scenario and must be listed as unlinked
     assert "Unlinked Tests" in content
     assert "test_feature_tag_@FeatureTag" in content
@@ -92,7 +93,6 @@ def test_no_matching_tags_shows_incomplete(tag):
     result = run_tool(base / "features", output, unit=base / "unit.xml")
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
-    assert "Incomplete" in content
     assert "0/1 scenarios complete" in content
     assert "<strong>unit</strong>" not in content
 
@@ -105,9 +105,8 @@ def test_empty_result_file_produces_zero_tests(tag):
     result = run_tool(base / "features", output, unit=base / "unit.xml")
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
-    assert "Incomplete" in content
     assert "0/1 scenarios complete" in content
-
+    assert "<strong>unit</strong>" not in content
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-006"])
 def test_malformed_junit_xml_errors(tag):

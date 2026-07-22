@@ -31,7 +31,7 @@ Feature: Test Coverage Linking
     And the integration result is scoped to module "linker"
     When I run the tool with --features, --integration, and --output
     Then the exit code should be 0
-    And the report should contain "1/1 scenarios complete"
+    And the report should contain "0/1 scenarios complete"
     And the report should contain "<strong>integration</strong>"
 
   @FC-004 @require-unit:collectors @require-integration:collectors @require-e2e:collectors
@@ -43,6 +43,6 @@ Feature: Test Coverage Linking
     And the integration result is scoped to module "collectors"
     When I run the tool with --features, --unit, --integration, and --output
     Then the exit code should be 0
-    And the report should contain "1/1 scenarios complete"
+    And the report should contain "0/1 scenarios complete"
     And the report should contain "<strong>unit</strong>"
     And the report should contain "<strong>integration</strong>"

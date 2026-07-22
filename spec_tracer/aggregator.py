@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Dict, List
 
 from spec_tracer.models import Scenario, ScenarioView, TestResult
+from spec_tracer.models import completion_fraction, completion_ratio
 
 
 class ReportAggregator:
@@ -27,9 +28,27 @@ class ReportAggregator:
     @staticmethod
     def completion_stats(views: List[ScenarioView]) -> dict:
         total = len(views)
-        complete = sum(1 for v in views if v.is_complete)
-        percentage = int(round((complete / total * 100) if total else 0))
-        return {"total": total, "complete": complete, "percentage": percentage}
+        satisfied = sum(completion_fraction(v)[0] for v in views)
+        required = sum(completion_fraction(v)[1] for v in views)
+        # ``complete`` = scenarios where EVERY declared requirement is satisfied
+        # (100% presence-based completion). A scenario with present-but-failed
+        # requirements is 100% complete here; outcome is tracked separately.
+        complete = sum(
+            1 for v in views if completion_fraction(v)[0] == completion_fraction(v)[1]
+        )
+        # Average presence-based completion across scenarios, in whole percent.
+        # This is the same basis as the tree-table completion bar and the
+        # feature-level rollup, so the dashboard headline and the tree never
+        # diverge (#9).
+        pct = int(round((satisfied / required * 100) if required else 0))
+        return {
+            "total": total,
+            "complete": complete,
+            "satisfied": satisfied,
+            "required": required,
+            "pct": pct,
+            "percentage": pct,
+        }
 
     @staticmethod
     def feature_breakdown(views: List[ScenarioView]) -> List[dict]:
@@ -42,11 +61,17 @@ class ReportAggregator:
             feature_complete = sum(1 for v in feature_views if v.is_complete)
             feature_total = len(feature_views)
             feature_pct = int(round((feature_complete / feature_total * 100) if feature_total else 0))
+            satisfied = sum(completion_fraction(v)[0] for v in feature_views)
+            required = sum(completion_fraction(v)[1] for v in feature_views)
+            completion_pct = int(round((satisfied / required * 100) if required else 0))
             breakdown.append({
                 "name": feature_name,
                 "complete": feature_complete,
                 "total": feature_total,
                 "percentage": feature_pct,
+                "satisfied": satisfied,
+                "required": required,
+                "completion_pct": completion_pct,
             })
         return breakdown
 
@@ -116,7 +141,7 @@ class ReportAggregator:
         e2e_duration_amber_seconds: float = 600,
         e2e_duration_red_seconds: float = 1800,
     ) -> dict:
-        progress_pct = progress_stats["percentage"]
+        progress_pct = progress_stats["pct"]
         if progress_pct >= progress_threshold_green:
             progress_status = "pass"
             progress_message = "Progress is healthy."

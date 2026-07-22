@@ -1,13 +1,15 @@
 import pytest
 
 from spec_tracer.aggregator import ReportAggregator
-from spec_tracer.models import Scenario, ScenarioView, TestResult
+from spec_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
 
 
-def _view(feature, name, results=None):
-    scenario = Scenario(feature=feature, name=name, tags=[f"@{name}"])
-    results = results or []
-    return ScenarioView(scenario=scenario, linked_results=results)
+def _view(feature, name, results=None, required_layers=None):
+    scenario = Scenario(
+        feature=feature, name=name, tags=[f"@{name}"],
+        required_layers=required_layers or [],
+    )
+    return ScenarioView(scenario=scenario, linked_results=results or [])
 
 
 @pytest.mark.parametrize("tag", ["@FC-008"])
@@ -262,3 +264,49 @@ def test_failure_breakdown_empty_when_no_failures(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="p1", status="passed")])]
 
     assert ReportAggregator.failure_breakdown(views) == []
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_stats_presence_based_not_link_count(tag):
+    # Scenario declares @require-e2e (parser injects it when none declared).
+    # A linked UNIT result is present but does NOT satisfy e2e, so the
+    # presence-based completion is 0% -> the summary % reflects that.
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1", status="passed")])]
+    stats = ReportAggregator.completion_stats(views)
+    assert stats["total"] == 1
+    # 0 of the 1 requirement (default e2e) is satisfied.
+    assert stats["pct"] == 0
+    assert stats["satisfied"] == 0
+    assert stats["required"] == 1
+    # No scenario is fully satisfied -> complete is 0 (not the is_complete count).
+    assert stats["complete"] == 0
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_stats_satisfied_when_requirement_present(tag):
+    views = [_view("F", "S1", [TestResult(layer="e2e", name="e1", status="failed")], required_layers=[RequiredLayer("e2e")])]
+    stats = ReportAggregator.completion_stats(views)
+    # Present-but-failed still fills the requirement: 100% completion.
+    assert stats["pct"] == 100
+    assert stats["satisfied"] == 1
+    assert stats["required"] == 1
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_stats_average_across_scenarios(tag):
+    a = _view("F", "S1", [TestResult(layer="e2e", name="e1", status="passed")], required_layers=[RequiredLayer("e2e")])
+    b = _view("F", "S2", [], required_layers=[RequiredLayer("e2e")])
+    stats = ReportAggregator.completion_stats([a, b])
+    assert stats["pct"] == 50
+    assert stats["satisfied"] == 1
+    assert stats["required"] == 2
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_feature_breakdown_uses_average_completion(tag):
+    a = _view("F", "S1", [TestResult(layer="e2e", name="e1", status="passed")], required_layers=[RequiredLayer("e2e")])
+    b = _view("F", "S2", [], required_layers=[RequiredLayer("e2e")])
+    breakdown = ReportAggregator.feature_breakdown([a, b])
+    assert breakdown[0]["completion_pct"] == 50
+    assert breakdown[0]["satisfied"] == 1
+    assert breakdown[0]["required"] == 2

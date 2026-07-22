@@ -1,7 +1,17 @@
 import pytest
 
-from spec_tracer.models import Scenario, ScenarioView, TestResult
-from spec_tracer.renderers import HtmlRenderer, _format_duration, _status_class, _status_label
+from spec_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
+from spec_tracer.renderers import (
+    HtmlRenderer,
+    _completion,
+    _completion_bar,
+    _feature_completion,
+    _feature_outcome,
+    _format_duration,
+    _outcome,
+    _status_class,
+    _status_label,
+)
 
 
 def _build_views():
@@ -15,10 +25,13 @@ def _build_views():
 
 def _render(**overrides):
     views = overrides.pop("views", _build_views())
-    stats = overrides.pop("stats", {"complete": 1, "total": 2, "percentage": 50})
+    stats = overrides.pop("stats", {
+        "complete": 1, "total": 2, "percentage": 50,
+        "pct": 50, "satisfied": 1, "required": 2,
+    })
     feature_breakdown = overrides.pop("feature_breakdown", [
-        {"name": "Alpha Feature", "complete": 1, "total": 1, "percentage": 100},
-        {"name": "Zebra Feature", "complete": 0, "total": 1, "percentage": 0},
+        {"name": "Alpha Feature", "complete": 1, "total": 1, "percentage": 100, "satisfied": 1, "required": 1, "completion_pct": 100},
+        {"name": "Zebra Feature", "complete": 0, "total": 1, "percentage": 0, "satisfied": 0, "required": 1, "completion_pct": 0},
     ])
     layer_stats = overrides.pop("layer_stats", [
         {
@@ -135,18 +148,40 @@ def test_render_navigation_click_handler_present(tag):
 def test_render_tree_table_sort_buttons_present(tag):
     html = _render()
     assert 'data-sort-key="name"' in html
-    assert 'data-sort-key="status"' in html
+    assert 'data-sort-key="completion"' in html
+    assert 'data-sort-key="result"' in html
     assert 'data-sort-key="duration"' in html
-    assert 'data-sort-key="coverage"' not in html
+    assert 'data-sort-key="status"' not in html
+    # The feature/scenario tree header no longer uses the single status column.
+    assert 'class="sort-btn col-status"' not in html
     assert "col-coverage" not in html
     assert "Coverage %" not in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
-def test_render_includes_scenario_status_badges(tag):
+def test_render_completion_bar_and_result_pill_present(tag):
     html = _render()
-    assert 'class="badge complete">Complete' in html
-    assert 'class="badge incomplete">Incomplete' in html
+    assert "completion-bar" in html
+    assert "completion-count" in html
+    assert 'class="badge passed">' in html or 'class="badge failed">' in html or 'class="badge skipped">' in html
+
+
+@pytest.mark.parametrize("tag", ["@FC-009"])
+def test_render_includes_scenario_status_badges(tag):
+    # Status badges still appear in the Failure Breakdown tree (and the
+    # summary helpers are intact), so assert on the failure-breakdown path.
+    scenario = Scenario(feature="Alpha Feature", name="Scenario A", tags=["@FC-100"])
+    failed_result = TestResult(layer="unit", name="test_a", tags=["@FC-100"], status="failed", failure_message="boom")
+    view = ScenarioView(scenario=scenario, linked_results=[failed_result], layers=[[failed_result]])
+    failure_breakdown = [
+        {
+            "name": "Alpha Feature",
+            "scenarios": [{"view": view, "failed_results": [failed_result]}],
+            "failed_count": 1,
+        }
+    ]
+    html = _render(views=[view], failure_breakdown=failure_breakdown)
+    assert 'class="badge failed">' in html
 
 
 @pytest.mark.parametrize("tag", ["@FC-009"])
@@ -202,3 +237,95 @@ def test_status_label_titlecases_status(tag):
     assert _status_label("passed") == "Passed"
     assert _status_label("failed") == "Failed"
     assert _status_label("skipped") == "Skipped"
+
+
+def _view_with(required_layers, results):
+    scenario = Scenario(feature="F", name="S", tags=["@FC"], required_layers=required_layers)
+    return ScenarioView(scenario=scenario, linked_results=results)
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_empty_when_no_results(tag):
+    view = _view_with([RequiredLayer("e2e")], [])
+    c = _completion(view)
+    assert c["satisfied"] == 0
+    assert c["total"] == 1
+    assert c["count"] == "0/1"
+    assert c["cls"] == "empty"
+    assert c["pct"] == 0
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_full_counts_presence_not_pass(tag):
+    # A present-but-FAILED result still fills the requirement (presence-based).
+    view = _view_with(
+        [RequiredLayer("unit"), RequiredLayer("e2e")],
+        [
+            TestResult(layer="unit", name="t", status="failed"),
+            TestResult(layer="e2e", name="e", status="passed"),
+        ],
+    )
+    c = _completion(view)
+    assert c["count"] == "2/2"
+    assert c["cls"] == "full"
+    assert c["pct"] == 100
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_empty_when_result_on_wrong_layer(tag):
+    view = _view_with([RequiredLayer("e2e")], [TestResult(layer="unit", name="t", status="passed")])
+    c = _completion(view)
+    assert c["count"] == "0/1"
+    assert c["cls"] == "empty"
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_outcome_worst_case_across_results(tag):
+    view = _view_with(
+        [RequiredLayer("unit")],
+        [
+            TestResult(layer="unit", name="p", status="passed"),
+            TestResult(layer="unit", name="f", status="failed"),
+        ],
+    )
+    assert _outcome(view)["cls"] == "failed"
+
+    view_skipped = _view_with(
+        [RequiredLayer("unit")],
+        [TestResult(layer="unit", name="s", status="skipped"), TestResult(layer="unit", name="p", status="passed")],
+    )
+    assert _outcome(view_skipped)["cls"] == "skipped"
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_outcome_skipped_when_no_results(tag):
+    view = _view_with([RequiredLayer("e2e")], [])
+    assert _outcome(view)["cls"] == "skipped"
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_completion_bar_renders_count_and_color_class(tag):
+    view = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="t", status="passed")])
+    bar = _completion_bar(_completion(view))
+    assert 'class="completion-bar completion-full"' in bar
+    assert "completion-count" in bar
+    assert "1/1" in bar
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_feature_completion_is_average_child_completion(tag):
+    a = _view_with([RequiredLayer("e2e")], [TestResult(layer="e2e", name="e", status="passed")])
+    b = _view_with([RequiredLayer("e2e")], [])
+    fc = _feature_completion([a, b])
+    # One scenario 100%, one 0% -> average 50%.
+    assert fc["pct"] == 50
+    assert fc["satisfied"] == 1
+    assert fc["required"] == 2
+    assert fc["cls"] == "partial"
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_feature_outcome_worst_across_feature_results(tag):
+    a = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="p", status="passed")])
+    b = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="f", status="failed")])
+    assert _feature_outcome([a, b])["cls"] == "failed"

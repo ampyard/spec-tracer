@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from spec_tracer.models import ScenarioView, TestResult
+from spec_tracer.models import ScenarioView, TestResult, completion_fraction
 
 SCHEMA_VERSION = "2"
 
@@ -126,6 +126,9 @@ def build_report(
                 "tested": stats["complete"],
                 "total": stats["total"],
                 "percent": stats["percentage"],
+                "pct": stats["pct"],
+                "satisfied": stats["satisfied"],
+                "required": stats["required"],
             },
             "pyramid": _layer_stats(layer_stats),
             "health": _health_summary(health_checks),

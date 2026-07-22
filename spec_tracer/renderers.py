@@ -1,9 +1,11 @@
 from typing import List
 
 try:
-    from jinja2 import Template
+    from jinja2 import Environment, select_autoescape
+    from markupsafe import Markup
 except ImportError:
-    Template = None
+    Environment = None
+    Markup = None
 
 from spec_tracer.models import ScenarioView, TestResult, completion_fraction, completion_ratio, worst_outcome
 
@@ -50,13 +52,14 @@ def _completion_bar(completion: dict) -> str:
     dashboard progress bar); the ``N/M`` requirement count sits beside it for
     additional context (it reveals how many requirements are in play).
     """
-    return (
+    html = (
         f'<span class="completion-bar completion-{completion["cls"]}">'
         f'<span class="completion-fill" style="width: {completion["pct"]}%;"></span>'
         f'<span class="completion-overlay">{completion["pct"]}%</span>'
         f'</span>'
         f'<span class="completion-count">{completion["count"]}</span>'
     )
+    return Markup(html) if Markup is not None else html
 
 
 def _completion(view: ScenarioView) -> dict:
@@ -1059,8 +1062,9 @@ class HtmlRenderer:
         failure_breakdown = failure_breakdown or []
         logo_data_uri = logo_data_uri if logo_data_uri is not None else LOGO_DATA_URI
 
-        if Template is not None:
-            template = Template(_TEMPLATE_STR)
+        if Environment is not None:
+            env = Environment(autoescape=select_autoescape(["html", "xml"]))
+            template = env.from_string(_TEMPLATE_STR)
             template.globals["_required_status"] = _required_status
             template.globals["required_layers"] = _required_layers
             template.globals["expected_test_count"] = _expected_test_count

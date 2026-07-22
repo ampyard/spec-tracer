@@ -383,8 +383,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .stat-card:hover { box-shadow: var(--shadow-1); }
     .stat-card strong { display: block; font-size: 1.5rem; font-weight: 700; margin-bottom: 2px; color: var(--text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
     .stat-card span { color: var(--text-soft); font-size: 0.84rem; }
-    .bar-shell { height: 8px; border-radius: 999px; overflow: hidden; background: var(--border); margin-top: 18px; }
+    .bar-shell { height: 26px; border-radius: 999px; overflow: hidden; background: var(--border); margin-top: 18px; position: relative; }
     .bar-fill { height: 100%; border-radius: inherit; background: var(--primary); transition: width 420ms ease; }
+    .bar-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); font-variant-numeric: tabular-nums; pointer-events: none; text-shadow: 0 1px 2px color-mix(in srgb, var(--page) 70%, transparent); }
     .section-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
     .section-head .muted { color: var(--text-soft); font-size: 0.87rem; margin-top: 4px; }
     .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
@@ -607,7 +608,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             <strong>{{ complete }}/{{ total }} scenarios satisfied</strong>
           </div>
         </div>
-        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div></div>
+        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div><span class="bar-overlay">{{ pct }}%</span></div>
       </section>
 
       <section class="panel">

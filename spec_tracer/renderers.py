@@ -548,6 +548,11 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .completion-partial .completion-fill { background: var(--warning); }
     .completion-empty .completion-fill { background: var(--danger); }
     .completion-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); font-variant-numeric: tabular-nums; pointer-events: none; text-shadow: 0 1px 2px color-mix(in srgb, var(--page) 70%, transparent); }
+    /* Dark mode: the bright yellow (partial) fill makes white text illegible.
+       Switch to dark text with a white halo so it stays readable on both the
+       yellow fill and the dark (unfilled) track. Light mode is unchanged. */
+    :root[data-theme="dark"] .completion-partial .completion-overlay,
+    :root:not([data-theme="light"]) .completion-partial .completion-overlay { color: #0d0d0d; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
     .completion-count { flex: 0 0 auto; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--text-soft); margin-left: 8px; }
     .required-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; padding-left: 32px; }
     .required-label { color: var(--text-soft); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }

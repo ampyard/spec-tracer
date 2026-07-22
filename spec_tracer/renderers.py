@@ -612,8 +612,8 @@ _TEMPLATE_STR = """<!DOCTYPE html>
           <div class="stat-card" title="{{ pct }}% complete across {{ required }} declared requirements ({{ satisfied }}/{{ required }} met)">
             <strong>{{ pct }}%</strong> <span>complete</span>
           </div>
-          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios fully satisfy every declared requirement">
-            <strong>{{ complete }}/{{ total }} scenarios satisfied</strong>
+          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios have every declared requirement met">
+            <strong>{{ complete }}/{{ total }} scenarios complete</strong>
           </div>
         </div>
         <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div><span class="bar-overlay">{{ pct }}%</span></div>

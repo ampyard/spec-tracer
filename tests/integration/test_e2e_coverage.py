@@ -21,4 +21,4 @@ def test_cli_generates_coverage_report(tag):
     content = OUTPUT.read_text(encoding="utf-8")
     assert "Testing Progress" in content
     assert "Successful login with valid credentials" in content
-    assert "1/1 scenarios complete" in content
+    assert "1/1 scenarios satisfied" in content

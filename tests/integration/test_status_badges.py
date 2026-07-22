@@ -20,7 +20,7 @@ def test_passed_failed_skipped_displayed_in_report(tag):
     assert result.returncode == 0, result.stderr
     content = OUTPUT.read_text(encoding="utf-8")
 
-    assert "1/1 scenarios complete" in content
+    assert "1/1 scenarios satisfied" in content
     assert "<strong>unit</strong>" in content
     assert "<strong>e2e</strong>" in content
 

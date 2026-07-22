@@ -5,7 +5,7 @@ try:
 except ImportError:
     Template = None
 
-from spec_tracer.models import ScenarioView, TestResult
+from spec_tracer.models import ScenarioView, TestResult, completion_fraction, completion_ratio, worst_outcome
 
 LOGO_DATA_URI = ""
 
@@ -42,6 +42,54 @@ def _has_missing_required_layer(view: ScenarioView) -> bool:
     return any(not _layer_satisfied(req, view.linked_results) for req in view.scenario.required_layers)
 
 
+def _completion_bar(completion: dict) -> str:
+    """HTML for the proportional completion bar + N/M count label.
+
+    Color: full (100%) green · partial (1–99%) amber · empty (0%) red/grey.
+    The label shows the requirement count ``N/M`` (more informative than a
+    bare percentage — it reveals how many requirements are in play).
+    """
+    return (
+        f'<span class="completion-bar completion-{completion["cls"]}">'
+        f'<span class="completion-fill" style="width: {completion["pct"]}%;"></span>'
+        f'</span>'
+        f'<span class="completion-count">{completion["count"]}</span>'
+    )
+
+
+def _completion(view: ScenarioView) -> dict:
+    """Presence-based completion for a scenario, used by the tree-table bar.
+
+    The bar measures how many declared ``@require-*`` requirements are present
+    (layer + module match), NOT whether results passed. A present-but-failed
+    result still fills its requirement. ``ratio`` is 0..1, ``count`` is ``N/M``.
+    """
+    satisfied, total = completion_fraction(view)
+    ratio = (satisfied / total) if total else 0.0
+    if ratio >= 1.0:
+        cls = "full"
+    elif ratio > 0.0:
+        cls = "partial"
+    else:
+        cls = "empty"
+    return {
+        "satisfied": satisfied,
+        "total": total,
+        "ratio": ratio,
+        "pct": int(round(ratio * 100)),
+        "cls": cls,
+        "count": f"{satisfied}/{total}",
+    }
+
+
+def _outcome(view: ScenarioView) -> dict:
+    """Result outcome pill for a scenario (worst-case across linked results)."""
+    status = worst_outcome(view)
+    cls = {"passed": "passed", "failed": "failed", "skipped": "skipped"}.get(status, "skipped")
+    word = {"passed": "Passed", "failed": "Failed", "skipped": "Skipped"}.get(status, "Skipped")
+    return {"word": word, "cls": cls, "status": status}
+
+
 def _scenario_status(view: ScenarioView) -> dict:
     if any(r.status == "failed" for r in view.linked_results):
         return {"word": "Failed", "cls": "failed"}
@@ -52,6 +100,40 @@ def _scenario_status(view: ScenarioView) -> dict:
     if any(r.status == "skipped" for r in view.linked_results):
         return {"word": "Incomplete", "cls": "incomplete"}
     return {"word": "Complete", "cls": "complete"}
+
+
+def _feature_completion(feature_views: list) -> dict:
+    """Feature-level rollup: average child completion (same basis as the bar)."""
+    ratios = [completion_ratio(v) for v in feature_views]
+    ratio = (sum(ratios) / len(ratios)) if ratios else 0.0
+    satisfied = sum(completion_fraction(v)[0] for v in feature_views)
+    required = sum(completion_fraction(v)[1] for v in feature_views)
+    if ratio >= 1.0:
+        cls = "full"
+    elif ratio > 0.0:
+        cls = "partial"
+    else:
+        cls = "empty"
+    return {
+        "satisfied": satisfied,
+        "required": required,
+        "ratio": ratio,
+        "pct": int(round(ratio * 100)),
+        "cls": cls,
+        "count": f"{satisfied}/{required}",
+    }
+
+
+def _feature_outcome(feature_views: list) -> dict:
+    """Feature-level rollup: worst outcome across all the feature's results."""
+    all_results = [r for v in feature_views for r in v.linked_results]
+    if not all_results:
+        return {"word": "Skipped", "cls": "skipped", "status": "skipped"}
+    rank = {"failed": 0, "skipped": 1, "passed": 2}
+    status = min((r.status for r in all_results), key=lambda s: rank.get(s, 0))
+    cls = {"passed": "passed", "failed": "failed", "skipped": "skipped"}.get(status, "skipped")
+    word = {"passed": "Passed", "failed": "Failed", "skipped": "Skipped"}.get(status, "Skipped")
+    return {"word": word, "cls": cls, "status": status}
 
 
 def _feature_status(feature_views: list) -> dict:
@@ -438,6 +520,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .col-name.lvl-3 { padding-left: 48px; }
     .col-status { flex: 0 0 110px; width: 110px; min-width: 0; overflow: hidden; }
     .col-status .badge { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+    .col-completion { flex: 1 1 200px; min-width: 120px; display: flex; align-items: center; gap: 8px; }
+    .col-result { flex: 0 0 100px; width: 100px; min-width: 0; overflow: hidden; }
+    .col-result .badge { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
     .col-expected, .col-actual { flex: 0 0 90px; width: 90px; text-align: center; }
     .col-duration { flex: 0 0 100px; width: 100px; }
     .tree-caret {
@@ -454,6 +539,12 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .tree-caret::before { content: "+"; }
     details.tree-row[open] > summary .tree-caret::before { content: "−"; }
     .col-expected, .col-actual, .col-duration {  ui-monospace, SFMono-Regular, monospace; font-size: 0.8rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+    .completion-bar { flex: 1 1 auto; min-width: 60px; height: 8px; border-radius: 999px; overflow: hidden; background: var(--border); display: block; }
+    .completion-fill { display: block; height: 100%; border-radius: inherit; transition: width 420ms ease; }
+    .completion-full .completion-fill { background: var(--success); }
+    .completion-partial .completion-fill { background: var(--warning); }
+    .completion-empty .completion-fill { background: var(--danger); }
+    .completion-count { flex: 0 0 auto; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--text-soft); }
     .required-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; padding-left: 32px; }
     .required-label { color: var(--text-soft); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .required-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 600; text-transform: uppercase; }
@@ -509,16 +600,14 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       <section class="panel">
         <h1>Testing Progress</h1>
         <div class="hero-stats">
-          <div class="stat-card" title="{{ tested }}/{{ total }} scenarios complete">
-            <strong>{{ tested }}/{{ total }}</strong>
-            <span>scenarios complete</span>
+          <div class="stat-card" title="{{ pct }}% complete across {{ required }} declared requirements ({{ satisfied }}/{{ required }} met)">
+            <strong>{{ pct }}%</strong> <span>complete</span>
           </div>
-          <div class="stat-card">
-            <strong>{{ percentage }}%</strong>
-            <span>progress</span>
+          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios fully satisfy every declared requirement">
+            <strong>{{ complete }}/{{ total }} scenarios satisfied</strong>
           </div>
         </div>
-        <div class="bar-shell"><div class="bar-fill" style="width: {{ percentage }}%;"></div></div>
+        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div></div>
       </section>
 
       <section class="panel">
@@ -600,7 +689,8 @@ _TEMPLATE_STR = """<!DOCTYPE html>
         <div class="tree-table">
           <div class="tree-head" data-tree-head>
             <button type="button" class="sort-btn col-name" data-sort-key="name">Name <span class="sort-caret">&#9660;</span></button>
-            <button type="button" class="sort-btn col-status" data-sort-key="status">Status <span class="sort-caret">&#9660;</span></button>
+            <button type="button" class="sort-btn col-completion" data-sort-key="completion">Completion <span class="sort-caret">&#9660;</span></button>
+            <button type="button" class="sort-btn col-result" data-sort-key="result">Result <span class="sort-caret">&#9660;</span></button>
             <div class="col-expected">Expected</div>
             <div class="col-actual">Actual</div>
             <button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>
@@ -611,6 +701,8 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             {% set feature_complete = feature_views | selectattr('is_complete') | list | length %}
             {% set feature_total = feature_views | length %}
             {% set feature_pct = ((feature_complete / feature_total * 100) | round | int) if feature_total else 0 %}
+            {% set feature_completion = feature_completion(feature_views) %}
+            {% set feature_outcome = feature_outcome(feature_views) %}
             {% set feature_ns = namespace(total=0, expected=0, actual=0) %}
             {% for view in feature_views %}
             {% set feature_ns.expected = feature_ns.expected + expected_test_count(view.scenario) %}
@@ -618,10 +710,11 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             {% for r in view.linked_results %}{% set feature_ns.total = feature_ns.total + r.duration %}{% endfor %}
             {% endfor %}
             {% set fstatus = feature_status(feature_views) %}
-            <details class="tree-row level-1" data-sort-name="{{ feature_name }}" data-sort-status="{{ feature_pct }}" data-sort-duration="{{ feature_ns.total }}" data-search="{{ feature_name | lower }}">
+            <details class="tree-row level-1" data-sort-name="{{ feature_name }}" data-sort-completion="{{ feature_completion.pct }}" data-sort-result="{{ status_rank(feature_outcome.status) }}" data-sort-status="{{ feature_pct }}" data-sort-duration="{{ feature_ns.total }}" data-search="{{ feature_name | lower }}">
               <summary>
                 <span class="col-name lvl-1"><span class="tree-caret"></span><span class="pill"><strong>Feature</strong></span><span class="name-text"><strong>{{ feature_name }}</strong></span></span>
-                <span class="col-status"><span class="badge {{ fstatus.cls }}">{{ fstatus.word }}</span></span>
+                <span class="col-completion">{{ _completion_bar(feature_completion) }}</span>
+                <span class="col-result"><span class="badge {{ feature_outcome.cls }}">{{ feature_outcome.word }}</span></span>
                 <span class="col-expected">{{ feature_ns.expected }}</span>
                 <span class="col-actual">{{ feature_ns.actual }}</span>
                 <span class="col-duration">{{ format_duration(feature_ns.total) }}</span>
@@ -632,10 +725,13 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                 {% set scenario_expected = expected_test_count(view.scenario) %}
                 {% set scenario_actual = view.linked_results | length %}
                 {% set sstatus = scenario_status(view) %}
-                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_complete else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
+                {% set scompletion = completion(view) %}
+                {% set soutcome = outcome(view) %}
+                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-completion="{{ scompletion.pct }}" data-sort-result="{{ status_rank(soutcome.status) }}" data-sort-status="{{ 100 if view.is_complete else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
                   <summary>
                     <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span><span class="name-text">{{ view.scenario.name }}</span></span>
-                    <span class="col-status"><span class="badge {{ sstatus.cls }}">{{ sstatus.word }}</span></span>
+                    <span class="col-completion">{{ _completion_bar(scompletion) }}</span>
+                    <span class="col-result"><span class="badge {{ soutcome.cls }}">{{ soutcome.word }}</span></span>
                     <span class="col-expected">{{ scenario_expected }}</span>
                     <span class="col-actual">{{ scenario_actual }}</span>
                     <span class="col-duration">{{ format_duration(scenario_duration) }}</span>
@@ -961,14 +1057,23 @@ class HtmlRenderer:
             template.globals["expected_test_count"] = _expected_test_count
             template.globals["scenario_status"] = _scenario_status
             template.globals["feature_status"] = _feature_status
+            template.globals["completion"] = _completion
+            template.globals["outcome"] = _outcome
+            template.globals["feature_completion"] = _feature_completion
+            template.globals["feature_outcome"] = _feature_outcome
+            template.globals["_completion_bar"] = _completion_bar
             template.globals["format_duration"] = _format_duration
             template.globals["_status_class"] = _status_class
             template.globals["_status_label"] = _status_label
             template.globals["status_rank"] = _status_rank
             return template.render(
                 tested=stats["complete"],
+                complete=stats["complete"],
                 total=stats["total"],
                 percentage=stats["percentage"],
+                pct=stats["pct"],
+                satisfied=stats["satisfied"],
+                required=stats["required"],
                 feature_breakdown=feature_breakdown,
                 views=views,
                 layer_stats=layer_stats,

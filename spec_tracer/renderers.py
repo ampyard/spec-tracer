@@ -43,15 +43,17 @@ def _has_missing_required_layer(view: ScenarioView) -> bool:
 
 
 def _completion_bar(completion: dict) -> str:
-    """HTML for the proportional completion bar + N/M count label.
+    """HTML for the proportional completion bar with an in-bar percentage.
 
     Color: full (100%) green · partial (1–99%) amber · empty (0%) red/grey.
-    The label shows the requirement count ``N/M`` (more informative than a
-    bare percentage — it reveals how many requirements are in play).
+    The bar itself carries a centered ``NN%`` overlay (same treatment as the
+    dashboard progress bar); the ``N/M`` requirement count sits beside it for
+    additional context (it reveals how many requirements are in play).
     """
     return (
         f'<span class="completion-bar completion-{completion["cls"]}">'
         f'<span class="completion-fill" style="width: {completion["pct"]}%;"></span>'
+        f'<span class="completion-overlay">{completion["pct"]}%</span>'
         f'</span>'
         f'<span class="completion-count">{completion["count"]}</span>'
     )
@@ -540,12 +542,13 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .tree-caret::before { content: "+"; }
     details.tree-row[open] > summary .tree-caret::before { content: "−"; }
     .col-expected, .col-actual, .col-duration {  ui-monospace, SFMono-Regular, monospace; font-size: 0.8rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
-    .completion-bar { flex: 1 1 auto; min-width: 60px; height: 8px; border-radius: 999px; overflow: hidden; background: var(--border); display: block; }
+    .completion-bar { flex: 1 1 auto; min-width: 60px; height: 20px; border-radius: 999px; overflow: hidden; background: var(--border); display: block; position: relative; }
     .completion-fill { display: block; height: 100%; border-radius: inherit; transition: width 420ms ease; }
     .completion-full .completion-fill { background: var(--success); }
     .completion-partial .completion-fill { background: var(--warning); }
     .completion-empty .completion-fill { background: var(--danger); }
-    .completion-count { flex: 0 0 auto; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--text-soft); }
+    .completion-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); font-variant-numeric: tabular-nums; pointer-events: none; text-shadow: 0 1px 2px color-mix(in srgb, var(--page) 70%, transparent); }
+    .completion-count { flex: 0 0 auto; font-size: 0.76rem; font-variant-numeric: tabular-nums; color: var(--text-soft); margin-left: 8px; }
     .required-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; padding-left: 32px; }
     .required-label { color: var(--text-soft); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
     .required-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 600; text-transform: uppercase; }

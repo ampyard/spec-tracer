@@ -1,6 +1,6 @@
 Feature: Test Coverage Health Signals
 
-  @FC-005 @require-unit:aggregator @require-e2e
+  @FC-005 @require-unit:aggregator @require-e2e:aggregator
   Scenario: Report flags missing required layer
     Given a feature file with scenario tagged "@FC-005"
     And a unit JUnit XML result tagged "@FC-005"

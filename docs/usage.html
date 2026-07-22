@@ -96,7 +96,10 @@ uv run spec-tracer path/to/other-config.json</code></pre>
   <span class="hl-prop">"integration"</span>: {
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/integration.xml"</span>]
   },
-  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"e2e"</span>: {
+    <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+    <span class="hl-str">"checkout"</span>: [<span class="hl-str">"./reports/checkout-e2e.json"</span>]
+  },
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">false</span>,
@@ -115,12 +118,12 @@ uv run spec-tracer path/to/other-config.json</code></pre>
     <p>Tags like <span class="tag tag-link">@FC-42</span> or <span class="tag tag-link">@regression</span> appear on both the Gherkin scenario and the test result. Any tag match links the test to the scenario (OR logic).</p>
 
     <h3>Layer Requirement Tags</h3>
-    <p>Tags like <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-integration</span>, or <span class="tag tag-require">@require-e2e</span> declare which layers <em>must</em> have coverage. These are excluded from linking &mdash; they only affect the report's "Required Layers" status.</p>
+    <p>Tags like <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-integration</span>, or <span class="tag tag-require">@require-e2e</span> declare which layers <em>must</em> have coverage. Append <code>:modulename</code> on any of them (e.g. <span class="tag tag-require">@require-e2e:checkout</span>) to require results from a specific config module key. These are excluded from linking &mdash; they only affect the report's "Required Layers" status.</p>
 
     <div class="code-header"><span>Example feature file</span></div>
 <pre><code><span class="hl-section">Feature:</span> User Login
 
-  <span class="hl-tag">@FC-42</span> <span class="hl-tag">@regression</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:auth</span> <span class="hl-tag">@require-e2e</span>
+  <span class="hl-tag">@FC-42</span> <span class="hl-tag">@regression</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:auth</span> <span class="hl-tag">@require-e2e:auth</span>
   <span class="hl-section">Scenario:</span> Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
@@ -185,8 +188,8 @@ uv run spec-tracer path/to/other-config.json</code></pre>
         <tr>
           <td><code>e2e</code></td>
           <td><span class="badge badge-pink">No</span></td>
-          <td><code>string[]</code></td>
-          <td>Cucumber JSON file/directory paths. Not module-scoped.</td>
+          <td><code>{string: string[]}</code></td>
+          <td>Same shape as <code>unit</code>, for Cucumber JSON paths. Matches <code>@require-e2e</code> / <code>@require-e2e:&lt;module&gt;</code>.</td>
         </tr>
         <tr>
           <td><code>output</code></td>
@@ -263,22 +266,24 @@ uv run spec-tracer path/to/other-config.json</code></pre>
     </ul>
 
     <h2 id="module-scope">Module-Scoped Requirements</h2>
-    <p><code>@require-unit</code> and <code>@require-integration</code> accept an optional <code>:modulename</code> suffix (e.g. <span class="tag tag-require">@require-unit:auth</span>). This pairs with module-keyed entries in the config:</p>
+    <p><code>@require-unit</code>, <code>@require-integration</code>, and <code>@require-e2e</code> accept an optional <code>:modulename</code> suffix (e.g. <span class="tag tag-require">@require-unit:auth</span>, <span class="tag tag-require">@require-e2e:checkout</span>). This pairs with module-keyed entries in the config:</p>
 
     <div class="code-header"><span>Module-scoped config</span></div>
 <pre><code>{
   <span class="hl-prop">"unit"</span>: {
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>],          <span class="hl-com">// unscoped — matches bare @require-unit</span>
     <span class="hl-str">"auth"</span>: [<span class="hl-str">"./reports/auth-unit.xml"</span>]     <span class="hl-com">// module "auth" — matches @require-unit:auth</span>
+  },
+  <span class="hl-prop">"e2e"</span>: {
+    <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+    <span class="hl-str">"checkout"</span>: [<span class="hl-str">"./reports/checkout-e2e.json"</span>]
   }
 }</code></pre>
 
     <div class="callout callout-warning">
       <strong>&#9888; Strict matching</strong>
-      A module-scoped requirement (<code>@require-unit:auth</code>) is only satisfied by a result registered under that exact module key. An unscoped result (config key <code>""</code>) never satisfies it. A bare <code>@require-unit</code> (no module) is satisfied by any linked unit result regardless of module.
+      A module-scoped requirement (<code>@require-unit:auth</code>) is only satisfied by a result registered under that exact module key. An unscoped result (config key <code>""</code>) never satisfies it. A bare <code>@require-unit</code> / <code>@require-e2e</code> (no module) is satisfied by any linked result for that layer regardless of module.
     </div>
-
-    <p><code>@require-e2e</code> does not accept a module suffix &mdash; E2E scenarios typically span multiple modules.</p>
 
     <h2 id="json-report">Machine-Readable JSON Report</h2>
     <p>Set <code>output_json</code> to also emit a JSON file conforming to <code>spectracer-report.schema.json</code> (Draft 7, shipped in the repo). It's built from the same internal data as the HTML report, so the two can never drift apart.</p>
@@ -287,7 +292,7 @@ uv run spec-tracer path/to/other-config.json</code></pre>
 <pre><code>{
   <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
   <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
-  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"e2e"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>] },
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>
 }</code></pre>
@@ -322,7 +327,7 @@ uv run spec-tracer path/to/other-config.json</code></pre>
     <div class="code-header"><span>spectracer.config.json</span></div>
 <pre><code>{
   <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
-  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"e2e"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>] },
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>
 }</code></pre>
 
@@ -332,7 +337,7 @@ uv run spec-tracer path/to/other-config.json</code></pre>
   <span class="hl-prop">"features"</span>: [<span class="hl-str">"./features"</span>],
   <span class="hl-prop">"unit"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>] },
   <span class="hl-prop">"integration"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/int.xml"</span>] },
-  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"e2e"</span>: { <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>] },
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">true</span>
 }</code></pre>
@@ -350,7 +355,11 @@ uv run spec-tracer path/to/other-config.json</code></pre>
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/int.xml"</span>],
     <span class="hl-str">"billing"</span>: [<span class="hl-str">"./modules/billing/reports/int.xml"</span>]
   },
-  <span class="hl-prop">"e2e"</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+  <span class="hl-prop">"e2e"</span>: {
+    <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+    <span class="hl-str">"checkout"</span>: [<span class="hl-str">"./reports/checkout-e2e.json"</span>],
+    <span class="hl-str">"billing"</span>: [<span class="hl-str">"./modules/billing/reports/e2e.json"</span>]
+  },
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"health_checks"</span>: {
     <span class="hl-prop">"progress_threshold_green"</span>: <span class="hl-num">90</span>,

@@ -73,7 +73,7 @@ The wheel is written to `dist/spec_tracer-*.whl`. Install it with `uv pip instal
      "features": ["./features"],
      "unit": { "": ["./reports/unit.xml"] },
      "integration": { "": ["./reports/integration.xml"] },
-     "e2e": ["./reports/e2e.json"],
+     "e2e": { "": ["./reports/e2e.json"] },
      "output": "./report.html"
    }
    ```
@@ -101,7 +101,7 @@ Feature files and test results connect via **shared tags**. There are two kinds 
 ```gherkin
 Feature: User Login
 
-  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e
+  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e:auth
   Scenario: Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
@@ -119,9 +119,7 @@ Feature: User Login
 
 ### Module-scoped requirements
 
-`@require-unit` and `@require-integration` accept an optional `:modulename` suffix, e.g. `@require-unit:auth`. This pairs with module-keyed entries in the config file's `unit`/`integration` objects (see below) — a module-scoped requirement is only satisfied by a result registered under that exact module. An unscoped result (config key `""`) never satisfies it, and a bare `@require-unit` (no module) is satisfied by any linked unit result regardless of module.
-
-`@require-e2e` does not accept a module suffix, since E2E scenarios typically span multiple modules by nature.
+`@require-unit`, `@require-integration`, and `@require-e2e` accept an optional `:modulename` suffix, e.g. `@require-unit:auth` or `@require-e2e:checkout`. This pairs with module-keyed entries in the config file's `unit`/`integration`/`e2e` objects (see below) — a module-scoped requirement is only satisfied by a result registered under that exact module. An unscoped result (config key `""`) never satisfies it, and a bare `@require-unit` / `@require-e2e` (no module) is satisfied by any linked result for that layer regardless of module.
 
 ### Matching rules
 
@@ -150,7 +148,10 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
   "integration": {
     "": ["./reports/integration.xml"]
   },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": {
+    "": ["./reports/e2e.json"],
+    "checkout": ["./reports/checkout-e2e.json"]
+  },
   "output": "./report.html",
   "output_json": "./report.json",
   "error_on_failure": false,
@@ -168,7 +169,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `features` | Yes | Array of Gherkin `.feature` file or directory paths (directories are searched recursively). |
 | `unit` | No | Object keyed by module name. Each value is an array of JUnit XML file/directory paths. Use `""` as the key for results not tied to any module. Matched against `@require-unit` / `@require-unit:<module>` tags. |
 | `integration` | No | Same shape as `unit`, matched against `@require-integration` / `@require-integration:<module>` tags. |
-| `e2e` | No | Array of Cucumber JSON file/directory paths. E2E results are never module-scoped. |
+| `e2e` | No | Same shape as `unit`, but for Cucumber JSON file/directory paths. Matched against `@require-e2e` / `@require-e2e:<module>` tags. |
 | `output` | Yes | Path for the generated HTML report. Created if the parent directory doesn't exist; overwritten if it already exists. |
 | `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. Health checks never affect the exit code — this is the only thing that does. |
@@ -197,7 +198,7 @@ Setting `output_json` in the config produces a JSON file alongside the HTML repo
 {
   "features": ["./features"],
   "unit": { "": ["./reports/unit.xml"] },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": { "": ["./reports/e2e.json"] },
   "output": "./report.html",
   "output_json": "./report.json"
 }

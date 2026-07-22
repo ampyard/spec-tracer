@@ -7,14 +7,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _layer_config(value):
+    """Normalize a layer argument to a module-keyed path map.
+
+    Accepts a single path (unscoped under ``""``) or an already module-keyed dict.
+    """
+    if isinstance(value, dict):
+        return {module: [str(p) for p in paths] for module, paths in value.items()}
+    return {"": [str(value)]}
+
+
 def run_tool(features, output, unit=None, integration=None, e2e=None, **extra):
     config = {"features": [str(features)], "output": str(output)}
     if unit is not None:
-        config["unit"] = {"": [str(unit)]}
+        config["unit"] = _layer_config(unit)
     if integration is not None:
-        config["integration"] = {"": [str(integration)]}
+        config["integration"] = _layer_config(integration)
     if e2e is not None:
-        config["e2e"] = [str(e2e)]
+        config["e2e"] = _layer_config(e2e)
     config.update(extra)
 
     config_path = ROOT / "reports" / f"config-{uuid.uuid4().hex}.json"

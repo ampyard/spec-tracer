@@ -1,6 +1,6 @@
 Feature: Test Coverage Dashboard Rendering
 
-  @FC-006 @require-unit:renderers @require-e2e
+  @FC-006 @require-unit:renderers @require-e2e:renderers
   Scenario: Report renders polished dashboard sections
     Given a feature file with scenario tagged "@FC-006"
     And a unit JUnit XML result tagged "@FC-006"

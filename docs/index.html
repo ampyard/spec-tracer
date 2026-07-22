@@ -89,7 +89,7 @@
         <div class="step-num">1</div>
         <div class="step-body">
           <h3>Write Gherkin Feature Files</h3>
-          <p>Define your scenarios in standard <code>.feature</code> files with tags like <span class="tag tag-link">@FC-42</span> that link to test results. Declare required layers with <span class="tag tag-require">@require-unit</span>.</p>
+          <p>Define your scenarios in standard <code>.feature</code> files with tags like <span class="tag tag-link">@FC-42</span> that link to test results. Declare required layers with <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-e2e</span>, or module forms like <span class="tag tag-require">@require-e2e:checkout</span>.</p>
         </div>
       </div>
       <div class="step animate-in animate-in-d1">
@@ -132,7 +132,7 @@ cat &gt; spectracer.config.json &lt;&lt;EOF
 {
   "features": ["./features"],
   "unit": { "": ["./reports/tests.xml"] },
-  "e2e": ["./reports/e2e.json"],
+  "e2e": { "": ["./reports/e2e.json"] },
   "output": "./reports/spectracer-report.html"
 }
 EOF
@@ -174,7 +174,7 @@ spec-tracer
       <div class="feature-card">
         <div class="feature-icon">&#9776;</div>
         <h4>Feature Traceability</h4>
-        <p>Searchable tree: Feature &rarr; Scenario &rarr; Layer results. Full Gherkin text, required layer status, and per-test pass/fail/skip.</p>
+        <p>Searchable tree: Feature &rarr; Scenario &rarr; Layer results. Full Gherkin text, required layer (and optional module) status, and per-test pass/fail/skip.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9888;</div>
@@ -195,6 +195,11 @@ spec-tracer
         <div class="feature-icon">&#9776;</div>
         <h4>JSON Report</h4>
         <p>Set <code>output_json</code> and get the same coverage, pyramid, health, and traceability data as schema-validated JSON &mdash; built from the same data model as the HTML report, so the two never drift.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128230;</div>
+        <h4>Module Scope</h4>
+        <p>Pin requirements to code areas with <code>@require-unit:auth</code> or <code>@require-e2e:checkout</code>. Unit, integration, and E2E all use the same module-keyed config shape.</p>
       </div>
     </div>
   </div>

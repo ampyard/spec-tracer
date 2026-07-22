@@ -239,8 +239,8 @@
           </tr>
           <tr>
             <td><span class="tag tag-require">Requirement</span></td>
-            <td><code>@require-unit</code>, <code>@require-e2e</code></td>
-            <td>Declares which layers must have coverage. Excluded from linking logic.</td>
+            <td><code>@require-unit</code>, <code>@require-integration</code>, <code>@require-e2e</code>, and module forms like <code>@require-e2e:checkout</code></td>
+            <td>Declares which layers (and optionally which modules) must have coverage. Excluded from linking logic.</td>
           </tr>
         </tbody>
       </table>
@@ -250,7 +250,7 @@
     <p>Scenarios without any <code>@require-*</code> tags default to <code>@require-e2e</code> &mdash; because if you wrote a Gherkin scenario but didn't declare requirements, it should at least have E2E coverage.</p>
 
     <h2 id="module-scope">Module-Scoped Requirements</h2>
-    <p>For teams with multi-module codebases, <code>@require-unit:auth</code> and <code>@require-integration:billing</code> let you pin requirements to specific modules.</p>
+    <p>For teams with multi-module codebases, every layer supports optional module pinning: <code>@require-unit:auth</code>, <code>@require-integration:billing</code>, and <code>@require-e2e:checkout</code>. Config for <code>unit</code>, <code>integration</code>, and <code>e2e</code> uses the same shape &mdash; an object keyed by module name.</p>
 
     <div class="feature-block">
       <h3>How It Works</h3>
@@ -260,15 +260,21 @@
     <span class="hl-str">""</span>: [<span class="hl-str">"./reports/unit.xml"</span>],
     <span class="hl-str">"auth"</span>: [<span class="hl-str">"./reports/auth-unit.xml"</span>],
     <span class="hl-str">"billing"</span>: [<span class="hl-str">"./reports/billing-unit.xml"</span>]
+  },
+  <span class="hl-prop">"integration"</span>: {
+    <span class="hl-str">"billing"</span>: [<span class="hl-str">"./reports/billing-int.xml"</span>]
+  },
+  <span class="hl-prop">"e2e"</span>: {
+    <span class="hl-str">""</span>: [<span class="hl-str">"./reports/e2e.json"</span>],
+    <span class="hl-str">"checkout"</span>: [<span class="hl-str">"./reports/checkout-e2e.json"</span>]
   }
 }</code></pre>
       <p>In your feature file:</p>
-<pre><code><span class="hl-tag">@FC-42</span> <span class="hl-tag">@require-unit:auth</span>
-<span class="hl-section">Scenario:</span> Authenticated billing access</code></pre>
-      <p>The <code>@require-unit:auth</code> requirement is <strong>only</strong> satisfied by results from the <code>"auth"</code> module key. Unscoped results (<code>""</code>) never satisfy it.</p>
+<pre><code><span class="hl-tag">@FC-42</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:billing</span> <span class="hl-tag">@require-e2e:checkout</span>
+<span class="hl-section">Scenario:</span> Authenticated billing checkout</code></pre>
+      <p>Each module-scoped requirement is <strong>only</strong> satisfied by a linked result registered under that exact module key. Unscoped results (config key <code>""</code>) never satisfy a module-scoped requirement. A bare <code>@require-unit</code> / <code>@require-e2e</code> (no module) is satisfied by any linked result for that layer.</p>
+      <p>In the HTML report, satisfied modules show as chips like <code>e2e (checkout) OK</code>; missing ones show <code>Missing</code>.</p>
     </div>
-
-    <p><code>@require-e2e</code> intentionally does not accept a module suffix &mdash; E2E scenarios typically span multiple modules by nature.</p>
 
     <h2 id="edge-cases">Edge Case Behavior</h2>
     <table>

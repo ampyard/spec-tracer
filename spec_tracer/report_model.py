@@ -123,7 +123,7 @@ def build_report(
         "config": config,
         "summary": {
             "completion": {
-                "tested": stats["tested"],
+                "tested": stats["complete"],
                 "total": stats["total"],
                 "percent": stats["percentage"],
             },

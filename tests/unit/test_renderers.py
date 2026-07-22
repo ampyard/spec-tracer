@@ -15,10 +15,10 @@ def _build_views():
 
 def _render(**overrides):
     views = overrides.pop("views", _build_views())
-    stats = overrides.pop("stats", {"tested": 1, "total": 2, "percentage": 50})
+    stats = overrides.pop("stats", {"complete": 1, "total": 2, "percentage": 50})
     feature_breakdown = overrides.pop("feature_breakdown", [
-        {"name": "Alpha Feature", "tested": 1, "total": 1, "percentage": 100},
-        {"name": "Zebra Feature", "tested": 0, "total": 1, "percentage": 0},
+        {"name": "Alpha Feature", "complete": 1, "total": 1, "percentage": 100},
+        {"name": "Zebra Feature", "complete": 0, "total": 1, "percentage": 0},
     ])
     layer_stats = overrides.pop("layer_stats", [
         {
@@ -145,7 +145,7 @@ def test_render_tree_table_sort_buttons_present(tag):
 @pytest.mark.parametrize("tag", ["@FC-009"])
 def test_render_includes_scenario_status_badges(tag):
     html = _render()
-    assert 'class="badge tested">Complete' in html
+    assert 'class="badge complete">Complete' in html
     assert 'class="badge incomplete">Incomplete' in html
 
 

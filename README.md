@@ -27,7 +27,7 @@ The tool is tech-stack agnostic: it only needs Gherkin `.feature` files, JUnit X
 
 - **Fragmented visibility** — unit, integration, and E2E tests usually live in different directories or repos, with no single view of overall coverage.
 - **Inverted pyramids** — teams unknowingly accumulate slow E2E tests instead of fast unit tests, and don't notice until CI is painfully slow.
-- **No traceability** — it's hard to know if a specific business scenario is actually tested across all the layers it should be.
+- **No traceability** — it's hard to know if a specific business scenario is actually complete across all the layers it should.
 - **Tooling lock-in** — most reporting tools are tied to one framework (Allure for Java, Cypress Dashboard for Cypress). This one isn't.
 
 ## Installation
@@ -215,7 +215,7 @@ Useful for PR bots, custom CI gating beyond `error_on_failure`, or feeding cover
 | Empty or missing test result path | Silently ignored (zero tests for that layer). |
 | Malformed JUnit XML or Cucumber JSON | Aborts with a clear error message. |
 | Test matches no scenario | Listed in "Unlinked Tests". |
-| Scenario matches no test | Shown as "untested". |
+| Scenario matches no test | Shown as "incomplete". |
 | Scenario has `@require-*` but no matching test | That layer is flagged as missing. |
 | Feature-level tags | Not inherited by scenarios — only scenario-level tags are used for matching. |
 | Scenario Outline / Examples, `Rule:`, `Background:`, non-English dialects | Deferred to whatever your Gherkin/E2E framework does with them — the tool doesn't parse Gherkin syntax beyond `Feature:`, tags, and `Scenario:` lines. |

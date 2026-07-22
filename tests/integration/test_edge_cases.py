@@ -85,7 +85,7 @@ def test_feature_level_tags_not_inherited(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-004"])
-def test_no_matching_tags_shows_untested(tag):
+def test_no_matching_tags_shows_incomplete(tag):
     """Scenario with no matching test results shows as incomplete."""
     base = FIXTURES / "no_match"
     output = base / "report.html"

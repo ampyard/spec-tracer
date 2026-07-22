@@ -51,7 +51,7 @@ def _scenario_status(view: ScenarioView) -> dict:
         return {"word": "Incomplete", "cls": "incomplete"}
     if any(r.status == "skipped" for r in view.linked_results):
         return {"word": "Incomplete", "cls": "incomplete"}
-    return {"word": "Complete", "cls": "tested"}
+    return {"word": "Complete", "cls": "complete"}
 
 
 def _feature_status(feature_views: list) -> dict:
@@ -60,7 +60,7 @@ def _feature_status(feature_views: list) -> dict:
         return {"word": "Failed", "cls": "failed"}
     if "Incomplete" in statuses:
         return {"word": "Incomplete", "cls": "incomplete"}
-    return {"word": "Complete", "cls": "tested"}
+    return {"word": "Complete", "cls": "complete"}
 
 
 def _format_duration(value: float) -> str:
@@ -345,8 +345,8 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .tier-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .tier-chip { padding: 2px 9px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--text-soft); white-space: nowrap; }
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
-    .badge.tested { background: var(--success-soft); color: var(--success); }
-    .badge.untested { background: var(--danger-soft); color: var(--danger); }
+    .badge.complete { background: var(--success-soft); color: var(--success); }
+    .badge.incomplete { background: var(--danger-soft); color: var(--danger); }
     .badge.partial { background: var(--warning-soft); color: var(--warning); }
     .badge.incomplete { background: var(--warning-soft); color: var(--warning); }
     .badge.passed { background: var(--success-soft); color: var(--success); }
@@ -608,9 +608,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
           <div class="tree-root" data-tree-group>
             {% for feature_name, feature_views in views | sort(attribute='scenario.feature') | groupby('scenario.feature') %}
             {% set feature_views = feature_views | list %}
-            {% set feature_tested = feature_views | selectattr('is_tested') | list | length %}
+            {% set feature_complete = feature_views | selectattr('is_complete') | list | length %}
             {% set feature_total = feature_views | length %}
-            {% set feature_pct = ((feature_tested / feature_total * 100) | round | int) if feature_total else 0 %}
+            {% set feature_pct = ((feature_complete / feature_total * 100) | round | int) if feature_total else 0 %}
             {% set feature_ns = namespace(total=0, expected=0, actual=0) %}
             {% for view in feature_views %}
             {% set feature_ns.expected = feature_ns.expected + expected_test_count(view.scenario) %}
@@ -632,7 +632,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                 {% set scenario_expected = expected_test_count(view.scenario) %}
                 {% set scenario_actual = view.linked_results | length %}
                 {% set sstatus = scenario_status(view) %}
-                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_tested else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
+                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-status="{{ 100 if view.is_complete else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
                   <summary>
                     <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span><span class="name-text">{{ view.scenario.name }}</span></span>
                     <span class="col-status"><span class="badge {{ sstatus.cls }}">{{ sstatus.word }}</span></span>
@@ -966,7 +966,7 @@ class HtmlRenderer:
             template.globals["_status_label"] = _status_label
             template.globals["status_rank"] = _status_rank
             return template.render(
-                tested=stats["tested"],
+                tested=stats["complete"],
                 total=stats["total"],
                 percentage=stats["percentage"],
                 feature_breakdown=feature_breakdown,
@@ -985,11 +985,11 @@ class HtmlRenderer:
             '<head><meta charset="utf-8"><title>SpecTracer</title></head>',
             "<body>",
             "<h1>Testing Progress</h1>",
-            f"<p>{stats['tested']}/{stats['total']} scenarios complete</p>",
+            f"<p>{stats['complete']}/{stats['total']} scenarios complete</p>",
             "<ul>",
         ]
         for view in views:
-            status = "tested" if view.is_tested else "untested"
+            status = "complete" if view.is_complete else "incomplete"
             lines.append(f"<li>{view.scenario.feature}: {view.scenario.name} - {status}</li>")
         lines.extend(["</ul>", "</body>", "</html>"])
         return "\n".join(lines)

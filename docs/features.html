@@ -66,12 +66,12 @@
         <li><span class="badge badge-amber">Amber</span> between the amber and green thresholds</li>
         <li><span class="badge badge-red">Red</span> below the amber threshold (default 50%)</li>
       </ul>
-      <p>A scenario counts as <strong>tested</strong> if at least one test result (across any layer) links to it.</p>
+      <p>A scenario counts as <strong>complete</strong> if at least one test result (across any layer) links to it.</p>
     </div>
 
     <div class="feature-block">
       <h3>&#9776; Per-Feature Breakdown</h3>
-      <p>Each feature file gets its own mini progress bar with its own tested/untested count. This makes it easy to see which areas of the application are well-covered and which need attention.</p>
+      <p>Each feature file gets its own mini progress bar with its own complete/incomplete count. This makes it easy to see which areas of the application are well-covered and which need attention.</p>
     </div>
 
     <div class="feature-block">
@@ -288,7 +288,7 @@
         <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
         <tr><td>Test matches no scenario (with <code>@FC-*</code> tag)</td><td>Listed in "Unlinked Tests"</td></tr>
         <tr><td>Test matches no scenario (no <code>@FC-*</code> tag)</td><td>Silently excluded — only <code>@FC-*</code> orphans are reported</td></tr>
-        <tr><td>Scenario matches no test</td><td>Shown as "untested"</td></tr>
+        <tr><td>Scenario matches no test</td><td>Shown as "incomplete"</td></tr>
         <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
         <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>
         <tr><td>Tag collisions</td><td>Result links to ALL matching scenarios</td></tr>

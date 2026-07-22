@@ -27,9 +27,9 @@ class ReportAggregator:
     @staticmethod
     def completion_stats(views: List[ScenarioView]) -> dict:
         total = len(views)
-        tested = sum(1 for v in views if v.is_tested)
-        percentage = int(round((tested / total * 100) if total else 0))
-        return {"total": total, "tested": tested, "percentage": percentage}
+        complete = sum(1 for v in views if v.is_complete)
+        percentage = int(round((complete / total * 100) if total else 0))
+        return {"total": total, "complete": complete, "percentage": percentage}
 
     @staticmethod
     def feature_breakdown(views: List[ScenarioView]) -> List[dict]:
@@ -39,12 +39,12 @@ class ReportAggregator:
 
         breakdown: List[dict] = []
         for feature_name, feature_views in sorted(features.items()):
-            feature_tested = sum(1 for v in feature_views if v.is_tested)
+            feature_complete = sum(1 for v in feature_views if v.is_complete)
             feature_total = len(feature_views)
-            feature_pct = int(round((feature_tested / feature_total * 100) if feature_total else 0))
+            feature_pct = int(round((feature_complete / feature_total * 100) if feature_total else 0))
             breakdown.append({
                 "name": feature_name,
-                "tested": feature_tested,
+                "complete": feature_complete,
                 "total": feature_total,
                 "percentage": feature_pct,
             })
@@ -162,7 +162,7 @@ class ReportAggregator:
             unlinked_message = "Several results didn't link to any scenario."
 
         return {
-            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['tested']}/{progress_stats['total']}"},
+            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['complete']}/{progress_stats['total']}"},
             "pyramid": {
                 "status": pyramid_status,
                 "message": pyramid_message,

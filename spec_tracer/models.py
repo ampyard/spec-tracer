@@ -36,5 +36,5 @@ class ScenarioView:
     layers: List[List[TestResult]] = field(default_factory=list)
 
     @property
-    def is_tested(self) -> bool:
+    def is_complete(self) -> bool:
         return bool(self.linked_results)

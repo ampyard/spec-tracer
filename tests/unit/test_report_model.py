@@ -18,7 +18,7 @@ def _build(views, stats=None, layer_stats=None, health_checks=None, unlinked_res
     return build_report(
         config or {"features": ["./features"], "output": "./out.html"},
         views,
-        stats or {"tested": len(views), "total": len(views), "percentage": 100},
+        stats or {"complete": len(views), "total": len(views), "percentage": 100},
         layer_stats or [],
         health_checks
         or {"Progress": {"status": "pass", "message": "ok", "value": "1/1"}},

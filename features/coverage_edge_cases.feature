@@ -33,7 +33,7 @@ Feature: Test Coverage Edge Cases
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
     And the report should contain "0/1 scenarios complete"
-    And the report should contain "untested"
+    And the report should contain "incomplete"
     And the report should list the unlinked test "test_unrelated_@OTHER-999"
 
   @FC-EDGE-004b @require-e2e:linker
@@ -52,7 +52,7 @@ Feature: Test Coverage Edge Cases
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
     And the report should contain "0/1 scenarios complete"
-    And the report should contain "untested"
+    And the report should contain "incomplete"
 
   @FC-EDGE-006 @require-e2e:parsers
   Scenario: Malformed JUnit XML aborts with a non-zero exit code

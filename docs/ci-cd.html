@@ -128,13 +128,13 @@
     <h3>PR Comment with Live Coverage Numbers</h3>
     <p>Set <code>output_json</code> in the config to get structured data your CI script can read directly, instead of just linking to the HTML artifact:</p>
 
-<pre><code>      - <span class="hl-section">name:</span> Comment PR with coverage
+<pre><code>      - <span class="hl-section">name:</span> Comment PR with completion
         <span class="hl-section">if:</span> github.event_name == 'pull_request'
         <span class="hl-section">run:</span> |
-          PERCENT=$(jq -r '.summary.coverage.percent' reports/spectracer-report.json)
+          PERCENT=$(jq -r '.summary.completion.percent' reports/spectracer-report.json)
           HEALTH=$(jq -r '.summary.health.status' reports/spectracer-report.json)
           gh pr comment ${{ github.event.pull_request.number }} \
-            --body "SpecTracer coverage: **${PERCENT}%** (health: ${HEALTH})"
+            --body "SpecTracer completion: **${PERCENT}%** (health: ${HEALTH})"
         <span class="hl-section">env:</span>
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}</code></pre>
 

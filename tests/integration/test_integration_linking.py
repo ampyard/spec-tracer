@@ -23,7 +23,7 @@ def test_cli_links_integration_results(tag):
     content = OUTPUT.read_text(encoding="utf-8")
     assert "Testing Progress" in content
     assert "Report shows integration coverage" in content
-    assert "1/1 scenarios tested" in content
+    assert "1/1 scenarios complete" in content
     assert "<strong>integration</strong>" in content
     assert "@FC-003" in content
 

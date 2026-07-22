@@ -45,7 +45,7 @@ def test_tag_collision_across_features(tag):
     assert "Successful login" in content
     assert "View profile" in content
     assert "<strong>unit</strong>" in content
-    assert "2/2 scenarios tested" in content
+    assert "2/2 scenarios complete" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-002"])
@@ -58,7 +58,7 @@ def test_tag_collision_within_feature(tag):
     content = output.read_text(encoding="utf-8")
     assert "Successful login" in content
     assert "Failed login" in content
-    assert "2/2 scenarios tested" in content
+    assert "2/2 scenarios complete" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-003"])
@@ -78,7 +78,7 @@ def test_feature_level_tags_not_inherited(tag):
     # @FC-001 test should link (scenario-level tag)
     assert "<strong>unit</strong>" in content
     # Only the @FC-001 scenario exists, and it is tested
-    assert "1/1 scenarios tested" in content
+    assert "1/1 scenarios complete" in content
     # The @FeatureTag test matches no scenario and must be listed as unlinked
     assert "Unlinked Tests" in content
     assert "test_feature_tag_@FeatureTag" in content
@@ -93,7 +93,7 @@ def test_no_matching_tags_shows_untested(tag):
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
     assert "Incomplete" in content
-    assert "0/1 scenarios tested" in content
+    assert "0/1 scenarios complete" in content
     assert "<strong>unit</strong>" not in content
 
 
@@ -106,7 +106,7 @@ def test_empty_result_file_produces_zero_tests(tag):
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
     assert "Incomplete" in content
-    assert "0/1 scenarios tested" in content
+    assert "0/1 scenarios complete" in content
 
 
 @pytest.mark.parametrize("tag", ["@FC-EDGE-006"])

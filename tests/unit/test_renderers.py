@@ -27,7 +27,7 @@ def _render(**overrides):
         }
     ])
     health_checks = overrides.pop("health_checks", {
-        "coverage": {"status": "warn", "message": "msg", "value": "1/2"},
+        "progress": {"status": "warn", "message": "msg", "value": "1/2"},
         "unlinked": {"status": "pass", "message": "none", "value": "0"},
     })
     failed_results = overrides.pop("failed_results", [])

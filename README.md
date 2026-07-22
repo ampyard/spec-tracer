@@ -14,7 +14,7 @@ A CLI tool that takes your Gherkin `.feature` files as the source of truth for w
 
 Feature files define the scope. Tags on scenarios link them to test results across layers. The report shows:
 
-- What percentage of scenarios actually have test coverage (the headline metric).
+- What percentage of scenarios actually have test completion (the headline metric).
 - Where that coverage exists across layers (per-scenario pass/fail/skip breakdown).
 - The overall test pyramid — test count, duration, and pass rate per layer.
 - Every failure's stack trace, in one place.
@@ -189,7 +189,7 @@ The generated HTML is a single self-contained file (all CSS/JS inlined — no ex
 
 Setting `output_json` in the config produces a JSON file alongside the HTML report, built from the exact same internal data — the two outputs can never drift apart. It conforms to [`spectracer-report.schema.json`](spectracer-report.schema.json) (Draft 7), which is the authoritative contract; the highlights:
 
-- `summary.coverage` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
+- `summary.completion` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
 - `features[].scenarios[].results[]` — every linked test result per scenario, with `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
 - `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page.
 - `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.

@@ -138,7 +138,7 @@ A searchable tree table:
 
 ```
 Feature: User Login
-  [=== 75% coverage ===] (2 of 3 scenarios tested)
+  [=== 75% completion ===] (2 of 3 scenarios complete)
 
   ├─ Scenario: Successful login (tested)
   │   Required: unit ✓  integration ✓  e2e ✓

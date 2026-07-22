@@ -3,7 +3,7 @@ from typing import List
 
 from spec_tracer.models import ScenarioView, TestResult
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 
 _HEALTH_STATUS_RANK = {"pass": 0, "warn": 1, "fail": 2}
 _HEALTH_STATUS_LABEL = {"pass": "green", "warn": "amber", "fail": "red"}
@@ -122,7 +122,7 @@ def build_report(
         "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "config": config,
         "summary": {
-            "coverage": {
+            "completion": {
                 "tested": stats["tested"],
                 "total": stats["total"],
                 "percent": stats["percentage"],

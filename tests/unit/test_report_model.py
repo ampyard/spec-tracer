@@ -274,5 +274,5 @@ def test_config_is_echoed_verbatim(tag):
 def test_schema_version_and_generated_at_present(tag):
     report = _build([])
 
-    assert report["schemaVersion"] == "1"
+    assert report["schemaVersion"] == "2"
     assert report["generatedAt"].endswith("Z")

@@ -509,9 +509,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       <section class="panel">
         <h1>Testing Progress</h1>
         <div class="hero-stats">
-          <div class="stat-card" title="{{ tested }}/{{ total }} scenarios tested">
+          <div class="stat-card" title="{{ tested }}/{{ total }} scenarios complete">
             <strong>{{ tested }}/{{ total }}</strong>
-            <span>scenarios tested</span>
+            <span>scenarios complete</span>
           </div>
           <div class="stat-card">
             <strong>{{ percentage }}%</strong>
@@ -985,7 +985,7 @@ class HtmlRenderer:
             '<head><meta charset="utf-8"><title>SpecTracer</title></head>',
             "<body>",
             "<h1>Testing Progress</h1>",
-            f"<p>{stats['tested']}/{stats['total']} scenarios tested</p>",
+            f"<p>{stats['tested']}/{stats['total']} scenarios complete</p>",
             "<ul>",
         ]
         for view in views:

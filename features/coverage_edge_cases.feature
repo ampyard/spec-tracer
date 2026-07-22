@@ -6,7 +6,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-001"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "2/2 scenarios tested"
+    And the report should contain "2/2 scenarios complete"
     And the report should contain "<strong>unit</strong>"
 
   @FC-EDGE-002 @require-e2e:linker
@@ -15,7 +15,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-002"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "2/2 scenarios tested"
+    And the report should contain "2/2 scenarios complete"
 
   @FC-EDGE-003 @require-e2e:linker
   Scenario: Tags on the Feature line are not inherited by scenarios
@@ -23,7 +23,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-003"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "1/1 scenarios tested"
+    And the report should contain "1/1 scenarios complete"
     And the report should contain "<strong>unit</strong>"
 
   @FC-EDGE-004 @require-e2e:linker
@@ -32,7 +32,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-004"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "0/1 scenarios tested"
+    And the report should contain "0/1 scenarios complete"
     And the report should contain "untested"
     And the report should list the unlinked test "test_unrelated_@OTHER-999"
 
@@ -51,7 +51,7 @@ Feature: Test Coverage Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-005"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
-    And the report should contain "0/1 scenarios tested"
+    And the report should contain "0/1 scenarios complete"
     And the report should contain "untested"
 
   @FC-EDGE-006 @require-e2e:parsers

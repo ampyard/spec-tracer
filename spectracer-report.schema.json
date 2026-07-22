@@ -65,12 +65,12 @@
         "summary": {
             "type": "object",
             "title": "Summary",
-            "required": ["coverage", "pyramid", "health"],
+            "required": ["completion", "pyramid", "health"],
             "properties": {
-                "coverage": {
+                "completion": {
                     "type": "object",
-                    "title": "CoverageSummary",
-                    "description": "The headline 'Tested: X / Y scenarios (Z%)' metric.",
+                    "title": "CompletionSummary",
+                    "description": "The headline 'Complete: X / Y scenarios (Z%)' metric.",
                     "required": ["tested", "total", "percent"],
                     "properties": {
                         "tested": { "type": "integer", "minimum": 0 },

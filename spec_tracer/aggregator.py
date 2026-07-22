@@ -25,7 +25,7 @@ class ReportAggregator:
         return views
 
     @staticmethod
-    def coverage_stats(views: List[ScenarioView]) -> dict:
+    def completion_stats(views: List[ScenarioView]) -> dict:
         total = len(views)
         tested = sum(1 for v in views if v.is_tested)
         percentage = int(round((tested / total * 100) if total else 0))

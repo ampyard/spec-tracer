@@ -86,10 +86,10 @@ jobs:
               raise SystemExit(0)
 
           report = json.load(open(output_json, encoding='utf-8'))
-          c = report['summary']['coverage']
+          c = report['summary']['completion']
           h = report['summary']['health']
           p = report['summary']['pyramid']
-          lines = ['## SpecTracer Coverage', '', f\"**{c['tested']}/{c['total']} scenarios tested ({c['percent']}%)** — health: **{h['status']}**\", '']
+          lines = ['## SpecTracer Coverage', '', f"**{c['tested']}/{c['total']} scenarios complete ({c['percent']}%)** — health: **{h['status']}**", '']
           if h['reasons']:
               lines += ['**Reasons:**'] + [f'- {r}' for r in h['reasons']] + ['']
           if p:

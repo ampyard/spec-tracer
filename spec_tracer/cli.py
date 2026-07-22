@@ -94,7 +94,7 @@ def main(argv: List[str] | None = None) -> int:
 
     links = ResultLinker.link(scenarios, results)
     views = ReportAggregator.build_views(scenarios, links)
-    stats = ReportAggregator.coverage_stats(views)
+    stats = ReportAggregator.completion_stats(views)
     breakdown = ReportAggregator.feature_breakdown(views)
     layer_stats = ReportAggregator.layer_stats(views)
     failed_results = [result for result in results if result.status == "failed"]

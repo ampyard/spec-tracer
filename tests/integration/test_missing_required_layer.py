@@ -22,7 +22,7 @@ def test_cli_flags_missing_required_layer(tag):
     content = OUTPUT.read_text(encoding="utf-8")
     assert "Testing Progress" in content
     assert "Report flags missing e2e layer" in content
-    assert "1/1 scenarios tested" in content
+    assert "1/1 scenarios complete" in content
     assert "Required" in content
     assert "unit" in content
     assert "e2e" in content

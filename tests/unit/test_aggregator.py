@@ -90,9 +90,9 @@ def test_health_checks_flags_inverted_pyramid(tag):
         _view("F", "S2", [TestResult(layer="e2e", name="e2")]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    coverage_stats = ReportAggregator.coverage_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
 
-    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats)
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats)
 
     assert health["pyramid"]["status"] == "fail"
 
@@ -105,9 +105,9 @@ def test_health_checks_passes_when_unit_dominates(tag):
         _view("F", "S3", [TestResult(layer="e2e", name="e1")]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    coverage_stats = ReportAggregator.coverage_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
 
-    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats)
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats)
 
     assert health["pyramid"]["status"] == "pass"
 
@@ -121,7 +121,7 @@ def test_health_checks_pyramid_warns_when_at_parity(tag):
         _view("F", "S4", [TestResult(layer="e2e", name="e1")]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    progress_stats = ReportAggregator.coverage_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
@@ -135,7 +135,7 @@ def test_health_checks_end_to_end_runtime_passes_when_below_amber(tag):
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=300)]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    progress_stats = ReportAggregator.coverage_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
@@ -149,7 +149,7 @@ def test_health_checks_end_to_end_runtime_warns_when_between_amber_and_red(tag):
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=900)]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    progress_stats = ReportAggregator.coverage_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
@@ -163,7 +163,7 @@ def test_health_checks_end_to_end_runtime_fails_when_exceeds_red(tag):
         _view("F", "S2", [TestResult(layer="e2e", name="e1", duration=2000)]),
     ]
     layer_stats = ReportAggregator.layer_stats(views)
-    progress_stats = ReportAggregator.coverage_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
 
     health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
 
@@ -217,9 +217,9 @@ def test_unlinked_results_excludes_tagless_results(tag):
 def test_health_checks_unlinked_entry_passes_when_zero(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
     layer_stats = ReportAggregator.layer_stats(views)
-    coverage_stats = ReportAggregator.coverage_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
 
-    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats, unlinked_count=0)
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats, unlinked_count=0)
 
     assert health["unlinked"]["status"] == "pass"
     assert health["unlinked"]["value"] == "0"
@@ -229,9 +229,9 @@ def test_health_checks_unlinked_entry_passes_when_zero(tag):
 def test_health_checks_unlinked_entry_fails_when_many(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
     layer_stats = ReportAggregator.layer_stats(views)
-    coverage_stats = ReportAggregator.coverage_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
 
-    health = ReportAggregator.health_checks(views, layer_stats, coverage_stats, unlinked_count=5)
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats, unlinked_count=5)
 
     assert health["unlinked"]["status"] == "fail"
     assert health["unlinked"]["value"] == "5"

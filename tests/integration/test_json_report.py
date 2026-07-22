@@ -38,7 +38,7 @@ def test_output_json_conforms_to_schema(tag, tmp_path):
     report = json.loads(output_json.read_text(encoding="utf-8"))
     Draft7Validator(SCHEMA).validate(report)
 
-    assert report["summary"]["coverage"]["total"] == 1
+    assert report["summary"]["completion"]["total"] == 1
     feature = report["features"][0]
     assert feature["name"] == "User Login"
     scenario = feature["scenarios"][0]

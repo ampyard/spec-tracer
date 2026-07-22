@@ -26,7 +26,7 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 - Parse JUnit XML results from Unit and Integration test suites.
 - Parse Cucumber JSON results from the E2E test suite.
 - Link test results to scenarios via shared tags (exact match, OR logic — any matching tag links).
-- Show a prominent **Testing Progress** (% tested vs. untested) as the headline metric.
+- Show a prominent **Testing Progress** (% complete vs. incomplete) as the headline metric.
 - Visualize the global Test Pyramid (E2E counts scenarios, other layers count individual testcases).
 - Display per-scenario, per-layer pass/fail/skip breakdowns with full Gherkin text.
 - Flag missing layers per scenario via `@require-*` tags.
@@ -42,7 +42,7 @@ The tool is tech-stack agnostic. It relies on Gherkin for scenario definition an
 ### 4. Target Audience
 - **QA Engineers / SDETs:** To validate feature coverage and identify missing layers of testing.
 - **Developers:** To quickly view pass/fail statuses and failure stack traces across all layers in one place.
-- **Engineering Managers / Tech Leads:** To assess the % tested progress, pyramid health, and distribution of effort.
+- **Engineering Managers / Tech Leads:** To assess the % complete progress, pyramid health, and distribution of effort.
 
 ### 5. Technical Architecture & Inputs
 
@@ -115,9 +115,9 @@ The HTML report is a self-contained single file (all CSS/JS inlined). It consist
 #### Section A: Coverage Progress Summary (Headline Metric)
 The very first thing visible in the report — designed for daily standup discussion.
 
-- **Overall progress bar** showing `Tested: X / Y scenarios (Z%)`
-  - A scenario counts as **"tested"** if at least one test result (across any layer) links to it.
-  - A scenario counts as **"untested"** if zero test results link to it.
+- **Overall progress bar** showing `Complete: X / Y scenarios (Z%)`
+  - A scenario counts as **"complete"** if at least one test result (across any layer) links to it.
+  - A scenario counts as **"incomplete"** if zero test results link to it.
 - **Per-feature breakdown:** Each feature listed with its own mini progress bar.
 - **Color coding:** Green if >80%, amber 50–80%, red <50% (configurable thresholds).
 
@@ -138,9 +138,9 @@ A searchable tree table:
 
 ```
 Feature: User Login
-  [=== 75% coverage ===] (2 of 3 scenarios tested)
+  [=== 75% completion ===] (2 of 3 scenarios complete)
 
-  ├─ Scenario: Successful login (tested)
+  ├─ Scenario: Successful login (complete)
   │   Required: unit ✓  integration ✓  e2e ✓
   │   Layer     │ Tests │ Pass │ Fail │ Skip │ Duration
   │  ───────────────────────────────────────────────────
@@ -238,7 +238,7 @@ JSON format, default filename `spectracer.config.json` at the project root (auto
 | Malformed Cucumber JSON | Abort on first error with a clear message. |
 | Malformed `.feature` file | Whatever the E2E framework would do (typically parse error). |
 | Test matches no scenario | Placed in "Unlinked Tests" section. |
-| Scenario matches no test | Shown as "untested" in the matrix. |
+| Scenario matches no test | Shown as "incomplete" in the matrix. |
 | Scenario has `@require-*` but no matching test | Required layer flagged as missing in the matrix. |
 | Tag collision across feature files | Test result is duplicated under both features. |
 | Tag collision within a feature file | Test result is duplicated under both scenarios. |
@@ -308,7 +308,7 @@ Where `spectracer.config.json` contains:
 
 #### Phase 1: Thinnest Vertical Slice (E2E Only)
 - Write one `.feature` file in `features/` with one scenario tagged `@FC-001` describing the tool's core behavior.
-- Write **behave step definitions** that: run the tool with `--features` + `--e2e` + `--output` -> verify HTML contains scenario name and "1/1 tested".
+- Write **behave step definitions** that: run the tool with `--features` + `--e2e` + `--output` -> verify HTML contains scenario name and "1/1 complete".
 - Implement the minimum: CLI skeleton, feature file parser, Cucumber JSON parser, tag matcher, bare-bones Jinja2 template.
 - No dogfooding yet (tool does not process its own behave output — use fixture `e2e.json`).
 

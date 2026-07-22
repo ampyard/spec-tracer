@@ -14,7 +14,7 @@ A CLI tool that takes your Gherkin `.feature` files as the source of truth for w
 
 Feature files define the scope. Tags on scenarios link them to test results across layers. The report shows:
 
-- What percentage of scenarios actually have test coverage (the headline metric).
+- What percentage of scenarios actually have test completion (the headline metric).
 - Where that coverage exists across layers (per-scenario pass/fail/skip breakdown).
 - The overall test pyramid — test count, duration, and pass rate per layer.
 - Every failure's stack trace, in one place.
@@ -27,7 +27,7 @@ The tool is tech-stack agnostic: it only needs Gherkin `.feature` files, JUnit X
 
 - **Fragmented visibility** — unit, integration, and E2E tests usually live in different directories or repos, with no single view of overall coverage.
 - **Inverted pyramids** — teams unknowingly accumulate slow E2E tests instead of fast unit tests, and don't notice until CI is painfully slow.
-- **No traceability** — it's hard to know if a specific business scenario is actually tested across all the layers it should be.
+- **No traceability** — it's hard to know if a specific business scenario is actually complete across all the layers it should.
 - **Tooling lock-in** — most reporting tools are tied to one framework (Allure for Java, Cypress Dashboard for Cypress). This one isn't.
 
 ## Installation
@@ -189,7 +189,7 @@ The generated HTML is a single self-contained file (all CSS/JS inlined — no ex
 
 Setting `output_json` in the config produces a JSON file alongside the HTML report, built from the exact same internal data — the two outputs can never drift apart. It conforms to [`spectracer-report.schema.json`](spectracer-report.schema.json) (Draft 7), which is the authoritative contract; the highlights:
 
-- `summary.coverage` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
+- `summary.completion` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
 - `features[].scenarios[].results[]` — every linked test result per scenario, with `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
 - `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page.
 - `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.
@@ -215,7 +215,7 @@ Useful for PR bots, custom CI gating beyond `error_on_failure`, or feeding cover
 | Empty or missing test result path | Silently ignored (zero tests for that layer). |
 | Malformed JUnit XML or Cucumber JSON | Aborts with a clear error message. |
 | Test matches no scenario | Listed in "Unlinked Tests". |
-| Scenario matches no test | Shown as "untested". |
+| Scenario matches no test | Shown as "incomplete". |
 | Scenario has `@require-*` but no matching test | That layer is flagged as missing. |
 | Feature-level tags | Not inherited by scenarios — only scenario-level tags are used for matching. |
 | Scenario Outline / Examples, `Rule:`, `Background:`, non-English dialects | Deferred to whatever your Gherkin/E2E framework does with them — the tool doesn't parse Gherkin syntax beyond `Feature:`, tags, and `Scenario:` lines. |

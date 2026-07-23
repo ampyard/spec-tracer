@@ -11,7 +11,7 @@ def requirement_satisfied(req, linked_results: List["TestResult"]) -> bool:
     failed-but-present result still fills the requirement.
     """
     return any(
-        r.layer == req.layer and (req.module == "" or r.module == req.module)
+        r.layer == req.layer and (req.module == "" or r.module.lower() == req.module.lower())
         for r in linked_results
     )
 

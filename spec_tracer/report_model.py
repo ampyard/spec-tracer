@@ -33,7 +33,7 @@ def _requirements(view: ScenarioView) -> List[dict]:
     requirements = []
     for req in view.scenario.required_layers:
         satisfied = any(
-            r.layer == req.layer and (req.module == "" or r.module == req.module)
+            r.layer == req.layer and (req.module == "" or r.module.lower() == req.module.lower())
             for r in view.linked_results
         )
         entry = {"layer": req.layer, "satisfied": satisfied}

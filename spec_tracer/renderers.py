@@ -14,7 +14,7 @@ LOGO_DATA_URI = ""
 
 def _layer_satisfied(req, linked_results) -> bool:
     return any(
-        r.layer == req.layer and (req.module == "" or r.module == req.module)
+        r.layer == req.layer and (req.module == "" or r.module.lower() == req.module.lower())
         for r in linked_results
     )
 

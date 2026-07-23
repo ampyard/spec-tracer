@@ -62,6 +62,13 @@ uv build
 
 The wheel is written to `dist/spec_tracer-*.whl`. Install it with `uv pip install dist/*.whl`.
 
+To run this repo's own test suite and regenerate its dogfooded report (`reports/spectracer-report.html`), matching what CI does:
+
+```bash
+uv sync --group dev
+uv run python run_local.py
+```
+
 ## Quick Start
 
 1. Write `.feature` files describing your scenarios, tagged so test results can link back to them (see [Tagging Convention](#tagging-convention) below).

@@ -215,6 +215,23 @@ Setting `output_json` in the config produces a JSON file alongside the HTML repo
 
 Useful for PR bots, custom CI gating beyond `error_on_failure`, or feeding coverage numbers into a dashboard — without scraping the HTML.
 
+## Historical Trends
+
+`output_json` already emits `summary.completion` / `summary.pyramid` / `summary.health` on every run — point your CI at whatever metrics system your team already has and post that block after each report is generated:
+
+```yaml
+- name: Generate report
+  run: spec-tracer
+
+- name: Post coverage metrics
+  run: |
+    curl -X POST "$METRICS_ENDPOINT" \
+      -H "Content-Type: application/json" \
+      -d @reports/spectracer-report.json
+```
+
+That's the whole integration — one `curl` (or your metrics SDK's equivalent) reading a file that already exists. Whatever's on the receiving end (Grafana, Datadog, an internal dashboard, even a spreadsheet webhook) owns the history, the retention policy, and the charting. See the [CI/CD guide](docs/ci-cd.html#trends) for a worked example.
+
 ## Behavior Reference
 
 | Scenario | Behavior |

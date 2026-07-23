@@ -41,6 +41,7 @@
       <a href="#gitlab-ci">GitLab CI</a>
       <a href="#jenkins">Jenkins</a>
       <span class="sidebar-label">Workflows</span>
+      <a href="#trends">Historical Trends</a>
       <a href="#team-workflows">Team Workflows</a>
       <a href="#best-practices">Best Practices</a>
       <a href="#standup">Standup Metric</a>
@@ -143,6 +144,22 @@
       <strong>&#8505; Schema-validated JSON</strong>
       <code>output_json</code> conforms to <code>spectracer-report.schema.json</code> in the repo, so any consumer script can validate the shape before parsing it.
     </div>
+
+    <h2 id="trends">Historical Trends</h2>
+    <p><code>output_json</code> gives you a <code>summary.completion</code> / <code>summary.pyramid</code> / <code>summary.health</code> snapshot on every run. Point that at whatever metrics system your team already runs and let it own history, retention, and charting:</p>
+
+<pre><code>      - <span class="hl-section">name:</span> Generate SpecTracer report
+        <span class="hl-section">run:</span> uv run spec-tracer
+
+      - <span class="hl-section">name:</span> Post coverage metrics
+        <span class="hl-section">run:</span> |
+          curl -X POST "$METRICS_ENDPOINT" \
+            -H "Content-Type: application/json" \
+            -d @reports/spectracer-report.json
+        <span class="hl-section">env:</span>
+          METRICS_ENDPOINT: ${{ secrets.METRICS_ENDPOINT }}</code></pre>
+
+    <p>Swap the <code>curl</code> for your dashboard's own SDK/API call if it has one (Datadog, Grafana Cloud, an internal service, even a spreadsheet webhook) &mdash; the only requirement is a system on the other end of the request that already knows how to store a time series and chart it.</p>
 
     <h2 id="gitlab-ci">GitLab CI</h2>
 

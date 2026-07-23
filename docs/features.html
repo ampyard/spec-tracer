@@ -204,7 +204,7 @@
       <ul>
         <li><strong>PR bots</strong> &mdash; post a coverage delta comment without scraping HTML</li>
         <li><strong>Custom CI gating</strong> &mdash; beyond <code>error_on_failure</code>, script your own thresholds against <code>summary.completion</code> or <code>summary.health</code></li>
-        <li><strong>Dashboards</strong> &mdash; feed coverage trends into an internal metrics system over time</li>
+        <li><strong>Historical trends</strong> &mdash; POST <code>summary.completion</code> / <code>summary.pyramid</code> / <code>summary.health</code> to your own dashboard on every run; SpecTracer doesn't store history itself, so your metrics system owns retention and charting (see <a href="ci-cd.html#trends">CI/CD guide</a>)</li>
       </ul>
     </div>
 

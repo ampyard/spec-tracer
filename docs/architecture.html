@@ -27,7 +27,8 @@
       <li><a href="ci-cd.html">CI/CD</a></li>
       <li><a href="architecture.html" class="active">Architecture</a></li>
     </ul>
-    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="theme-toggle" aria-label="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
   </div>
 </nav>
@@ -68,7 +69,7 @@
                  |                       |
                  +--------&gt; <span class="hl-section">Linker</span> &lt;--------+
                                |
-                     <span class="hl-section">LinkedScenarioView</span>[]
+                      <span class="hl-section">ScenarioView</span>[]
                                |
                           <span class="hl-section">Aggregator</span>
                                |
@@ -86,7 +87,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128196;</div>
         <h4>models.py</h4>
-        <p>Core data classes: <code>Scenario</code>, <code>TestResult</code>, <code>RequiredLayer</code>, <code>ScenarioView</code>. 40 lines — the entire type system.</p>
+        <p>Core data classes: <code>Scenario</code>, <code>TestResult</code>, <code>RequiredLayer</code>, <code>ScenarioView</code> plus helper functions. 90 lines — the entire type system.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128269;</div>
@@ -101,7 +102,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128202;</div>
         <h4>aggregator.py</h4>
-        <p>Computes completion stats, layer breakdowns, feature trees, health checks, and unlinked results. 188 lines of pure logic.</p>
+        <p>Computes completion stats, layer breakdowns, feature trees, health checks, and unlinked results. 223 lines of pure logic.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128451;</div>
@@ -111,7 +112,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128187;</div>
         <h4>renderers.py</h4>
-        <p>Jinja2 template with 760 lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
+        <p>Jinja2 template with a few lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128203;</div>
@@ -172,12 +173,14 @@
 
     <div class="code-header"><span>Linking logic (abridged)</span></div>
 <pre><code><span class="hl-kw">def</span> <span class="hl-fn">link</span>(scenarios, results):
+    links = {}
     <span class="hl-kw">for</span> scenario <span class="hl-kw">in</span> scenarios:
         linked = [
             r <span class="hl-kw">for</span> r <span class="hl-kw">in</span> results
-            <span class="hl-kw">if</span> <span class="hl-fn">any</span>(tag <span class="hl-kw">in</span> r.tags <span class="hl-kw">for</span> tag <span class="hl-kw">in</span> scenario.linking_tags)
+            <span class="hl-kw">if</span> <span class="hl-fn">any</span>(tag <span class="hl-kw">in</span> scenario.tags <span class="hl-kw">for</span> tag <span class="hl-kw">in</span> r.tags)
         ]
-        <span class="hl-fn">yield</span> <span class="hl-fn">ScenarioView</span>(scenario, linked)</code></pre>
+        links[<span class="hl-fn">id</span>(scenario)] = linked
+    <span class="hl-kw">return</span> links</code></pre>
 
     <h2 id="aggregator">Aggregator</h2>
     <p>The <code>ReportAggregator</code> transforms linked data into report views. All methods are static:</p>
@@ -224,7 +227,7 @@
     <p>Written to disk only when <code>output_json</code> is set in the config &mdash; omit it and <code>cli.py</code> skips this step entirely, leaving HTML-only behavior unchanged.</p>
 
     <h2 id="data-flow">Data Flow</h2>
-    <p>Here's exactly what happens when you run <code>uv run spec-tracer</code> (or <code>uv run python build_pyramid.py</code>):</p>
+    <p>Here's exactly what happens when you run <code>uv run spec-tracer</code> (or <code>spec-tracer</code> after pip install):</p>
     <ol>
       <li><strong>Config loading</strong> &mdash; <code>cli.py</code> discovers and reads the JSON config file. Validates required keys (<code>features</code>, <code>output</code>). <code>unit</code>, <code>integration</code>, and <code>e2e</code> are module-keyed objects (<code>""</code> = unscoped).</li>
       <li><strong>File collection</strong> &mdash; <code>FileCollector</code> (<code>collectors.py</code>) resolves literal file paths and recursively searches directories for <code>.feature</code>, <code>.xml</code>, and <code>.json</code> files, once per module key.</li>
@@ -305,7 +308,7 @@ uv run spec-tracer
 </footer>
 
 <script>
-(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n)})}})();
 </script>
 </body>
 </html>

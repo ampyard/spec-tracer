@@ -27,7 +27,8 @@
       <li><a href="ci-cd.html">CI/CD</a></li>
       <li><a href="architecture.html">Architecture</a></li>
     </ul>
-    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="theme-toggle" aria-label="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
   </div>
 </nav>
@@ -103,10 +104,20 @@
         <div class="step-num">3</div>
         <div class="step-body">
           <h3>Generate the Report</h3>
-           <p>Run <code>uv run spec-tracer</code> (or <code>uv run python build_pyramid.py</code>). SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
+           <p>Run <code>uv run spec-tracer</code> (or <code>spec-tracer</code> after pip install). SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>See It in Action</h2>
+      <p>A live report generated from SpecTracer's own test suite — showing the Coverage Progress dashboard, Test Pyramid, and Feature Traceability tree with completion bars, outcome pills, and searchable columns.</p>
+    </div>
+    <p><img src="report-features.png" alt="SpecTracer report Feature Traceability view showing expanded tree with completion bars, outcome pills, and sortable columns" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin:1rem 0;box-shadow:var(--shadow-2);"></p>
   </div>
 </section>
 
@@ -143,8 +154,8 @@ spec-tracer
 <span class="hl-com"># Open reports/spectracer-report.html in your browser</span></code></pre>
 
 <div class="callout callout-info" style="margin-top: 1.5rem;">
-  <strong>&#8505; No CLI flags</strong>
-  SpecTracer is configured entirely through a JSON file. Drop a <code>spectracer.config.json</code> at your project root and run <code>spec-tracer</code> &mdash; no flags needed.
+  <strong>&#8505; Config-driven CLI</strong>
+  All configuration lives in <code>spectracer.config.json</code>. Run <code>spec-tracer</code> with no arguments to auto-discover it, or pass a path: <code>spec-tracer path/to/config.json</code>. No flags needed.
 </div>
 
 <div class="callout callout-info" style="margin-top: 1rem;">
@@ -244,7 +255,7 @@ spec-tracer
 </footer>
 
 <script>
-(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n)})}})();
 </script>
 </body>
 </html>

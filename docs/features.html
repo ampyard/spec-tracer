@@ -27,7 +27,8 @@
       <li><a href="ci-cd.html">CI/CD</a></li>
       <li><a href="architecture.html">Architecture</a></li>
     </ul>
-    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="theme-toggle" aria-label="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
   </div>
 </nav>
@@ -60,13 +61,13 @@
 
     <div class="feature-block">
       <h3>&#9679; Headline Metric</h3>
-      <p><strong>Tested: X / Y scenarios (Z%)</strong> &mdash; prominently displayed with color coding:</p>
+      <p><strong>Tested: X / Y scenarios (Z%)</strong> &mdash; prominently displayed with color coding, plus a large progress bar with the percentage overlaid on the bar fill:</p>
       <ul>
         <li><span class="badge badge-green">Green</span> above the configurable green threshold (default 80%)</li>
         <li><span class="badge badge-amber">Amber</span> between the amber and green thresholds</li>
         <li><span class="badge badge-red">Red</span> below the amber threshold (default 50%)</li>
       </ul>
-      <p>A scenario counts as <strong>complete</strong> if at least one test result (across any layer) links to it.</p>
+      <p>A scenario counts as <strong>complete</strong> when every declared <code>@require-*</code> layer has at least one linked test result (presence-based — pass/fail does not matter). The per-feature breakdown below uses a looser definition: a scenario is complete if any linked result exists across all layers.</p>
     </div>
 
     <div class="feature-block">
@@ -121,7 +122,20 @@
 
     <div class="feature-block">
       <h3>&#9881; Sortable Columns</h3>
-      <p>Click any column header to sort by name, status, duration, or coverage. Click again to reverse the sort order.</p>
+      <p>The tree-table has six columns, each clickable to sort:</p>
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Name</td><td>Feature / Scenario name with a type pill (e.g. <span class="badge">Feature</span>, <span class="badge">Scenario</span>)</td></tr>
+          <tr><td>Completion</td><td>Presence-based completion bar. A horizontal bar fills proportionally (green 100%, amber partial, red 0%) with the percentage <strong>overlaid on the bar itself</strong>. Beside the bar, the <code>N/M</code> requirement count shows how many declared <code>@require-*</code> layers have a match.</td></tr>
+          <tr><td>Result</td><td>Outcome pill showing the worst-case result across all linked tests for that feature / scenario (<span class="badge badge-green">pass</span>, <span class="badge badge-amber">skipped</span>, or <span class="badge badge-red">failed</span>)</td></tr>
+          <tr><td>Expected</td><td>Number of test cases the feature file's scenarios declare they need</td></tr>
+          <tr><td>Actual</td><td>Number of individually linked test results found during the run</td></tr>
+          <tr><td>Duration</td><td>Total execution time across all linked tests</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="feature-block">
@@ -151,7 +165,7 @@
     </div>
 
     <h2 id="unlinked">Unlinked Tests</h2>
-    <p>Test results whose tags didn't match any scenario and carry an <code>@FC-*</code> tag end up here. Results without any <code>@FC-*</code> tag are silently excluded — the tool assumes non-<code>@FC</code> tags are generic (like <code>@smoke</code> or <code>@regression</code>) and not worth reporting as orphans.</p>
+    <p>Test results whose tags didn't match any scenario end up here — regardless of tag prefix. Any tagged result that fails to link to a scenario is reported. Results with no tags at all are excluded (they can never participate in tag-based linking).</p>
 
     <p>This is invaluable for catching:</p>
     <ul>
@@ -203,7 +217,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#9679;</div>
         <h4>Progress</h4>
-        <p>% of scenarios with at least one linked test. Pass/amber/fail thresholds configured via <code>health_checks</code> in config (defaults: green 80%, amber 50%).</p>
+        <p>% of declared <code>@require-*</code> layer/module pairs satisfied (linked results present). Pass/amber/fail thresholds configured via <code>health_checks</code> in config (defaults: green 80%, amber 50%).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9650;</div>
@@ -218,7 +232,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
-        <p>Orphaned test results with <code>@FC-*</code> tags that didn't match any scenario. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
+        <p>Orphaned test results with any tags that didn't match any scenario. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
       </div>
     </div>
 
@@ -286,13 +300,13 @@
         <tr><td>Missing <code>features</code> or <code>output</code></td><td>Errors out — both are required</td></tr>
         <tr><td>Empty/missing test result path</td><td>Silently ignored (zero tests for that layer)</td></tr>
         <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
-        <tr><td>Test matches no scenario (with <code>@FC-*</code> tag)</td><td>Listed in "Unlinked Tests"</td></tr>
-        <tr><td>Test matches no scenario (no <code>@FC-*</code> tag)</td><td>Silently excluded — only <code>@FC-*</code> orphans are reported</td></tr>
+        <tr><td>Test matches no scenario (has tags)</td><td>Listed in "Unlinked Tests"</td></tr>
+        <tr><td>Test matches no scenario (no tags)</td><td>Silently excluded — tagless results can never link</td></tr>
         <tr><td>Scenario matches no test</td><td>Shown as "incomplete"</td></tr>
         <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
         <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>
         <tr><td>Tag collisions</td><td>Result links to ALL matching scenarios</td></tr>
-        <tr><td>Unicode / special characters</td><td>Preserved as-is (Jinja2 autoescape is off; scenario names and tags render raw)</td></tr>
+        <tr><td>Unicode / special characters</td><td>Preserved as-is (template helpers use <code>Markup</code> to bypass autoescape where needed)</td></tr>
       </tbody>
     </table>
 
@@ -313,7 +327,7 @@
 </footer>
 
 <script>
-(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n)})}})();
 </script>
 </body>
 </html>

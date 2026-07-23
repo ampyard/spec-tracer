@@ -75,7 +75,15 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  color-scheme: dark;
 }
+[data-theme="light"] { color-scheme: light; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; border: 2px solid var(--bg-secondary); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+* { scrollbar-width: thin; scrollbar-color: var(--border-light) var(--bg-secondary); }
 
 body {
   font-family: var(--font-sans);
@@ -98,6 +106,15 @@ a:hover {
 img {
   max-width: 100%;
   height: auto;
+}
+.page-content img {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.page-content img:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 ::selection {
@@ -153,6 +170,7 @@ img {
   align-items: center;
   gap: 0.25rem;
   list-style: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .nav-links a {
@@ -197,16 +215,21 @@ img {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.1rem;
   transition: all var(--transition);
   flex-shrink: 0;
   margin-left: 0.5rem;
-  line-height: 1;
 }
-.theme-toggle:hover {
-  color: var(--pink);
-  border-color: var(--pink);
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.4s ease, opacity 0.3s ease;
 }
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+[data-theme="light"] .theme-toggle .icon-moon { display: none; }
+.theme-toggle:hover { color: var(--pink); border-color: var(--pink); }
+.theme-toggle:hover svg { transform: rotate(30deg); }
 
 /* ============================================================
    Hero
@@ -448,10 +471,12 @@ img {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: background var(--transition), border-color var(--transition);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
 .step:hover {
   border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .step-num {
@@ -494,7 +519,11 @@ pre {
   line-height: 1.6;
   margin: 1rem 0;
   position: relative;
-  transition: background var(--transition), border-color var(--transition);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+pre:hover {
+  border-color: var(--border-light);
+  box-shadow: inset 0 0 0 1px rgba(161, 82, 239, 0.06);
 }
 
 code {
@@ -504,6 +533,8 @@ code {
   padding: 0.15em 0.4em;
   border-radius: var(--radius-xs);
   color: var(--purple);
+  border: 1px solid transparent;
+  transition: border-color var(--transition);
 }
 
 pre code {
@@ -592,8 +623,10 @@ tbody td {
   color: var(--text-secondary);
 }
 
+tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.015); }
+[data-theme="light"] tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.02); }
 tbody tr:hover {
-  background: rgba(255, 107, 157, 0.03);
+  background: rgba(255, 107, 157, 0.04);
 }
 
 tbody td:first-child {
@@ -754,6 +787,7 @@ tbody td:first-child {
 .feature-block {
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
   border-radius: var(--radius);
   padding: 2rem;
   margin: 1.5rem 0;
@@ -761,6 +795,7 @@ tbody td:first-child {
 }
 .feature-block:hover {
   border-color: var(--border-light);
+  border-left-color: var(--pink);
 }
 
 .feature-block h3 {
@@ -987,7 +1022,6 @@ tbody td:first-child {
 
 @media (max-width: 768px) {
   .nav-links {
-    display: none;
     position: absolute;
     top: 64px;
     left: 0;
@@ -996,10 +1030,14 @@ tbody td:first-child {
     border-bottom: 1px solid var(--border);
     flex-direction: column;
     padding: 0.5rem;
-    transition: background var(--transition);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
   }
   .nav-links.open {
-    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
   .nav-links a {
     width: 100%;

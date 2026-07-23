@@ -27,7 +27,8 @@
       <li><a href="ci-cd.html">CI/CD</a></li>
       <li><a href="architecture.html">Architecture</a></li>
     </ul>
-    <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+    <button class="theme-toggle" aria-label="Toggle theme"><svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
   </div>
 </nav>
@@ -50,20 +51,19 @@
 
   <main class="page-content">
     <h1>Usage &amp; Configuration</h1>
-    <p class="subtitle">SpecTracer is configured entirely through a JSON file &mdash; no CLI flags. Drop a config at your project root and run.</p>
+    <p class="subtitle">All configuration lives in a JSON file &mdash; no flags or subcommands. Drop a config at your project root and run.</p>
 
     <h2 id="cli">CLI Usage</h2>
     <p>The tool follows an <strong>ESLint-style</strong> convention: all configuration lives in a JSON file, and the CLI just runs it.</p>
 
     <div class="code-header"><span>Basic usage</span></div>
 <pre><code><span class="hl-com"># Auto-discover spectracer.config.json in current directory</span>
-uv run python build_pyramid.py
-<span class="hl-com"># Or using the installed CLI:</span>
 uv run spec-tracer
+<span class="hl-com"># Or after pip install:</span>
+spec-tracer
 
 <span class="hl-com"># Point at an explicit config file</span>
-uv run python build_pyramid.py path/to/other-config.json
-uv run spec-tracer path/to/other-config.json</code></pre>
+spec-tracer path/to/other-config.json</code></pre>
 
     <p>That's the entire CLI surface &mdash; one command, one optional argument. No <code>--help</code> flags, no subcommands, no environment variables.</p>
 
@@ -228,7 +228,7 @@ uv run spec-tracer path/to/other-config.json</code></pre>
       <tbody>
         <tr>
           <td>Progress</td>
-          <td>% of scenarios with at least one linked test</td>
+          <td>% of declared <code>@require-*</code> layer/module pairs with a linked result</td>
           <td>&ge; green threshold</td>
           <td>&ge; amber threshold</td>
           <td>&lt; amber threshold</td>
@@ -386,7 +386,7 @@ uv run spec-tracer path/to/other-config.json</code></pre>
 </footer>
 
 <script>
-(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.textContent=t==='dark'?'\u2600':'\u263E';b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n);b.textContent=n==='dark'?'\u2600':'\u263E'})}})();
+(function(){var t=localStorage.getItem('st-theme');if(!t){t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t);var b=document.querySelector('.theme-toggle');if(b){b.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('st-theme',n)})}})();
 </script>
 </body>
 </html>

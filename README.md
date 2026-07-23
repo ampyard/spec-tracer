@@ -179,6 +179,8 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 
 The generated HTML is a single self-contained file (all CSS/JS inlined — no external assets, safe to email or archive) with five sections:
 
+<img src="docs/report-features.png" alt="SpecTracer report Feature Traceability view" style="max-width:100%;border-radius:12px;margin:1rem 0;">
+
 1. **Coverage Progress Summary** — the headline `Tested: X / Y scenarios (Z%)` metric, plus a per-feature breakdown. Color-coded green/amber/red using the configurable thresholds.
 2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer with excessive runtime.
 3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status with failure stack traces.

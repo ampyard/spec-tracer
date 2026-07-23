@@ -114,6 +114,20 @@ def test_requirement_satisfied_when_module_matches(tag):
 
 
 @pytest.mark.parametrize("tag", ["@FC-010"])
+def test_requirement_satisfied_when_module_matches_case_insensitively(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="unit", module="Billing")],
+        results=[TestResult(layer="unit", name="t1", status="passed", module="billing")],
+    )
+
+    report = _build([view])
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req == {"layer": "unit", "satisfied": True, "module": "Billing"}
+
+
+@pytest.mark.parametrize("tag", ["@FC-010"])
 def test_requirement_unsatisfied_when_module_does_not_match(tag):
     view = _view(
         "F", "S1",

@@ -315,8 +315,13 @@
     </div>
 
     <div class="callout callout-success">
-      <strong>&#10003; Use <code>output_json</code> for anything beyond pass/fail gating</strong>
-      <code>error_on_failure</code> only handles the binary "did any test fail" case. For coverage-percentage thresholds, health-status gating, or feeding a dashboard, script against <code>output_json</code> instead of parsing HTML.
+      <strong>&#10003; Gate PRs on health checks with <code>fail_on</code></strong>
+      Beyond <code>error_on_failure</code> (which only covers "did any test fail"), list health checks under <code>fail_on</code> &mdash; e.g. <code>["pyramid", "e2e_runtime"]</code> &mdash; to exit <code>1</code> when the pyramid inverts or the suite runs too slow. This enforces testing standards in PRs, not just displays them.
+    </div>
+
+    <div class="callout callout-success">
+      <strong>&#10003; Use <code>output_json</code> for anything beyond built-in gating</strong>
+      <code>error_on_failure</code> and <code>fail_on</code> cover pass/fail and health-status gating. For coverage-percentage thresholds or feeding a dashboard, script against <code>output_json</code> instead of parsing HTML.
     </div>
 
     <h2 id="standup">The Standup Metric</h2>

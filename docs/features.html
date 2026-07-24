@@ -211,7 +211,7 @@
     <p>Fully opt-in and backward compatible: omit <code>output_json</code> and nothing changes.</p>
 
     <h2 id="health-checks">Health Checks</h2>
-    <p>Four visual health indicators on the Dashboard section. They are <strong>purely visual</strong> — they never affect the exit code. Each card has a colored left border reflecting its status.</p>
+    <p>Four health indicators on the Dashboard section. Each card has a colored left border reflecting its status. They are visual by default, but any of them can gate CI: list a check under <code>fail_on</code> and a failing (red) status makes the tool exit <code>1</code> (see the <a href="usage.html#health-checks">Usage guide</a>).</p>
 
     <div class="feature-grid">
       <div class="feature-card">

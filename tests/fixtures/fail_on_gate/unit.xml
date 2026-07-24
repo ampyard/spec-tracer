@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="5" errors="0" failures="0" time="0.05">
+    <testcase classname="tests.unit" name="test_linked_@FC-001" time="0.001"/>
+    <testcase classname="tests.unit" name="test_orphan0_@NOPE-0" time="0.001"/>
+    <testcase classname="tests.unit" name="test_orphan1_@NOPE-1" time="0.001"/>
+    <testcase classname="tests.unit" name="test_orphan2_@NOPE-2" time="0.001"/>
+    <testcase classname="tests.unit" name="test_orphan3_@NOPE-3" time="0.001"/>
+  </testsuite>
+</testsuites>

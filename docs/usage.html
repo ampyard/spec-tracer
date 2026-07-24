@@ -79,7 +79,7 @@ spec-tracer path/to/other-config.json</code></pre>
       </thead>
       <tbody>
         <tr><td>0</td><td>Success</td><td>Report generated, no errors</td></tr>
-        <tr><td>1</td><td>Failure</td><td>Config error, parse error, or <code>error_on_failure: true</code> with test failures</td></tr>
+        <tr><td>1</td><td>Failure</td><td>Config error, parse error, <code>error_on_failure: true</code> with test failures, or a <code>fail_on</code> health check in a failing (red) state</td></tr>
       </tbody>
     </table>
 
@@ -103,6 +103,7 @@ spec-tracer path/to/other-config.json</code></pre>
   <span class="hl-prop">"output"</span>: <span class="hl-str">"./reports/spectracer-report.html"</span>,
   <span class="hl-prop">"output_json"</span>: <span class="hl-str">"./reports/spectracer-report.json"</span>,
   <span class="hl-prop">"error_on_failure"</span>: <span class="hl-kw">false</span>,
+  <span class="hl-prop">"fail_on"</span>: [<span class="hl-str">"pyramid"</span>, <span class="hl-str">"e2e_runtime"</span>],
   <span class="hl-prop">"health_checks"</span>: {
     <span class="hl-prop">"progress_threshold_green"</span>: <span class="hl-num">80</span>,
     <span class="hl-prop">"progress_threshold_amber"</span>: <span class="hl-num">50</span>,
@@ -207,7 +208,13 @@ spec-tracer path/to/other-config.json</code></pre>
           <td><code>error_on_failure</code></td>
           <td><span class="badge badge-pink">No</span></td>
           <td><code>boolean</code></td>
-          <td>Exit non-zero when any test fails. Default: <code>false</code>. Health checks never affect exit code.</td>
+          <td>Exit non-zero when any test fails. Default: <code>false</code>.</td>
+        </tr>
+        <tr>
+          <td><code>fail_on</code></td>
+          <td><span class="badge badge-pink">No</span></td>
+          <td><code>array</code></td>
+          <td>Health checks that gate CI &mdash; any listed check in a failing (red) state makes the tool exit <code>1</code>. Accepted values: <code>progress</code>, <code>pyramid</code>, <code>e2e_runtime</code>. Amber (warn) never gates. Additive to <code>error_on_failure</code>. Any other value is a config error. Default: none.</td>
         </tr>
         <tr>
           <td><code>health_checks</code></td>
@@ -219,7 +226,7 @@ spec-tracer path/to/other-config.json</code></pre>
     </table>
 
     <h2 id="health-checks">Health Checks</h2>
-    <p>Health checks are visual indicators on the report dashboard. They <strong>never</strong> affect the exit code &mdash; only <code>error_on_failure</code> does.</p>
+    <p>Health checks are visual indicators on the report dashboard. By default they do <strong>not</strong> affect the exit code. To turn them into CI gates, list them under <code>fail_on</code>: any listed check in a failing (red) state makes the tool exit <code>1</code> (amber never gates).</p>
 
     <table>
       <thead>
@@ -264,6 +271,8 @@ spec-tracer path/to/other-config.json</code></pre>
       <li><code>e2e_duration_amber_seconds</code>: 600 (10 min)</li>
       <li><code>e2e_duration_red_seconds</code>: 1800 (30 min)</li>
     </ul>
+
+    <p>To gate CI on a check, use its <code>fail_on</code> name: <code>progress</code> (Progress), <code>pyramid</code> (Pyramid Ratio), and <code>e2e_runtime</code> (End to end Runtime). <code>unlinked</code> is visual-only and cannot gate CI.</p>
 
     <h2 id="module-scope">Module-Scoped Requirements</h2>
     <p><code>@require-unit</code>, <code>@require-integration</code>, and <code>@require-e2e</code> accept an optional <code>:modulename</code> suffix (e.g. <span class="tag tag-require">@require-unit:auth</span>, <span class="tag tag-require">@require-e2e:checkout</span>). This pairs with module-keyed entries in the config:</p>

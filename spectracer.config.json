@@ -25,5 +25,6 @@
   },
   "output": "./reports/spectracer-report.html",
   "output_json": "./reports/spectracer-report.json",
-  "error_on_failure": true
+  "error_on_failure": true,
+  "fail_on": ["pyramid", "e2e_runtime"]
 }

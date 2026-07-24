@@ -19,6 +19,7 @@ TAG_FIXTURES = {
     "@FC-005": "missing_required_layer",
     "@FC-006": "fc002",
     "@FC-007": "module_scope",
+    "@FC-011": "fail_on_gate",
     "@FC-EDGE-001": "edge_cases/collision_across",
     "@FC-EDGE-002": "edge_cases/collision_within",
     "@FC-EDGE-003": "edge_cases/feature_tags_not_inherited",
@@ -86,6 +87,12 @@ def step_request_json_report(context):
     context.output_json = str(ROOT / "reports" / f"e2e-report-{uuid.uuid4().hex}.json")
 
 
+@given('the config gates CI on the "{name}" health check')
+def step_gate_ci_on_health_check(context, name):
+    context.fail_on = getattr(context, "fail_on", [])
+    context.fail_on.append(name)
+
+
 def _build_config(context) -> dict:
     config = {
         "features": [context.features],
@@ -102,6 +109,8 @@ def _build_config(context) -> dict:
         config["e2e"] = {module: [context.e2e]}
     if hasattr(context, "output_json"):
         config["output_json"] = context.output_json
+    if hasattr(context, "fail_on"):
+        config["fail_on"] = context.fail_on
     return config
 
 

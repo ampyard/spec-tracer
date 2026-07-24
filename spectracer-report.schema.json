@@ -51,6 +51,15 @@
                 "output": { "type": "string" },
                 "output_json": { "type": "string" },
                 "error_on_failure": { "type": "boolean" },
+                "fail_on": {
+                    "type": "array",
+                    "description": "Health checks that gate CI. If any listed check reports a failing (red) status, the tool exits 1. Independent of and additive to error_on_failure.",
+                    "items": {
+                        "type": "string",
+                        "enum": ["progress", "pyramid", "e2e_runtime"]
+                    },
+                    "uniqueItems": true
+                },
                 "health_checks": {
                     "type": "object",
                     "properties": {

@@ -162,6 +162,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
   "output": "./report.html",
   "output_json": "./report.json",
   "error_on_failure": false,
+  "fail_on": ["pyramid", "e2e_runtime"],
   "health_checks": {
     "progress_threshold_green": 80,
     "progress_threshold_amber": 50,
@@ -179,7 +180,8 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `e2e` | No | Same shape as `unit`, but for Cucumber JSON file/directory paths. Matched against `@require-e2e` / `@require-e2e:<module>` tags. |
 | `output` | Yes | Path for the generated HTML report. Created if the parent directory doesn't exist; overwritten if it already exists. |
 | `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |
-| `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. Health checks never affect the exit code — this is the only thing that does. |
+| `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
+| `fail_on` | No | Array of health checks that gate CI. If any listed check reports a failing (red) status, the tool exits `1`. Accepted values: `progress`, `pyramid`, `e2e_runtime`. Amber (warn) never gates — only red does. Independent of and additive to `error_on_failure`; either one exiting non-zero fails the build. Any other value is a config error. Default: none (health checks stay visual-only). |
 | `health_checks` | No | Overrides for the default thresholds shown above. |
 
 ## The Report

@@ -14,6 +14,14 @@ from spec_tracer.report_model import build_report
 
 DEFAULT_CONFIG_NAME = "spectracer.config.json"
 
+# Maps the friendly names accepted in the `fail_on` config to the internal
+# health-check keys produced by ReportAggregator.health_checks.
+FAIL_ON_ALIASES = {
+    "progress": "Progress",
+    "pyramid": "pyramid",
+    "e2e_runtime": "end_to_end_runtime",
+}
+
 
 def _find_config_path(argv: List[str] | None = None) -> Path:
     args = sys.argv[1:] if argv is None else argv
@@ -32,7 +40,33 @@ def _load_config(path: Path) -> dict:
         raise ValueError("Config is missing required key: 'features'")
     if "output" not in config:
         raise ValueError("Config is missing required key: 'output'")
+    fail_on = config.get("fail_on", [])
+    if not isinstance(fail_on, list):
+        raise ValueError("Config key 'fail_on' must be a list of health check names")
+    not_strings = [name for name in fail_on if not isinstance(name, str)]
+    if not_strings:
+        raise ValueError(
+            f"Config key 'fail_on' entries must be strings, got: {not_strings}"
+        )
+    unknown = [name for name in fail_on if name not in FAIL_ON_ALIASES]
+    if unknown:
+        accepted = ", ".join(sorted(FAIL_ON_ALIASES))
+        raise ValueError(
+            f"Config key 'fail_on' has unknown health checks: {unknown}. Accepted values: {accepted}"
+        )
+    duplicates = sorted({name for name in fail_on if fail_on.count(name) > 1})
+    if duplicates:
+        raise ValueError(f"Config key 'fail_on' has duplicate entries: {duplicates}")
     return config
+
+
+def _failing_gated_checks(health_checks: dict, fail_on: List[str]) -> List[str]:
+    """Return the ``fail_on`` names whose health check is in a failing state."""
+    return [
+        name
+        for name in fail_on
+        if health_checks.get(FAIL_ON_ALIASES[name], {}).get("status") == "fail"
+    ]
 
 
 def _load_logo(config_dir: Path) -> str:
@@ -143,7 +177,17 @@ def main(argv: List[str] | None = None) -> int:
         output_json_path.parent.mkdir(parents=True, exist_ok=True)
         output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
-    if config.get("error_on_failure", False) and any(result.status == "failed" for result in results):
+    failing_checks = _failing_gated_checks(health_checks, config.get("fail_on", []))
+    if failing_checks:
+        print(
+            "Health check gate failed (fail_on): " + ", ".join(failing_checks),
+            file=sys.stderr,
+        )
+
+    error_on_failure = config.get("error_on_failure", False) and any(
+        result.status == "failed" for result in results
+    )
+    if error_on_failure or failing_checks:
         return 1
     return 0
 

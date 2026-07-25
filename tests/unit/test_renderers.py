@@ -9,6 +9,7 @@ from spec_tracer.renderers import (
     _feature_outcome,
     _format_duration,
     _outcome,
+    _result_satisfies_requirement,
     _status_class,
     _status_label,
 )
@@ -329,3 +330,58 @@ def test_feature_outcome_worst_across_feature_results(tag):
     a = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="p", status="passed")])
     b = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="f", status="failed")])
     assert _feature_outcome([a, b])["cls"] == "failed"
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_satisfies_requirement_when_layer_matches(tag):
+    view = _view_with([RequiredLayer("unit")], [TestResult(layer="unit", name="t")])
+    assert _result_satisfies_requirement(view.linked_results[0], view) is True
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_does_not_satisfy_when_layer_mismatch(tag):
+    view = _view_with([RequiredLayer("e2e")], [TestResult(layer="unit", name="t")])
+    assert _result_satisfies_requirement(view.linked_results[0], view) is False
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_satisfies_with_module_scope(tag):
+    view = _view_with(
+        [RequiredLayer("unit", module="auth")],
+        [TestResult(layer="unit", name="t", module="auth")],
+    )
+    assert _result_satisfies_requirement(view.linked_results[0], view) is True
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_does_not_satisfy_when_module_mismatch(tag):
+    view = _view_with(
+        [RequiredLayer("unit", module="auth")],
+        [TestResult(layer="unit", name="t", module="billing")],
+    )
+    assert _result_satisfies_requirement(view.linked_results[0], view) is False
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_does_not_satisfy_when_no_required_layers(tag):
+    view = _view_with([], [TestResult(layer="e2e", name="t")])
+    assert _result_satisfies_requirement(view.linked_results[0], view) is False
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_satisfies_with_module_scope_case_insensitive(tag):
+    view = _view_with(
+        [RequiredLayer("unit", module="Auth")],
+        [TestResult(layer="unit", name="t", module="auth")],
+    )
+    assert _result_satisfies_requirement(view.linked_results[0], view) is True
+
+
+@pytest.mark.parametrize("tag", ["@FC-014"])
+def test_result_satisfies_one_of_multiple_requirements(tag):
+    view = _view_with(
+        [RequiredLayer("unit"), RequiredLayer("e2e")],
+        [TestResult(layer="unit", name="t"), TestResult(layer="e2e", name="e")],
+    )
+    assert _result_satisfies_requirement(view.linked_results[0], view) is True
+    assert _result_satisfies_requirement(view.linked_results[1], view) is True

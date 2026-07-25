@@ -1,4 +1,4 @@
-Feature: Test Coverage Linking
+Feature: Linking
 
   @FC-001 @require-unit:linker @require-e2e:linker
   Scenario: Generate report with linked unit and E2E coverage

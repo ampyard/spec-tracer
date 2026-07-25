@@ -1,4 +1,4 @@
-Feature: Test Coverage Health Signals
+Feature: Health Signals
 
   @FC-005 @require-unit:aggregator @require-e2e:aggregator
   Scenario: Report flags missing required layer

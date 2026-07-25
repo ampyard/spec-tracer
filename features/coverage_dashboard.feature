@@ -1,4 +1,4 @@
-Feature: Test Coverage Dashboard Rendering
+Feature: Dashboard Rendering
 
   @FC-006 @require-unit:renderers @require-e2e:renderers
   Scenario: Report renders polished dashboard sections

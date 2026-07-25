@@ -44,6 +44,13 @@ def _has_missing_required_layer(view: ScenarioView) -> bool:
     return any(not _layer_satisfied(req, view.linked_results) for req in view.scenario.required_layers)
 
 
+def _result_satisfies_requirement(result: TestResult, view: ScenarioView) -> bool:
+    return any(
+        result.layer == req.layer and (req.module == "" or result.module.lower() == req.module.lower())
+        for req in view.scenario.required_layers
+    )
+
+
 def _completion_bar(completion: dict) -> str:
     """HTML for the proportional completion bar with an in-bar percentage.
 
@@ -484,10 +491,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       background: var(--surface-alt);
       border-bottom: 1px solid var(--border);
     }
-    .sort-btn {
+    .sort-btn, .tree-head-label {
       background: none;
       border: none;
-      cursor: pointer;
       color: var(--text-soft);
       font: inherit;
       text-transform: uppercase;
@@ -501,8 +507,10 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       text-align: left;
       min-width: 0;
     }
+    .sort-btn { cursor: pointer; }
     .sort-btn:hover { color: var(--primary); }
-    .sort-btn .sort-caret { font-size: 0.68rem; opacity: 0; flex: 0 0 auto; }
+    .sort-btn .sort-caret { font-size: 0.68rem; opacity: 0; flex: 0 0 auto; transition: opacity 120ms ease; }
+    .sort-btn:hover .sort-caret { opacity: 0.35; }
     .sort-btn.sort-active .sort-caret { opacity: 1; }
     .tree-row { display: block; width: 100%; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 0.87rem; }
     .tree-row:last-child { border-bottom: none; }
@@ -564,6 +572,9 @@ _TEMPLATE_STR = """<!DOCTYPE html>
     .required-chip.missing { background: var(--danger-soft); color: var(--danger); }
     .required-chip.none { background: var(--surface); color: var(--text-soft); border: 1px solid var(--border); }
     .module-tag { font-weight: 400; text-transform: none; opacity: 0.75; }
+    .req-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+    .req-tag.matched { background: var(--primary-soft); color: var(--primary); }
+    .req-tag.extra { background: var(--surface-alt); color: var(--text-soft); border: 1px solid var(--border); }
     .failure-block { margin: 4px 16px 14px 48px; padding: 12px; border-radius: 8px; background: var(--danger-soft); border: 1px solid var(--border); white-space: pre-wrap; ui-monospace, SFMono-Regular, monospace; font-size: 0.79rem; line-height: 1.5; color: var(--danger); }
     .nav-button {
       display: inline-flex;
@@ -703,8 +714,8 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             <button type="button" class="sort-btn col-name" data-sort-key="name">Name <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-completion" data-sort-key="completion">Completion <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-result" data-sort-key="result">Result <span class="sort-caret">&#9660;</span></button>
-            <div class="col-expected">Expected</div>
-            <div class="col-actual">Actual</div>
+            <div class="col-expected tree-head-label">Expected</div>
+            <div class="col-actual tree-head-label">Actual</div>
             <button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>
           </div>
           <div class="tree-root" data-tree-group>
@@ -769,10 +780,11 @@ _TEMPLATE_STR = """<!DOCTYPE html>
                     {% endif %}
                     {% if view.linked_results %}
                     {% for result in view.linked_results %}
-                    <div class="tree-row level-3 leaf" data-sort-name="{{ result.name }}" data-sort-status="{{ status_rank(result.status) }}" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }}">
+                    {% set is_required = result_satisfies_requirement(result, view) %}
+                    <div class="tree-row level-3 leaf" data-sort-name="{{ result.name }}" data-sort-status="{{ status_rank(result.status) }}" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }} {{ 'matched' if is_required else 'extra' }}">
                       <span class="col-name lvl-3"><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span></span>
                       <span class="col-status"><span class="badge {{ _status_class(result.status) }}">{{ _status_label(result.status) }}</span></span>
-                      <span class="col-expected">&mdash;</span>
+                      <span class="col-expected"><span class="req-tag {{ 'matched' if is_required else 'extra' }}">{{ 'Matched' if is_required else 'Extra' }}</span></span>
                       <span class="col-actual">&mdash;</span>
                       <span class="col-duration">{{ format_duration(result.duration) }}</span>
                     </div>
@@ -1067,6 +1079,7 @@ class HtmlRenderer:
             template = env.from_string(_TEMPLATE_STR)
             template.globals["_required_status"] = _required_status
             template.globals["required_layers"] = _required_layers
+            template.globals["result_satisfies_requirement"] = _result_satisfies_requirement
             template.globals["expected_test_count"] = _expected_test_count
             template.globals["scenario_status"] = _scenario_status
             template.globals["feature_status"] = _feature_status

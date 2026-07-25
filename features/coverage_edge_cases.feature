@@ -1,4 +1,4 @@
-Feature: Test Coverage Edge Cases
+Feature: Edge Cases
 
   @FC-EDGE-001 @require-e2e:linker
   Scenario: Generate report with linked edge case coverage

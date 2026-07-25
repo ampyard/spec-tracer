@@ -1,4 +1,4 @@
-Feature: Test Coverage Tool Internals
+Feature: Tool Internals
 
   @FC-007 @require-unit:parsers @require-e2e:parsers
   Scenario: Malformed JUnit XML input is rejected with a clear error

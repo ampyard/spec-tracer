@@ -28,3 +28,15 @@ def test_passed_failed_skipped_displayed_in_report(tag):
     assert "badge passed" in content
     assert "badge failed" in content
     assert "badge skipped" in content
+
+    # Hero "tests passed" card (outcome metric, distinct from declared-tests matched)
+    assert "tests passed" in content
+    assert 'href="#/failures"' in content
+    import re
+    m = re.search(r"<strong>(\d+)/(\d+)</strong>\s*<span>tests passed", content)
+    assert m, "hero tests-passed card missing its N/M count"
+    passed, total = int(m.group(1)), int(m.group(2))
+    assert total > 0
+    failed = int(re.search(r"(\d+) failed", content).group(1))
+    assert passed == total - failed, "passed + failed should equal total"
+    assert failed > 0, "expected at least one failed test in this fixture"

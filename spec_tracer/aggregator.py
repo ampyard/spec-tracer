@@ -144,26 +144,26 @@ class ReportAggregator:
         progress_pct = progress_stats["pct"]
         if progress_pct >= progress_threshold_green:
             progress_status = "pass"
-            progress_message = "Every scenario is fully matched."
+            progress_message = "All declared tests are matched."
         elif progress_pct >= progress_threshold_amber:
             progress_status = "warn"
-            progress_message = "Matched coverage still needs attention."
+            progress_message = "Progress still needs attention."
         else:
             progress_status = "fail"
-            progress_message = "Matched coverage is below the comfort threshold."
+            progress_message = "Progress is below the comfort threshold."
 
         unit_count = next((metric["count"] for metric in layer_stats if metric["name"] == "unit"), 0)
         integration_count = next((metric["count"] for metric in layer_stats if metric["name"] == "integration"), 0)
         e2e_count = next((metric["count"] for metric in layer_stats if metric["name"] == "e2e"), 0)
         if unit_count > integration_count + e2e_count:
             pyramid_status = "pass"
-            pyramid_message = "Unit coverage is strong enough for the pyramid."
+            pyramid_message = "Unit tests are strong enough for the pyramid."
         elif unit_count == integration_count + e2e_count:
             pyramid_status = "warn"
-            pyramid_message = "Unit coverage is exactly at parity — add more unit tests."
+            pyramid_message = "Unit tests are exactly at parity — add more unit tests."
         else:
             pyramid_status = "fail"
-            pyramid_message = "The pyramid is inverted and needs more unit coverage."
+            pyramid_message = "The pyramid is inverted and needs more unit tests."
 
         e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
         if e2e_duration <= e2e_duration_amber_seconds:
@@ -187,7 +187,7 @@ class ReportAggregator:
             unlinked_message = "Several results didn't link to any scenario."
 
         return {
-            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['complete']}/{progress_stats['total']}"},
+            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['satisfied']}/{progress_stats['required']}"},
             "pyramid": {
                 "status": pyramid_status,
                 "message": pyramid_message,

@@ -21,7 +21,7 @@ def test_cli_links_integration_results(tag):
     assert OUTPUT.exists()
 
     content = OUTPUT.read_text(encoding="utf-8")
-    assert "Testing Progress" in content
+    assert "Overview" in content
     assert "Report shows integration coverage" in content
     assert "<strong>0/1</strong>" in content
     assert "scenarios fully matched" in content

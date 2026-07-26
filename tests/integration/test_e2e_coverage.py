@@ -19,6 +19,15 @@ def test_cli_generates_coverage_report(tag):
     assert OUTPUT.exists()
 
     content = OUTPUT.read_text(encoding="utf-8")
-    assert "Testing Progress" in content
+    assert "Overview" in content
     assert "Successful login with valid credentials" in content
-    assert "1/1 scenarios complete" in content
+    assert "<strong>1/1</strong>" in content
+    assert "scenarios fully matched" in content
+    assert "tests passed" in content
+    assert 'href="#/failures"' in content
+    import re
+    m = re.search(r"<strong>(\d+)/(\d+)</strong>\s*<span>tests passed", content)
+    assert m, "hero tests-passed card missing its N/M count"
+    passed, total = int(m.group(1)), int(m.group(2))
+    assert total > 0
+    assert passed == total - int(re.search(r"(\d+) failed", content).group(1))

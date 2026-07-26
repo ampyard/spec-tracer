@@ -8,7 +8,7 @@ Feature: Dashboard Rendering
     And an E2E Cucumber JSON result tagged "@FC-006"
     When I run the tool with --features, --unit, --e2e, and --output
     Then the exit code should be 0
-    And the report should contain "Testing Progress"
+    And the report should contain "Overview"
     And the report should contain "Test Pyramid"
     And the report should contain "Health Check"
     And the report should contain "Search by name"

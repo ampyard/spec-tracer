@@ -144,7 +144,7 @@ class ReportAggregator:
         progress_pct = progress_stats["pct"]
         if progress_pct >= progress_threshold_green:
             progress_status = "pass"
-            progress_message = "Progress is healthy."
+            progress_message = "All declared tests are matched."
         elif progress_pct >= progress_threshold_amber:
             progress_status = "warn"
             progress_message = "Progress still needs attention."
@@ -157,24 +157,24 @@ class ReportAggregator:
         e2e_count = next((metric["count"] for metric in layer_stats if metric["name"] == "e2e"), 0)
         if unit_count > integration_count + e2e_count:
             pyramid_status = "pass"
-            pyramid_message = "Unit coverage is strong enough for the pyramid."
+            pyramid_message = "Unit tests are strong enough for the pyramid."
         elif unit_count == integration_count + e2e_count:
             pyramid_status = "warn"
-            pyramid_message = "Unit coverage is exactly at parity — add more unit tests."
+            pyramid_message = "Unit tests are exactly at parity — add more unit tests."
         else:
             pyramid_status = "fail"
-            pyramid_message = "The pyramid is inverted and needs more unit coverage."
+            pyramid_message = "The pyramid is inverted and needs more unit tests."
 
         e2e_duration = next((metric["duration"] for metric in layer_stats if metric["name"] == "e2e"), 0.0)
         if e2e_duration <= e2e_duration_amber_seconds:
             e2e_status = "pass"
-            e2e_message = "End to end Runtime is within the healthy envelope."
+            e2e_message = "E2E runtime is within budget."
         elif e2e_duration <= e2e_duration_red_seconds:
             e2e_status = "warn"
-            e2e_message = "End to end Runtime is getting slow."
+            e2e_message = "E2E runtime is getting slow."
         else:
             e2e_status = "fail"
-            e2e_message = "End to end Runtime exceeds the configured threshold."
+            e2e_message = "E2E runtime exceeds the configured threshold."
 
         if unlinked_count == 0:
             unlinked_status = "pass"
@@ -187,7 +187,7 @@ class ReportAggregator:
             unlinked_message = "Several results didn't link to any scenario."
 
         return {
-            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['complete']}/{progress_stats['total']}"},
+            "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['satisfied']}/{progress_stats['required']}"},
             "pyramid": {
                 "status": pyramid_status,
                 "message": pyramid_message,

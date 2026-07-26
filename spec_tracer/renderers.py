@@ -177,8 +177,32 @@ def _status_rank(status: str) -> int:
     return {"passed": 2, "skipped": 1, "failed": 0}.get(status, 0)
 
 
-_TEMPLATE_STR = """<!DOCTYPE html>
-<html lang="en">
+def _progress_band(pct: int) -> str:
+    """Color band for a 0–100 percentage, mirroring the Progress health gate.
+
+    ``>= 80`` green, ``>= 50`` amber, otherwise red.
+    """
+    if pct >= 80:
+        return "good"
+    if pct >= 50:
+        return "warn"
+    return "bad"
+
+
+def _pass_band(pct: int) -> str:
+    """Color band for a pass-rate percentage — same sense as :func:`_progress_band`.
+
+    ``>= 80`` green, ``>= 50`` amber, otherwise red.``0`` (all failing) is red.
+    """
+    if pct >= 80:
+        return "good"
+    if pct >= 50:
+        return "warn"
+    return "bad"
+
+
+
+_TEMPLATE_STR = """<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -393,12 +417,20 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       transition: box-shadow 160ms ease;
     }
     .stat-card:hover { box-shadow: var(--shadow-1); }
+    .stat-card-link { cursor: pointer; }
+    .stat-card-link:hover { box-shadow: var(--shadow-1); border-color: var(--primary); }
+    .stat-card-anchor { display: block; color: inherit; text-decoration: none; }
+    .stat-sub { margin-top: 4px; font-size: 0.76rem; color: var(--text-soft); }
     .stat-card strong { display: block; font-size: 1.5rem; font-weight: 700; margin-bottom: 2px; color: var(--text); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
     .stat-card span { color: var(--text-soft); font-size: 0.84rem; }
-    .bar-shell { height: 26px; border-radius: 999px; overflow: hidden; background: var(--border); margin-top: 18px; position: relative; }
     .bar-fill { height: 100%; border-radius: inherit; background: var(--primary); transition: width 420ms ease; }
-    .bar-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); font-variant-numeric: tabular-nums; pointer-events: none; text-shadow: 0 1px 2px color-mix(in srgb, var(--page) 70%, transparent); }
-    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .bar-fill.good { background: var(--success); }
+    .bar-fill.warn { background: var(--warning); }
+    .bar-fill.bad { background: var(--danger); }
+    .stat-bar { height: 8px; border-radius: 999px; overflow: hidden; background: var(--border); margin-top: 10px; }
+    .stat-bar .bar-fill { border-radius: inherit; }
+    .stat-card { position: relative; }
+
     .section-head .muted { color: var(--text-soft); font-size: 0.87rem; margin-top: 4px; }
     .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
     .health-card { position: relative; border-radius: 12px; padding: 16px 18px; border: 1px solid var(--border); background: var(--surface-alt); overflow: hidden; }
@@ -621,16 +653,24 @@ _TEMPLATE_STR = """<!DOCTYPE html>
 
     <main id="page-dashboard" class="page-stack">
       <section class="panel">
-        <h1>Testing Progress</h1>
+        <h1>Overview</h1>
         <div class="hero-stats">
-          <div class="stat-card" title="{{ pct }}% complete across {{ required }} declared requirements ({{ satisfied }}/{{ required }} met)">
-            <strong>{{ pct }}%</strong> <span>complete</span>
+          <div class="stat-card" title="{{ satisfied }}/{{ required }} declared tests are matched by at least one linked test (presence only — pass/fail not considered)">
+            <strong>{{ satisfied }}/{{ required }}</strong> <span>declared tests matched &middot; {{ pct }}%</span>
+            <div class="stat-bar"><div class="bar-fill {{ progress_band(pct) }}" style="width: {{ pct }}%;"></div></div>
           </div>
-          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios have every declared requirement met">
-            <strong>{{ complete }}/{{ total }} scenarios complete</strong>
+          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios have every declared test matched">
+            <strong>{{ complete }}/{{ total }}</strong> <span>scenarios fully matched &middot; {{ scenario_pct }}%</span>
+            <div class="stat-bar"><div class="bar-fill {{ progress_band(scenario_pct) }}" style="width: {{ scenario_pct }}%;"></div></div>
+          </div>
+          <div class="stat-card stat-card-link" title="{{ passed_total }} of {{ passed_denom }} linked results passed (pass/fail, distinct from declared-tests matched)">
+            <a class="stat-card-anchor" href="#/failures">
+              <strong>{{ passed_total }}/{{ passed_denom }}</strong> <span>tests passed &middot; {{ passed_pct }}%</span>
+              <div class="stat-sub">{{ failed_total }} failed</div>
+              <div class="stat-bar"><div class="bar-fill {{ pass_band(passed_pct) }}" style="width: {{ passed_pct }}%;"></div></div>
+            </a>
           </div>
         </div>
-        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div><span class="bar-overlay">{{ pct }}%</span></div>
       </section>
 
       <section class="panel">
@@ -643,7 +683,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
         <div class="health-grid">
           {% for key, item in health_checks.items() %}
           <div class="health-card {{ item.status }}">
-            <div class="health-title">{{ key.replace('_', ' ') | title }}</div>
+            <div class="health-title">{{ {'end_to_end_runtime': 'E2E runtime', 'Progress': 'Progress', 'pyramid': 'Test pyramid', 'unlinked': 'Unlinked'}.get(key, key.replace('_', ' ') | title) }}</div>
             {% if key == 'pyramid' %}
             <div class="pyramid-mini">
               {% for entry in item.layers %}
@@ -653,11 +693,17 @@ _TEMPLATE_STR = """<!DOCTYPE html>
               </span>
               {% endfor %}
             </div>
+            {% elif key == 'Progress' %}
+            <div class="health-value">{{ item.value }} declared tests matched</div>
             {% else %}
             <div class="health-value">{{ item.value }}</div>
             {% endif %}
             <div class="health-message">{{ item.message }}</div>
-            {% if key == 'unlinked' %}
+            {% if key == 'pyramid' %}
+            <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
+            {% elif key == 'end_to_end_runtime' %}
+            <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
+            {% elif key == 'unlinked' %}
             <a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>
             {% endif %}
           </div>
@@ -714,7 +760,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
             <button type="button" class="sort-btn col-name" data-sort-key="name">Name <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-completion" data-sort-key="completion">Completion <span class="sort-caret">&#9660;</span></button>
             <button type="button" class="sort-btn col-result" data-sort-key="result">Result <span class="sort-caret">&#9660;</span></button>
-            <div class="col-expected tree-head-label">Expected</div>
+            <div class="col-expected tree-head-label">Declared</div>
             <div class="col-actual tree-head-label">Actual</div>
             <button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>
           </div>
@@ -1092,14 +1138,25 @@ class HtmlRenderer:
             template.globals["_status_class"] = _status_class
             template.globals["_status_label"] = _status_label
             template.globals["status_rank"] = _status_rank
+            template.globals["progress_band"] = _progress_band
+            template.globals["pass_band"] = _pass_band
+            failed_total = sum(metric["failed"] for metric in layer_stats)
+            result_total = sum(metric["count"] for metric in layer_stats)
+            passed_total = result_total - failed_total
+            passed_pct = int(round((passed_total / result_total * 100) if result_total else 0))
             return template.render(
                 tested=stats["complete"],
                 complete=stats["complete"],
                 total=stats["total"],
                 percentage=stats["percentage"],
                 pct=stats["pct"],
+                scenario_pct=int(round((stats["complete"] / stats["total"] * 100) if stats["total"] else 0)),
                 satisfied=stats["satisfied"],
                 required=stats["required"],
+                passed_total=passed_total,
+                passed_denom=result_total,
+                passed_pct=passed_pct,
+                failed_total=failed_total,
                 feature_breakdown=feature_breakdown,
                 views=views,
                 layer_stats=layer_stats,

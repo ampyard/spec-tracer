@@ -623,14 +623,14 @@ _TEMPLATE_STR = """<!DOCTYPE html>
       <section class="panel">
         <h1>Testing Progress</h1>
         <div class="hero-stats">
-          <div class="stat-card" title="{{ pct }}% complete across {{ required }} declared requirements ({{ satisfied }}/{{ required }} met)">
-            <strong>{{ pct }}%</strong> <span>complete</span>
+          <div class="stat-card" title="{{ satisfied }}/{{ required }} declared tests are matched by at least one linked test (presence only — pass/fail not considered)">
+            <strong>{{ satisfied }}/{{ required }}</strong> <span>declared tests matched &middot; {{ pct }}%</span>
           </div>
-          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios have every declared requirement met">
-            <strong>{{ complete }}/{{ total }} scenarios complete</strong>
+          <div class="stat-card" title="{{ complete }}/{{ total }} scenarios have every declared test matched">
+            <strong>{{ complete }}/{{ total }}</strong> <span>scenarios fully matched &middot; {{ scenario_pct }}%</span>
           </div>
         </div>
-        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div><span class="bar-overlay">{{ pct }}%</span></div>
+        <div class="bar-shell"><div class="bar-fill" style="width: {{ pct }}%;"></div><span class="bar-overlay">{{ pct }}% declared tests matched</span></div>
       </section>
 
       <section class="panel">
@@ -643,7 +643,7 @@ _TEMPLATE_STR = """<!DOCTYPE html>
         <div class="health-grid">
           {% for key, item in health_checks.items() %}
           <div class="health-card {{ item.status }}">
-            <div class="health-title">{{ key.replace('_', ' ') | title }}</div>
+            <div class="health-title">{{ {'end_to_end_runtime': 'E2E runtime', 'Progress': 'Matched', 'pyramid': 'Test pyramid', 'unlinked': 'Unlinked'}.get(key, key.replace('_', ' ') | title) }}</div>
             {% if key == 'pyramid' %}
             <div class="pyramid-mini">
               {% for entry in item.layers %}
@@ -653,11 +653,17 @@ _TEMPLATE_STR = """<!DOCTYPE html>
               </span>
               {% endfor %}
             </div>
+            {% elif key == 'Progress' %}
+            <div class="health-value">{{ item.value }} matched</div>
             {% else %}
             <div class="health-value">{{ item.value }}</div>
             {% endif %}
             <div class="health-message">{{ item.message }}</div>
-            {% if key == 'unlinked' %}
+            {% if key == 'pyramid' %}
+            <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
+            {% elif key == 'end_to_end_runtime' %}
+            <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
+            {% elif key == 'unlinked' %}
             <a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>
             {% endif %}
           </div>
@@ -1098,6 +1104,7 @@ class HtmlRenderer:
                 total=stats["total"],
                 percentage=stats["percentage"],
                 pct=stats["pct"],
+                scenario_pct=int(round((stats["complete"] / stats["total"] * 100) if stats["total"] else 0)),
                 satisfied=stats["satisfied"],
                 required=stats["required"],
                 feature_breakdown=feature_breakdown,

@@ -21,6 +21,7 @@ def test_cli_links_unit_results(tag):
     content = OUTPUT.read_text(encoding="utf-8")
     assert "Testing Progress" in content
     assert "Successful login with valid credentials" in content
-    assert "0/1 scenarios complete" in content
+    assert "<strong>0/1</strong>" in content
+    assert "scenarios fully matched" in content
     assert "<strong>unit</strong>" in content
     assert "@FC-001" in content

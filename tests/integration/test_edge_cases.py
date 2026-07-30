@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "tests" / "fixtures" / "edge_cases"
 
 
-def test_edge_case_pytest_junit_contains_tag(tmp_path):
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-001"])
+def test_edge_case_pytest_junit_contains_tag(tag, tmp_path):
     xml_path = tmp_path / "edge.xml"
     result = subprocess.run(
         [
@@ -31,12 +32,12 @@ def test_edge_case_pytest_junit_contains_tag(tmp_path):
     )
 
     assert result.returncode == 0, result.stderr
-    assert "@FC-EDGE-001" in xml_path.read_text(encoding="utf-8")
+    assert "test_tag_collision_across_features" in xml_path.read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-001"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-001"])
 def test_tag_collision_across_features(tag):
-    """One test tagged @FC-001 links to scenarios in both feature files."""
+    """One test tagged @scenario:FC-001 links to scenarios in both feature files."""
     base = FIXTURES / "collision_across"
     output = base / "report.html"
     result = run_tool(base / "features", output, unit=base / "unit.xml")
@@ -49,9 +50,9 @@ def test_tag_collision_across_features(tag):
     assert "scenarios fully matched" in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-002"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-002"])
 def test_tag_collision_within_feature(tag):
-    """One test tagged @smoke links to both scenarios sharing that tag."""
+    """Category tag @smoke no longer links — scenarios show as incomplete."""
     base = FIXTURES / "collision_within"
     output = base / "report.html"
     result = run_tool(base / "features", output, unit=base / "unit.xml")
@@ -63,24 +64,25 @@ def test_tag_collision_within_feature(tag):
     assert "scenarios fully matched" in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-003"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-003"])
 def test_feature_level_tags_not_inherited(tag):
     """Tags on Feature: line are NOT inherited by scenarios.
 
-    The scenario ``@FC-001`` links to the matching unit test, so coverage is
-    0/1 under the presence-based basis (the linked unit result does not satisfy
-    the default injected ``e2e`` requirement). The other unit test carries
-    ``@FeatureTag`` (taken from its name), which matches no scenario — it must
-    appear under Unlinked Tests rather than being silently dropped.
+    The scenario tagged ``@id:FC-001`` links to the matching unit test
+    (``@scenario:FC-001``), so coverage is 0/1 under the presence-based basis
+    (the linked unit result does not satisfy the default injected ``e2e``
+    requirement). The other unit test carries ``@FeatureTag`` (taken from its
+    name), which is not an ``@scenario:`` tag and therefore matches no scenario
+    — it must appear under Unlinked Tests rather than being silently dropped.
     """
     base = FIXTURES / "feature_tags_not_inherited"
     output = base / "report.html"
     result = run_tool(base / "features", output, unit=base / "unit.xml")
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
-    # @FC-001 test should link (scenario-level tag)
+    # @id:FC-001 test should link (scenario-level tag via @scenario:FC-001)
     assert "<strong>unit</strong>" in content
-    # Only the @FC-001 scenario exists, but its default e2e requirement is unmet
+    # Only the @id:FC-001 scenario exists, but its default e2e requirement is unmet
     assert "<strong>0/1</strong>" in content
     assert "scenarios fully matched" in content
     # The @FeatureTag test matches no scenario and must be listed as unlinked
@@ -88,7 +90,7 @@ def test_feature_level_tags_not_inherited(tag):
     assert "test_feature_tag_@FeatureTag" in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-004"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-004"])
 def test_no_matching_tags_shows_incomplete(tag):
     """Scenario with no matching test results shows as incomplete."""
     base = FIXTURES / "no_match"
@@ -101,7 +103,7 @@ def test_no_matching_tags_shows_incomplete(tag):
     assert "<strong>unit</strong>" not in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-005"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-005"])
 def test_empty_result_file_produces_zero_tests(tag):
     """Empty <testsuites/> produces zero unit results, scenario is incomplete."""
     base = FIXTURES / "empty_result"
@@ -113,7 +115,7 @@ def test_empty_result_file_produces_zero_tests(tag):
     assert "scenarios fully matched" in content
     assert "<strong>unit</strong>" not in content
 
-@pytest.mark.parametrize("tag", ["@FC-EDGE-006"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-006"])
 def test_malformed_junit_xml_errors(tag):
     """Malformed JUnit XML aborts with a clear error."""
     base = FIXTURES / "malformed_xml"

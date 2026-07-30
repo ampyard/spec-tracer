@@ -7,7 +7,7 @@
       {
         "keyword": "Scenario",
         "name": "Successful login - passed",
-        "tags": [{"name": "@FC-002"}],
+        "tags": [{"name": "@scenario:FC-002"}],
         "steps": [
           {"keyword": "Given", "name": "step", "result": {"status": "passed"}}
         ],
@@ -16,7 +16,7 @@
       {
         "keyword": "Scenario",
         "name": "Login with invalid password - failed",
-        "tags": [{"name": "@FC-002"}],
+        "tags": [{"name": "@scenario:FC-002"}],
         "steps": [
           {"keyword": "When", "name": "invalid", "result": {"status": "failed", "error_message": "AssertionError"}}
         ],
@@ -25,7 +25,7 @@
       {
         "keyword": "Scenario",
         "name": "Login lockout - skipped",
-        "tags": [{"name": "@FC-002"}],
+        "tags": [{"name": "@scenario:FC-002"}],
         "steps": [
           {"keyword": "Then", "name": "lockout", "result": {"status": "skipped"}}
         ],

@@ -11,7 +11,7 @@ E2E = ROOT / "tests" / "fixtures" / "e2e_coverage" / "e2e.json"
 OUTPUT = ROOT / "tests" / "fixtures" / "e2e_coverage" / "report.html"
 
 
-@pytest.mark.parametrize("tag", ["@FC-001"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-001"])
 def test_cli_generates_coverage_report(tag):
     result = run_tool(FEATURES, OUTPUT, e2e=E2E)
 

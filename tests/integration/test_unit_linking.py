@@ -11,7 +11,7 @@ UNIT = ROOT / "tests" / "fixtures" / "unit_linking" / "unit.xml"
 OUTPUT = ROOT / "tests" / "fixtures" / "unit_linking" / "report.html"
 
 
-@pytest.mark.parametrize("tag", ["@FC-001"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-001"])
 def test_cli_links_unit_results(tag):
     result = run_tool(FEATURES, OUTPUT, unit=UNIT)
 
@@ -24,4 +24,4 @@ def test_cli_links_unit_results(tag):
     assert "<strong>0/1</strong>" in content
     assert "scenarios fully matched" in content
     assert "<strong>unit</strong>" in content
-    assert "@FC-001" in content
+    assert "@scenario:FC-001" in content

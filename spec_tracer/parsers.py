@@ -75,7 +75,7 @@ class FeatureParser:
 
 class JunitParser(ResultParser):
 
-    _tag_pattern = re.compile(r"@[\w.-]+")
+    _tag_pattern = re.compile(r"@[\w.:-]+")
 
     def parse(self, paths: List[Path], layer: str = "unit", module: str = "") -> List[TestResult]:
         results: List[TestResult] = []

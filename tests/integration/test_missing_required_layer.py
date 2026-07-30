@@ -12,7 +12,7 @@ UNIT = FIXTURES / "unit.xml"
 OUTPUT = FIXTURES / "report.html"
 
 
-@pytest.mark.parametrize("tag", ["@FC-005"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-005"])
 def test_cli_flags_missing_required_layer(tag):
     result = run_tool(FEATURES, OUTPUT, unit=UNIT)
 

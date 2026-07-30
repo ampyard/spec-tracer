@@ -19,7 +19,7 @@ FC002_UNIT = ROOT / "tests" / "fixtures" / "fc002" / "unit.xml"
 FC002_E2E = ROOT / "tests" / "fixtures" / "fc002" / "e2e.json"
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_output_json_conforms_to_schema(tag, tmp_path):
     output = tmp_path / "report.html"
     output_json = tmp_path / "report.json"
@@ -52,7 +52,7 @@ def test_output_json_conforms_to_schema(tag, tmp_path):
     assert "failureMessage" not in passed_result
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_output_json_omitted_when_not_configured(tag, tmp_path):
     output = tmp_path / "report.html"
 

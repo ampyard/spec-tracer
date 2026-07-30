@@ -260,8 +260,8 @@
     <div class="feature-block">
       <h3>&#127891; Onboarding a New Project</h3>
       <ol>
-        <li><strong>Write feature files</strong> &mdash; your team's QA or product owner creates <code>.feature</code> files describing every business scenario. Each scenario gets a unique tag like <span class="tag tag-link">@FC-001</span>.</li>
-        <li><strong>Add tags to tests</strong> &mdash; developers add the matching tags to their unit/integration/E2E tests. A quick PR review ensures tag naming consistency.</li>
+        <li><strong>Write feature files</strong> &mdash; your team's QA or product owner creates <code>.feature</code> files describing every business scenario. Each scenario gets an identity tag like <span class="tag tag-link">@id:FC-001</span>.</li>
+        <li><strong>Add tags to tests</strong> &mdash; developers add <span class="tag tag-link">@scenario:FC-001</span> to their unit/integration/E2E tests. A quick PR review ensures tag naming consistency.</li>
         <li><strong>Set up the config</strong> &mdash; create <code>spectracer.config.json</code> pointing at your feature files and test outputs.</li>
         <li><strong>Add to CI</strong> &mdash; add the SpecTracer step to your pipeline. The report becomes part of every build.</li>
       </ol>
@@ -284,10 +284,11 @@
           <tr><th>Pattern</th><th>Example</th><th>Use</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>@FC-&lt;N&gt;</code></td><td><code>@FC-42</code></td><td>Feature-case ID — unique per scenario (linking)</td></tr>
+          <tr><td><code>@id:&lt;VALUE&gt;</code></td><td><code>@id:FC-42</code></td><td>Scenario identity — placed on Gherkin scenarios (used for linking)</td></tr>
+          <tr><td><code>@scenario:&lt;VALUE&gt;</code></td><td><code>@scenario:FC-42</code></td><td>Test reference — placed on test results (used for linking)</td></tr>
           <tr><td><code>@require-&lt;layer&gt;</code></td><td><code>@require-unit</code>, <code>@require-e2e</code></td><td>Required layer coverage (not used for linking)</td></tr>
           <tr><td><code>@require-&lt;layer&gt;:&lt;module&gt;</code></td><td><code>@require-e2e:checkout</code></td><td>Required layer + module key from config</td></tr>
-          <tr><td><code>@&lt;type&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Optional linking / classification tags</td></tr>
+          <tr><td><code>@&lt;type&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Optional classification tags (ignored during linking)</td></tr>
         </tbody>
       </table>
     </div>
@@ -328,7 +329,7 @@
     <p>SpecTracer's headline metric — <strong>Tested: X / Y scenarios (Z%)</strong> — is designed for daily standup discussion. Unlike code coverage (which measures lines executed), this metric measures <strong>business scenario coverage</strong>:</p>
     <ul>
       <li>It's <strong>meaningful to product managers</strong> — "we haven't tested the password reset flow yet"</li>
-      <li>It's <strong>actionable for developers</strong> — "scenario @FC-43 needs a unit test"</li>
+      <li>It's <strong>actionable for developers</strong> — "scenario @id:FC-43 needs a unit test"</li>
       <li>It's <strong>visible to leadership</strong> — a single number that reflects the team's testing health</li>
     </ul>
     <p>Teams that use SpecTracer find themselves discussing coverage in standup naturally: "Our coverage dropped from 85% to 78% this sprint &mdash; let's add tests for the new billing scenarios before the sprint ends."</p>

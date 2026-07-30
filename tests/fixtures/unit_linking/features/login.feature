@@ -1,6 +1,6 @@
 Feature: User Login
 
-  @FC-001
+  @id:FC-001
   Scenario: Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials

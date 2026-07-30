@@ -7,7 +7,7 @@
       {
         "keyword": "Scenario",
         "name": "Report requires e2e coverage from the parsers module",
-        "tags": [{"name": "@FC-007"}],
+        "tags": [{"name": "@scenario:FC-007"}],
         "steps": [
           {"keyword": "Given", "name": "a scenario requiring e2e coverage from module parsers", "result": {"status": "passed"}},
           {"keyword": "When", "name": "e2e results exist under another module", "result": {"status": "passed"}},

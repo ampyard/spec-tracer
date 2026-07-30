@@ -34,15 +34,15 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: linker", [
         "uv", "run", "behave", "features/linking.feature",
-        "--tags=-@FC-004", "-f", "json", "-o", "reports/e2e-linker.json",
+        "--tags=not @scenario:FC-004", "-f", "json", "-o", "reports/e2e-linker.json",
     ]),
     ("E2E: linker (edge)", [
         "uv", "run", "behave", "features/edge_cases.feature",
-        "--tags=-@FC-EDGE-006", "-f", "json", "-o", "reports/e2e-linker-edge.json",
+        "--tags=not @scenario:FC-EDGE-006", "-f", "json", "-o", "reports/e2e-linker-edge.json",
     ]),
     ("E2E: collectors", [
         "uv", "run", "behave", "features/linking.feature",
-        "--tags=@FC-004", "-f", "json", "-o", "reports/e2e-collectors.json",
+        "--tags=@scenario:FC-004", "-f", "json", "-o", "reports/e2e-collectors.json",
     ]),
     ("E2E: aggregator", [
         "uv", "run", "behave", "features/health.feature",
@@ -50,7 +50,7 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: aggregator (internals)", [
         "uv", "run", "behave", "features/internals.feature",
-        "--tags=@FC-008", "-f", "json", "-o", "reports/e2e-aggregator-internals.json",
+        "--tags=@scenario:FC-008", "-f", "json", "-o", "reports/e2e-aggregator-internals.json",
     ]),
     ("E2E: renderers", [
         "uv", "run", "behave", "features/dashboard.feature",
@@ -58,7 +58,7 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: renderers (internals)", [
         "uv", "run", "behave", "features/internals.feature",
-        "--tags=@FC-009", "-f", "json", "-o", "reports/e2e-renderers-internals.json",
+        "--tags=@scenario:FC-009", "-f", "json", "-o", "reports/e2e-renderers-internals.json",
     ]),
     ("E2E: parsers", [
         "uv", "run", "behave", "features/module_scope.feature",
@@ -66,11 +66,11 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: parsers (edge)", [
         "uv", "run", "behave", "features/edge_cases.feature",
-        "--tags=@FC-EDGE-006", "-f", "json", "-o", "reports/e2e-parsers-edge.json",
+        "--tags=@scenario:FC-EDGE-006", "-f", "json", "-o", "reports/e2e-parsers-edge.json",
     ]),
     ("E2E: parsers (internals)", [
         "uv", "run", "behave", "features/internals.feature",
-        "--tags=@FC-007", "-f", "json", "-o", "reports/e2e-parsers-internals.json",
+        "--tags=@scenario:FC-007", "-f", "json", "-o", "reports/e2e-parsers-internals.json",
     ]),
     ("E2E: report_model", [
         "uv", "run", "behave", "features/json_output.feature",

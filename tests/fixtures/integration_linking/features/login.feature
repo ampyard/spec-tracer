@@ -1,6 +1,6 @@
 Feature: Integration Coverage
 
-  @FC-003
+  @id:FC-003
   Scenario: Report shows integration coverage
     Given an integration result is present
     When the tool runs

@@ -30,7 +30,7 @@ def _build(views, stats=None, layer_stats=None, health_checks=None, unlinked_res
     )
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_omits_duration_when_zero(tag):
     view = _view("F", "S1", results=[TestResult(layer="unit", name="t1", status="passed", duration=0.0)])
 
@@ -40,7 +40,7 @@ def test_result_omits_duration_when_zero(tag):
     assert "duration" not in result
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_converts_duration_seconds_to_milliseconds(tag):
     view = _view("F", "S1", results=[TestResult(layer="unit", name="t1", status="passed", duration=1.5)])
 
@@ -50,7 +50,7 @@ def test_result_converts_duration_seconds_to_milliseconds(tag):
     assert result["duration"] == 1500.0
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_omits_failure_message_when_passed(tag):
     view = _view(
         "F", "S1",
@@ -63,7 +63,7 @@ def test_result_omits_failure_message_when_passed(tag):
     assert "failureMessage" not in result
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_includes_failure_message_when_failed(tag):
     view = _view(
         "F", "S1",
@@ -76,7 +76,7 @@ def test_result_includes_failure_message_when_failed(tag):
     assert result["failureMessage"] == "boom"
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_omits_failure_message_when_failed_but_message_empty(tag):
     view = _view(
         "F", "S1",
@@ -89,7 +89,7 @@ def test_result_omits_failure_message_when_failed_but_message_empty(tag):
     assert "failureMessage" not in result
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_result_omits_module_when_blank(tag):
     view = _view("F", "S1", results=[TestResult(layer="unit", name="t1", status="passed", module="")])
 
@@ -99,7 +99,7 @@ def test_result_omits_module_when_blank(tag):
     assert "module" not in result
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_requirement_satisfied_when_module_matches(tag):
     view = _view(
         "F", "S1",
@@ -113,7 +113,7 @@ def test_requirement_satisfied_when_module_matches(tag):
     assert req == {"layer": "unit", "satisfied": True, "module": "billing"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_requirement_satisfied_when_module_matches_case_insensitively(tag):
     view = _view(
         "F", "S1",
@@ -127,7 +127,7 @@ def test_requirement_satisfied_when_module_matches_case_insensitively(tag):
     assert req == {"layer": "unit", "satisfied": True, "module": "Billing"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_requirement_unsatisfied_when_module_does_not_match(tag):
     view = _view(
         "F", "S1",
@@ -141,7 +141,7 @@ def test_requirement_unsatisfied_when_module_does_not_match(tag):
     assert req["satisfied"] is False
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_requirement_omits_module_key_when_unscoped(tag):
     view = _view(
         "F", "S1",
@@ -155,7 +155,7 @@ def test_requirement_omits_module_key_when_unscoped(tag):
     assert "module" not in req
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_e2e_requirement_satisfied_when_module_matches(tag):
     view = _view(
         "F", "S1",
@@ -169,7 +169,7 @@ def test_e2e_requirement_satisfied_when_module_matches(tag):
     assert req == {"layer": "e2e", "satisfied": True, "module": "parsers"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_e2e_requirement_unsatisfied_when_module_does_not_match(tag):
     view = _view(
         "F", "S1",
@@ -183,7 +183,7 @@ def test_e2e_requirement_unsatisfied_when_module_does_not_match(tag):
     assert req["satisfied"] is False
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_features_group_scenarios_and_preserve_first_seen_order(tag):
     views = [
         _view("Zebra", "S1"),
@@ -199,7 +199,7 @@ def test_features_group_scenarios_and_preserve_first_seen_order(tag):
     assert len(zebra["scenarios"]) == 2
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_features_use_provided_feature_file_path(tag):
     view = _view("F", "S1")
 
@@ -208,7 +208,7 @@ def test_features_use_provided_feature_file_path(tag):
     assert report["features"][0]["file"] == "features/f.feature"
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_features_default_file_to_empty_string_when_unknown(tag):
     view = _view("F", "S1")
 
@@ -217,7 +217,7 @@ def test_features_default_file_to_empty_string_when_unknown(tag):
     assert report["features"][0]["file"] == ""
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_health_status_green_when_all_checks_pass(tag):
     report = _build(
         [],
@@ -227,7 +227,7 @@ def test_health_status_green_when_all_checks_pass(tag):
     assert report["summary"]["health"] == {"status": "green", "reasons": []}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_health_status_amber_when_worst_check_warns(tag):
     report = _build(
         [],
@@ -241,7 +241,7 @@ def test_health_status_amber_when_worst_check_warns(tag):
     assert report["summary"]["health"]["reasons"] == ["at parity"]
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_health_status_red_when_any_check_fails(tag):
     report = _build(
         [],
@@ -255,7 +255,7 @@ def test_health_status_red_when_any_check_fails(tag):
     assert set(report["summary"]["health"]["reasons"]) == {"needs attention", "inverted"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_pyramid_summary_converts_duration_to_milliseconds(tag):
     report = _build(
         [],
@@ -265,20 +265,20 @@ def test_pyramid_summary_converts_duration_to_milliseconds(tag):
     assert report["summary"]["pyramid"]["unit"] == {"testCount": 3, "duration": 250.0, "passRate": 100}
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_unlinked_tests_included_with_tags_and_optional_module(tag):
     unlinked = [
-        TestResult(layer="unit", name="orphan", tags=["@FC-999"], module="billing"),
+        TestResult(layer="unit", name="orphan", tags=["@scenario:FC-999"], module="billing"),
     ]
 
     report = _build([], unlinked_results=unlinked)
 
     assert report["unlinkedTests"] == [
-        {"layer": "unit", "testId": "orphan", "name": "orphan", "tags": ["@FC-999"], "module": "billing"}
+        {"layer": "unit", "testId": "orphan", "name": "orphan", "tags": ["@scenario:FC-999"], "module": "billing"}
     ]
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_config_is_echoed_verbatim(tag):
     config = {"features": ["./features"], "output": "./out.html", "output_json": "./out.json"}
 
@@ -287,7 +287,7 @@ def test_config_is_echoed_verbatim(tag):
     assert report["config"] == config
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_schema_version_and_generated_at_present(tag):
     report = _build([])
 

@@ -9,7 +9,7 @@ FIXTURES = ROOT / "tests" / "fixtures" / "module_scope"
 FEATURES = FIXTURES / "features"
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-007"])
 def test_e2e_module_match_marks_requirement_ok(tag, tmp_path):
     output = tmp_path / "report.html"
     result = run_tool(
@@ -23,7 +23,7 @@ def test_e2e_module_match_marks_requirement_ok(tag, tmp_path):
     assert "e2e" in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-007"])
 def test_e2e_module_mismatch_marks_requirement_missing(tag, tmp_path):
     output = tmp_path / "report.html"
     result = run_tool(

@@ -165,12 +165,12 @@
     </div>
 
     <h2 id="unlinked">Unlinked Tests</h2>
-    <p>Test results whose tags didn't match any scenario end up here — regardless of tag prefix. Any tagged result that fails to link to a scenario is reported. Results with no tags at all are excluded (they can never participate in tag-based linking).</p>
+    <p>Test results whose <code>@scenario:VALUE</code> tag doesn't match any scenario's <code>@id:VALUE</code> end up here. Results without a <code>@scenario:</code> tag are excluded (they can never participate in identity-based linking).</p>
 
     <p>This is invaluable for catching:</p>
     <ul>
       <li><strong>Orphaned tests</strong> — tests that were written for a scenario that no longer exists</li>
-      <li><strong>Mis-tagged tests</strong> — tests with typos in their tags (<code>@FC-42</code> vs <code>@FC-43</code>)</li>
+      <li><strong>Mis-tagged tests</strong> — tests with typos in their tags (<code>@scenario:FC-42</code> vs <code>@scenario:FC-43</code>)</li>
       <li><strong>Coverage gaps</strong> — areas where test results exist but no feature file scenario describes them</li>
     </ul>
 
@@ -232,24 +232,29 @@
       <div class="feature-card">
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
-        <p>Orphaned test results with any tags that didn't match any scenario. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
+        <p>Test results with <code>@scenario:VALUE</code> that matched no scenario's <code>@id:VALUE</code>. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
       </div>
     </div>
 
     <h2 id="tag-linking">Tag Linking System</h2>
-    <p>The heart of SpecTracer. Feature files and test results connect through <strong>shared tags</strong> on scenarios.</p>
+    <p>The heart of SpecTracer. Feature files and test results connect through an <strong>explicit identity convention</strong> using two paired tag prefixes.</p>
 
     <div class="feature-block">
-      <h3>Two Kinds of Tags</h3>
+      <h3>Three Kinds of Tags</h3>
       <table>
         <thead>
           <tr><th>Type</th><th>Examples</th><th>Purpose</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td><span class="tag tag-link">Linking</span></td>
-            <td><code>@FC-42</code>, <code>@regression</code></td>
-            <td>Shared with test results. Any matching tag links the test to the scenario.</td>
+            <td><span class="tag tag-link">Identity</span></td>
+            <td><code>@id:FC-42</code></td>
+            <td>Placed on scenarios in <code>.feature</code> files. Declares the scenario's stable identity — the canonical ID.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-link">Reference</span></td>
+            <td><code>@scenario:FC-42</code></td>
+            <td>Placed on test results (via framework markers, test names, or properties). Declares which scenario this test satisfies.</td>
           </tr>
           <tr>
             <td><span class="tag tag-require">Requirement</span></td>
@@ -259,6 +264,8 @@
         </tbody>
       </table>
     </div>
+
+    <p>Linking matches <strong>only</strong> <code>@scenario:VALUE</code> from results against <code>@id:VALUE</code> from scenarios. Other tags (like <code>@smoke</code> or <code>@regression</code>) never participate in linking — they are purely for organization or test-runner filtering.</p>
 
     <h3>Default Behavior</h3>
     <p>Scenarios without any <code>@require-*</code> tags default to <code>@require-e2e</code> &mdash; because if you wrote a Gherkin scenario but didn't declare requirements, it should at least have E2E coverage.</p>
@@ -284,7 +291,7 @@
   }
 }</code></pre>
       <p>In your feature file:</p>
-<pre><code><span class="hl-tag">@FC-42</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:billing</span> <span class="hl-tag">@require-e2e:checkout</span>
+<pre><code><span class="hl-tag">@id:FC-42</span> <span class="hl-tag">@scenario:FC-42</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:billing</span> <span class="hl-tag">@require-e2e:checkout</span>
 <span class="hl-section">Scenario:</span> Authenticated billing checkout</code></pre>
       <p>Each module-scoped requirement is <strong>only</strong> satisfied by a linked result registered under that exact module key. Unscoped results (config key <code>""</code>) never satisfy a module-scoped requirement. A bare <code>@require-unit</code> / <code>@require-e2e</code> (no module) is satisfied by any linked result for that layer.</p>
       <p>In the HTML report, satisfied modules show as chips like <code>e2e (checkout) OK</code>; missing ones show <code>Missing</code>.</p>
@@ -300,8 +307,8 @@
         <tr><td>Missing <code>features</code> or <code>output</code></td><td>Errors out — both are required</td></tr>
         <tr><td>Empty/missing test result path</td><td>Silently ignored (zero tests for that layer)</td></tr>
         <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
-        <tr><td>Test matches no scenario (has tags)</td><td>Listed in "Unlinked Tests"</td></tr>
-        <tr><td>Test matches no scenario (no tags)</td><td>Silently excluded — tagless results can never link</td></tr>
+        <tr><td>Test with <code>@scenario:</code> matches no <code>@id:</code></td><td>Listed in "Unlinked Tests"</td></tr>
+        <tr><td>Test has no <code>@scenario:</code> tag</td><td>Silently excluded — cannot participate in identity-based linking</td></tr>
         <tr><td>Scenario matches no test</td><td>Shown as "incomplete"</td></tr>
         <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
         <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>

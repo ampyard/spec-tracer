@@ -97,7 +97,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128279;</div>
         <h4>linker.py</h4>
-        <p>OR-based tag matching. Links scenarios to test results by shared tags. 17 lines — the simplest module.</p>
+        <p>Identity-based pairing. Matches <code>@scenario:VALUE</code> on test results against <code>@id:VALUE</code> on scenarios. 17 lines — the simplest module.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128202;</div>
@@ -134,7 +134,7 @@
       <ul>
         <li><code>Feature:</code> lines for the feature name</li>
         <li>Scenario names (line following <code>Scenario:</code>)</li>
-        <li>Tags on lines above scenarios (distinguishes <span class="tag tag-link">linking tags</span> from <span class="tag tag-require">@require-*</span> tags)</li>
+        <li>Tags on lines above scenarios (identity, classification, and <span class="tag tag-require">@require-*</span> layer requirement tags)</li>
         <li>Given/When/Then steps for display in the report</li>
       </ul>
       <p><strong>Default behavior:</strong> Scenarios without any <code>@require-*</code> tags default to <code>@require-e2e</code>.</p>
@@ -163,21 +163,23 @@
     </div>
 
     <h2 id="linker">Linker</h2>
-    <p>The linker is the simplest but most important module. It performs <strong>OR-based tag matching</strong>:</p>
+    <p>The linker is the simplest but most important module. It performs <strong>identity-based pairing</strong> using a two-tag convention:</p>
     <ul>
-      <li>For each scenario, find all test results where <strong>any</strong> tag appears in the scenario's linking tags</li>
-      <li><code>@require-*</code> tags are stripped before linking &mdash; they never participate</li>
-      <li>Tag matching is <strong>exact string equality</strong> only &mdash; no wildcards, no expressions</li>
-      <li>One test result can link to multiple scenarios (tag collision)</li>
+      <li>Scenarios carry <span class="tag tag-link">@id:VALUE</span> (e.g. <code>@id:FC-42</code>) as their stable identity</li>
+      <li>Test results carry <span class="tag tag-link">@scenario:VALUE</span> (e.g. <code>@scenario:FC-42</code>) to declare which scenario they satisfy</li>
+      <li>Linking matches <strong>only</strong> <code>@scenario:</code> values from results against <code>@id:</code> values from scenarios &mdash; no accidental matches from other tags</li>
+      <li><code>@require-*</code> tags never participate in linking</li>
+      <li>One test result can link to multiple scenarios (same <code>@scenario:</code> value matching multiple <code>@id:</code> values)</li>
     </ul>
 
     <div class="code-header"><span>Linking logic (abridged)</span></div>
 <pre><code><span class="hl-kw">def</span> <span class="hl-fn">link</span>(scenarios, results):
     links = {}
     <span class="hl-kw">for</span> scenario <span class="hl-kw">in</span> scenarios:
+        ids = {t[<span class="hl-num">3</span>:] <span class="hl-kw">for</span> t <span class="hl-kw">in</span> scenario.tags <span class="hl-kw">if</span> t.<span class="hl-fn">startswith</span>(<span class="hl-str">"@id:"</span>)}
         linked = [
             r <span class="hl-kw">for</span> r <span class="hl-kw">in</span> results
-            <span class="hl-kw">if</span> <span class="hl-fn">any</span>(tag <span class="hl-kw">in</span> scenario.tags <span class="hl-kw">for</span> tag <span class="hl-kw">in</span> r.tags)
+            <span class="hl-kw">if</span> <span class="hl-fn">any</span>(t.<span class="hl-fn">startswith</span>(<span class="hl-str">"@scenario:"</span>) <span class="hl-kw">and</span> t[<span class="hl-num">10</span>:] <span class="hl-kw">in</span> ids <span class="hl-kw">for</span> t <span class="hl-kw">in</span> r.tags)
         ]
         links[<span class="hl-fn">id</span>(scenario)] = linked
     <span class="hl-kw">return</span> links</code></pre>
@@ -232,7 +234,7 @@
       <li><strong>Config loading</strong> &mdash; <code>cli.py</code> discovers and reads the JSON config file. Validates required keys (<code>features</code>, <code>output</code>). <code>unit</code>, <code>integration</code>, and <code>e2e</code> are module-keyed objects (<code>""</code> = unscoped).</li>
       <li><strong>File collection</strong> &mdash; <code>FileCollector</code> (<code>collectors.py</code>) resolves literal file paths and recursively searches directories for <code>.feature</code>, <code>.xml</code>, and <code>.json</code> files, once per module key.</li>
       <li><strong>Parsing</strong> &mdash; Each file type is parsed by its dedicated parser. Scenarios and test results are extracted into typed data classes; results carry the module key they were collected under.</li>
-      <li><strong>Linking</strong> &mdash; <code>ResultLinker</code> cross-references scenario tags against test result tags. OR logic: any shared tag creates a link.</li>
+      <li><strong>Linking</strong> &mdash; <code>ResultLinker</code> matches <code>@scenario:VALUE</code> on test results against <code>@id:VALUE</code> on scenarios. Only explicit identity pairs create a link.</li>
       <li><strong>Aggregation</strong> &mdash; <code>ReportAggregator</code> computes all stats, views, breakdowns, and health checks from the linked data.</li>
       <li><strong>Rendering</strong> &mdash; <code>HtmlRenderer</code> feeds the aggregated data into a Jinja2 template and writes the HTML output file.</li>
       <li><strong>JSON output (optional)</strong> &mdash; if <code>output_json</code> is set, <code>report_model.build_report()</code> reshapes the same aggregated data into the schema-conformant JSON file.</li>
@@ -243,7 +245,7 @@
     <ol>
       <li>All tags on lines immediately above a <code>Scenario:</code> line are collected</li>
       <li>Tags matching the pattern <code>@require-(unit|integration|e2e)(:module)?</code> are classified as <strong>layer requirements</strong> (optional <code>:module</code> suffix for all three layers)</li>
-      <li>All remaining tags become <strong>linking tags</strong></li>
+      <li>All remaining tags are retained as-is (including <code>@id:VALUE</code> for scenario identity and any classification tags like <code>@smoke</code>)</li>
       <li>If zero requirement tags were found, the scenario defaults to bare <code>@require-e2e</code> (unscoped)</li>
       <li>A module-scoped requirement is only satisfied by a linked result whose <code>module</code> matches that key; unscoped results never satisfy it</li>
     </ol>
@@ -274,7 +276,7 @@
 uv run pytest tests/integration --junitxml=reports/int.xml
 
 <span class="hl-com"># E2E is split by module so @require-e2e:&lt;module&gt; can be dogfooded</span>
-uv run behave features/coverage_linking.feature --tags=-@FC-004 -f json -o reports/e2e-linker.json
+uv run behave features/coverage_linking.feature --tags="not @scenario:FC-004" -f json -o reports/e2e-linker.json
 uv run behave features/coverage_health.feature -f json -o reports/e2e-aggregator.json
 uv run behave features/coverage_dashboard.feature -f json -o reports/e2e-renderers.json
 uv run behave features/coverage_module_scope.feature -f json -o reports/e2e-parsers.json

@@ -13,7 +13,7 @@ E2E = FIXTURES / "e2e.json"
 OUTPUT = FIXTURES / "report.html"
 
 
-@pytest.mark.parametrize("tag", ["@FC-002"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-002"])
 def test_passed_failed_skipped_displayed_in_report(tag):
     result = run_tool(FEATURES, OUTPUT, unit=UNIT, e2e=E2E)
 

@@ -90,7 +90,7 @@
         <div class="step-num">1</div>
         <div class="step-body">
           <h3>Write Gherkin Feature Files</h3>
-          <p>Define your scenarios in standard <code>.feature</code> files with tags like <span class="tag tag-link">@FC-42</span> that link to test results. Declare required layers with <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-e2e</span>, or module forms like <span class="tag tag-require">@require-e2e:checkout</span>.</p>
+          <p>Define your scenarios in standard <code>.feature</code> files with identity tags like <span class="tag tag-link">@id:FC-42</span> that pair with test results via <span class="tag tag-link">@scenario:FC-42</span>. Declare required layers with <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-e2e</span>, or module forms like <span class="tag tag-require">@require-e2e:checkout</span>.</p>
         </div>
       </div>
       <div class="step animate-in animate-in-d1">
@@ -104,7 +104,7 @@
         <div class="step-num">3</div>
         <div class="step-body">
           <h3>Generate the Report</h3>
-           <p>Run <code>uv run spec-tracer</code> (or <code>spec-tracer</code> after pip install). SpecTracer links tests to scenarios via shared tags and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
+           <p>Run <code>uv run spec-tracer</code> (or <code>spec-tracer</code> after pip install). SpecTracer links test results to scenarios by matching <code>@scenario:VALUE</code> against <code>@id:VALUE</code> and produces a single self-contained HTML report with five interactive sections. Add <code>output_json</code> to your config to also emit a schema-validated JSON report for scripts and CI tooling.</p>
         </div>
       </div>
     </div>
@@ -132,7 +132,7 @@
 pip install spec-tracer
 
 <span class="hl-com"># Write Gherkin feature files in ./features/</span>
-<span class="hl-com"># Tag each scenario with an ID like @FC-1</span>
+<span class="hl-com"># Tag each scenario with @id:FC-1 and each test with @scenario:FC-1</span>
 
 <span class="hl-com"># Run your tests with JUnit XML or Cucumber JSON output</span>
 pytest tests/ --junitxml=reports/tests.xml
@@ -200,7 +200,7 @@ spec-tracer
       <div class="feature-card">
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
-        <p>Test results whose tags don't match any scenario. Catch orphaned or mis-tagged tests that would otherwise go unnoticed.</p>
+        <p>Test results whose <code>@scenario:</code> tag doesn't match any scenario's <code>@id:</code>. Catch orphaned or mis-tagged tests that would otherwise go unnoticed.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">{ }</div>

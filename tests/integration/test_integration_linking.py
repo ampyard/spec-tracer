@@ -13,7 +13,7 @@ INTEGRATION = ROOT / "tests" / "fixtures" / "integration_linking" / "integration
 OUTPUT = ROOT / "tests" / "fixtures" / "integration_linking" / "report.html"
 
 
-@pytest.mark.parametrize("tag", ["@FC-003"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-003"])
 def test_cli_links_integration_results(tag):
     result = run_tool(FEATURES, OUTPUT, integration=INTEGRATION)
 
@@ -26,10 +26,10 @@ def test_cli_links_integration_results(tag):
     assert "<strong>0/1</strong>" in content
     assert "scenarios fully matched" in content
     assert "<strong>integration</strong>" in content
-    assert "@FC-003" in content
+    assert "@scenario:FC-003" in content
 
 
-@pytest.mark.parametrize("tag", ["@FC-003"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-003"])
 def test_report_includes_integration_layer_from_pytest_junit(tag, tmp_path):
     xml_path = tmp_path / "int.xml"
     result = subprocess.run(

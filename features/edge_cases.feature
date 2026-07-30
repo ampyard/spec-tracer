@@ -1,6 +1,6 @@
 Feature: Edge Cases
 
-  @FC-EDGE-001 @require-e2e:linker
+  @id:FC-EDGE-001 @scenario:FC-EDGE-001 @require-e2e:linker
   Scenario: Generate report with linked edge case coverage
     Given a feature file with scenario tagged "@FC-EDGE-001"
     And a unit JUnit XML result tagged "@FC-EDGE-001"
@@ -10,7 +10,7 @@ Feature: Edge Cases
     And the report should contain "scenarios fully matched"
     And the report should contain "<strong>unit</strong>"
 
-  @FC-EDGE-002 @require-e2e:linker
+  @id:FC-EDGE-002 @scenario:FC-EDGE-002 @require-e2e:linker
   Scenario: One test tag links to multiple scenarios sharing that tag
     Given a feature file with scenario tagged "@FC-EDGE-002"
     And a unit JUnit XML result tagged "@FC-EDGE-002"
@@ -19,7 +19,7 @@ Feature: Edge Cases
     And the report should contain "<strong>0/2</strong>"
     And the report should contain "scenarios fully matched"
 
-  @FC-EDGE-003 @require-e2e:linker
+  @id:FC-EDGE-003 @scenario:FC-EDGE-003 @require-e2e:linker
   Scenario: Tags on the Feature line are not inherited by scenarios
     Given a feature file with scenario tagged "@FC-EDGE-003"
     And a unit JUnit XML result tagged "@FC-EDGE-003"
@@ -29,7 +29,7 @@ Feature: Edge Cases
     And the report should contain "scenarios fully matched"
     And the report should contain "<strong>unit</strong>"
 
-  @FC-EDGE-004 @require-e2e:linker
+  @id:FC-EDGE-004 @scenario:FC-EDGE-004 @require-e2e:linker
   Scenario: Scenario with no matching test results shows as untested
     Given a feature file with scenario tagged "@FC-EDGE-004"
     And a unit JUnit XML result tagged "@FC-EDGE-004"
@@ -39,7 +39,7 @@ Feature: Edge Cases
     And the report should contain "scenarios fully matched"
     And the report should list the unlinked test "test_unrelated_@OTHER-999"
 
-  @FC-EDGE-004b @require-e2e:linker
+  @id:FC-EDGE-004b @scenario:FC-EDGE-004b @require-e2e:linker
   Scenario: Untagged result with no matching scenario still appears as unlinked
     Given a feature file with scenario tagged "@FC-EDGE-004"
     And a unit JUnit XML result tagged "@FC-EDGE-004"
@@ -48,7 +48,7 @@ Feature: Edge Cases
     And the report should contain "Unlinked Tests"
     And the report should list the unlinked test "test_unrelated_@OTHER-999"
 
-  @FC-EDGE-005 @require-e2e:linker
+  @id:FC-EDGE-005 @scenario:FC-EDGE-005 @require-e2e:linker
   Scenario: Empty JUnit XML result file produces zero test results
     Given a feature file with scenario tagged "@FC-EDGE-005"
     And a unit JUnit XML result tagged "@FC-EDGE-005"
@@ -57,7 +57,7 @@ Feature: Edge Cases
     And the report should contain "<strong>0/1</strong>"
     And the report should contain "scenarios fully matched"
 
-  @FC-EDGE-006 @require-e2e:parsers
+  @id:FC-EDGE-006 @scenario:FC-EDGE-006 @require-e2e:parsers
   Scenario: Malformed JUnit XML aborts with a non-zero exit code
     Given a feature file with scenario tagged "@FC-EDGE-006"
     And a unit JUnit XML result tagged "@FC-EDGE-006"

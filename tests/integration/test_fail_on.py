@@ -27,7 +27,7 @@ def _feature_dir(workdir: Path) -> Path:
             """\
             Feature: User Login
 
-              @FC-001
+              @id:FC-001
               Scenario: Successful login
                 Given the user is on the login page
                 When they enter valid credentials
@@ -54,17 +54,17 @@ def _unit_xml(workdir: Path, testcases: str) -> Path:
 
 
 def _linked_case() -> str:
-    return '    <testcase classname="tests.unit" name="test_login_@FC-001" time="0.001"/>'
+    return '    <testcase classname="tests.unit" name="test_login_@scenario:FC-001" time="0.001"/>'
 
 
 def _orphan_cases(count: int) -> str:
     return "\n".join(
-        f'    <testcase classname="tests.unit" name="test_orphan{i}_@NOPE-{i}" time="0.001"/>'
+        f'    <testcase classname="tests.unit" name="test_orphan{i}_@scenario:NOPE-{i}" time="0.001"/>'
         for i in range(count)
     )
 
 
-@pytest.mark.parametrize("tag", ["@FC-011"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
 def test_fail_on_progress_exits_nonzero_when_check_fails(tag, workdir):
     features = _feature_dir(workdir)
     # No linked case -> 0% complete -> progress check fails (< 50% amber threshold).
@@ -82,7 +82,7 @@ def test_fail_on_progress_exits_nonzero_when_check_fails(tag, workdir):
     assert "progress" in result.stderr
 
 
-@pytest.mark.parametrize("tag", ["@FC-011"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
 def test_no_fail_on_keeps_exit_zero_despite_failing_health_check(tag, workdir):
     features = _feature_dir(workdir)
     unit = _unit_xml(workdir, _linked_case() + "\n" + _orphan_cases(4))
@@ -92,7 +92,7 @@ def test_no_fail_on_keeps_exit_zero_despite_failing_health_check(tag, workdir):
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.parametrize("tag", ["@FC-011"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
 def test_fail_on_passing_check_keeps_exit_zero(tag, workdir):
     features = _feature_dir(workdir)
     # Many unit results, no integration/e2e -> pyramid check passes.
@@ -122,15 +122,15 @@ def _integration_xml(workdir: Path, testcases: str) -> Path:
     return path
 
 
-@pytest.mark.parametrize("tag", ["@FC-011"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
 def test_fail_on_reports_all_simultaneously_failing_checks(tag, workdir):
     features = _feature_dir(workdir)
     # No unit results vs. 2 integration results -> progress stays incomplete
     # (fail) and pyramid is inverted (fail).
     integration = _integration_xml(
         workdir,
-        '    <testcase classname="tests.integration" name="test_a_@FC-001" time="0.001"/>\n'
-        '    <testcase classname="tests.integration" name="test_b_@FC-001" time="0.001"/>',
+        '    <testcase classname="tests.integration" name="test_a_@scenario:FC-001" time="0.001"/>\n'
+        '    <testcase classname="tests.integration" name="test_b_@scenario:FC-001" time="0.001"/>',
     )
 
     result = run_tool(
@@ -145,7 +145,7 @@ def test_fail_on_reports_all_simultaneously_failing_checks(tag, workdir):
     assert "pyramid" in result.stderr
 
 
-@pytest.mark.parametrize("tag", ["@FC-011"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
 def test_unknown_fail_on_name_is_a_config_error(tag, workdir):
     features = _feature_dir(workdir)
     unit = _unit_xml(workdir, _linked_case())

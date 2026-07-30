@@ -33,35 +33,31 @@ def _parse_junit_results(paths, layer="unit"):
     return _junit_parser.parse(paths, layer=layer)
 
 
-@pytest.mark.parametrize("tag", ["@FC-001"])
-def test_parse_feature_file_returns_scenarios(tag):
+def test_parse_feature_file_returns_scenarios():
     scenarios = _parse_feature_file(FIXTURES / "e2e_coverage" / "features" / "login.feature")
     assert len(scenarios) == 1
     assert scenarios[0].name == "Successful login with valid credentials"
-    assert tag in scenarios[0].tags
+    assert "@id:FC-001" in scenarios[0].tags
 
 
-@pytest.mark.parametrize("tag", ["@FC-001"])
-def test_parse_e2e_results_extracts_tags(tag):
+def test_parse_e2e_results_extracts_tags():
     results = _parse_e2e_results([FIXTURES / "e2e_coverage" / "e2e.json"])
     assert len(results) == 1
     assert results[0].layer == "e2e"
-    assert tag in results[0].tags
+    assert "@scenario:FC-001" in results[0].tags
 
 
-@pytest.mark.parametrize("tag", ["@FC-001"])
-def test_parse_junit_results_extracts_tags(tag):
+def test_parse_junit_results_extracts_tags():
     results = _parse_junit_results([FIXTURES / "unit_linking" / "unit.xml"])
     assert len(results) == 1
     assert results[0].layer == "unit"
-    assert tag in results[0].tags
+    assert "@scenario:FC-001" in results[0].tags
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
-def test_parse_junit_results_extracts_tags_from_classname_and_properties(tag, tmp_path):
+def test_parse_junit_results_extracts_tags_from_classname_and_properties(tmp_path):
     xml_path = tmp_path / "integration.xml"
     xml_path.write_text(
-        """<testsuite><testcase classname=\"tests.integration @FC-004\" name=\"some test\"><properties><property name=\"@FC-005\" value=\"x\" /></properties></testcase></testsuite>""",
+        """<testsuite><testcase classname=\"tests.integration @scenario:FC-004\" name=\"some test\"><properties><property name=\"@scenario:FC-005\" value=\"x\" /></properties></testcase></testsuite>""",
         encoding="utf-8",
     )
 
@@ -69,12 +65,11 @@ def test_parse_junit_results_extracts_tags_from_classname_and_properties(tag, tm
 
     assert len(results) == 1
     assert results[0].layer == "integration"
-    assert "@FC-004" in results[0].tags
-    assert "@FC-005" in results[0].tags
+    assert "@scenario:FC-004" in results[0].tags
+    assert "@scenario:FC-005" in results[0].tags
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
-def test_parse_junit_results_raises_clear_error_on_malformed_xml(tag, tmp_path):
+def test_parse_junit_results_raises_clear_error_on_malformed_xml(tmp_path):
     xml_path = tmp_path / "broken.xml"
     xml_path.write_text("<testsuite><testcase></testsuite>", encoding="utf-8")
 
@@ -82,8 +77,7 @@ def test_parse_junit_results_raises_clear_error_on_malformed_xml(tag, tmp_path):
         _parse_junit_results([xml_path], layer="integration")
 
 
-@pytest.mark.parametrize("tag", ["@FC-004"])
-def test_load_config_requires_features_and_output(tag, tmp_path):
+def test_load_config_requires_features_and_output(tmp_path):
     config_path = tmp_path / "spectracer.config.json"
     config_path.write_text(json.dumps({"features": ["features"]}), encoding="utf-8")
 
@@ -91,15 +85,14 @@ def test_load_config_requires_features_and_output(tag, tmp_path):
         _load_config(config_path)
 
 
-@pytest.mark.parametrize("tag", ["@FC-004"])
-def test_collect_and_parse_junit_results_groups_by_module(tag, tmp_path):
+def test_collect_and_parse_junit_results_groups_by_module(tmp_path):
     module_a = tmp_path / "a.xml"
     module_a.write_text(
-        '<testsuite><testcase name="test_a @FC-004" time="0.1" /></testsuite>', encoding="utf-8"
+        '<testsuite><testcase name="test_a @scenario:FC-004" time="0.1" /></testsuite>', encoding="utf-8"
     )
     module_b = tmp_path / "b.xml"
     module_b.write_text(
-        '<testsuite><testcase name="test_b @FC-004" time="0.1" /></testsuite>', encoding="utf-8"
+        '<testsuite><testcase name="test_b @scenario:FC-004" time="0.1" /></testsuite>', encoding="utf-8"
     )
 
     results = _collect_and_parse_junit_results(
@@ -111,8 +104,8 @@ def test_collect_and_parse_junit_results_groups_by_module(tag, tmp_path):
     assert all(r.layer == "unit" for r in results)
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
-def test_collect_and_parse_e2e_results_groups_by_module(tag, tmp_path):
+def test_collect_and_parse_e2e_results_groups_by_module(tmp_path):
+    tag = "@scenario:FC-007"
     module_a = tmp_path / "a.json"
     module_a.write_text(
         json.dumps(
@@ -165,17 +158,16 @@ def test_collect_and_parse_e2e_results_groups_by_module(tag, tmp_path):
     assert all(r.layer == "e2e" for r in results)
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
-def test_require_e2e_accepts_module_suffix(tag):
+def test_require_e2e_accepts_module_suffix():
     scenarios = _parse_feature_file(FIXTURES / "module_scope" / "features" / "parsers.feature")
     e2e_scenario = next(s for s in scenarios if any(r.layer == "e2e" for r in s.required_layers))
     e2e_req = next(r for r in e2e_scenario.required_layers if r.layer == "e2e")
     assert e2e_req.module == "parsers"
 
 
-@pytest.mark.parametrize("tag", ["@FC-007"])
-def test_parse_e2e_ignores_tag_filtered_unexecuted_scenarios(tag, tmp_path):
+def test_parse_e2e_ignores_tag_filtered_unexecuted_scenarios(tmp_path):
     """Behave tag filters leave non-selected scenarios as skipped without step results."""
+    tag = "@scenario:FC-007"
     path = tmp_path / "mixed.json"
     path.write_text(
         json.dumps(
@@ -200,7 +192,7 @@ def test_parse_e2e_ignores_tag_filtered_unexecuted_scenarios(tag, tmp_path):
                         {
                             "keyword": "Scenario",
                             "name": "tag-filtered never ran",
-                            "tags": [{"name": "@FC-OTHER"}],
+                            "tags": [{"name": "@scenario:FC-OTHER"}],
                             "steps": [
                                 {"keyword": "Given", "name": "y", "location": "features/x.feature:1"}
                             ],
@@ -232,36 +224,32 @@ def test_parse_e2e_ignores_tag_filtered_unexecuted_scenarios(tag, tmp_path):
     assert {r.status for r in results} == {"passed", "skipped"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-002"])
-def test_parse_junit_results_passed_failed_skipped(tag):
+def test_parse_junit_results_passed_failed_skipped():
     results = _parse_junit_results([FIXTURES / "fc002" / "unit.xml"])
     assert len(results) == 3
     statuses = {r.status for r in results}
     assert statuses == {"passed", "failed", "skipped"}
-    assert all(tag in r.tags for r in results)
+    assert all("@scenario:FC-002" in r.tags for r in results)
 
 
-@pytest.mark.parametrize("tag", ["@FC-002"])
-def test_parse_e2e_results_passed_failed_skipped(tag):
+def test_parse_e2e_results_passed_failed_skipped():
     results = _parse_e2e_results([FIXTURES / "fc002" / "e2e.json"])
     assert len(results) == 3
     statuses = {r.status for r in results}
     assert statuses == {"passed", "failed", "skipped"}
-    assert all(tag in r.tags for r in results)
+    assert all("@scenario:FC-002" in r.tags for r in results)
 
 
-@pytest.mark.parametrize("linking_tag", ["@FC-005"])
-def test_require_tags_excluded_from_linking(linking_tag):
+def test_require_tags_excluded_from_linking():
     scenarios = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
-    assert linking_tag in scenario.tags
+    assert "@id:FC-005" in scenario.tags
     assert "@require-unit" not in scenario.tags
     assert "@require-e2e" not in scenario.tags
 
 
-@pytest.mark.parametrize("tag", ["@FC-005"])
-def test_require_tags_stored_as_required_layers(tag):
+def test_require_tags_stored_as_required_layers():
     scenarios = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")
     assert len(scenarios) == 1
     scenario = scenarios[0]
@@ -271,11 +259,10 @@ def test_require_tags_stored_as_required_layers(tag):
     assert "integration" not in layers
 
 
-@pytest.mark.parametrize("tag", ["@FC-005"])
-def test_require_layer_status_missing_e2e(tag, tmp_path):
+def test_require_layer_status_missing_e2e(tmp_path):
     from spec_tracer.models import ScenarioView, Scenario
     scenario = _parse_feature_file(FIXTURES / "missing_required_layer" / "features" / "login.feature")[0]
-    unit_result = TestResult(layer="unit", name="test", tags=["@FC-005"], status="passed")
+    unit_result = TestResult(layer="unit", name="test", tags=["@scenario:FC-005"], status="passed")
     view = ScenarioView(scenario=scenario, linked_results=[unit_result])
     status = _required_status(view)
     assert "unit [OK]" in status
@@ -283,12 +270,11 @@ def test_require_layer_status_missing_e2e(tag, tmp_path):
     assert "integration" not in status
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
-def test_collect_and_parse_features_returns_path_relative_to_base_dir(tag, tmp_path):
+def test_collect_and_parse_features_returns_path_relative_to_base_dir(tmp_path):
     features_dir = tmp_path / "features"
     features_dir.mkdir()
     (features_dir / "login.feature").write_text(
-        "Feature: Login\n\n  @FC-010\n  Scenario: Sign in\n    Given a user\n",
+        "Feature: Login\n\n  @id:FC-010\n  Scenario: Sign in\n    Given a user\n",
         encoding="utf-8",
     )
 
@@ -298,14 +284,13 @@ def test_collect_and_parse_features_returns_path_relative_to_base_dir(tag, tmp_p
     assert feature_files["Login"] == "features/login.feature"
 
 
-@pytest.mark.parametrize("tag", ["@FC-010"])
-def test_collect_and_parse_features_never_returns_absolute_path(tag, tmp_path):
+def test_collect_and_parse_features_never_returns_absolute_path(tmp_path):
     config_dir = tmp_path / "config_dir"
     config_dir.mkdir()
     features_dir = tmp_path / "elsewhere" / "features"
     features_dir.mkdir(parents=True)
     (features_dir / "login.feature").write_text(
-        "Feature: Login\n\n  @FC-010\n  Scenario: Sign in\n    Given a user\n",
+        "Feature: Login\n\n  @id:FC-010\n  Scenario: Sign in\n    Given a user\n",
         encoding="utf-8",
     )
 

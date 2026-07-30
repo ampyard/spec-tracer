@@ -113,10 +113,13 @@ spec-tracer path/to/other-config.json</code></pre>
 }</code></pre>
 
     <h2 id="tagging">Tagging Convention</h2>
-    <p>Feature files and test results connect through <strong>shared tags</strong> on scenarios. There are two kinds:</p>
+    <p>Feature files and test results connect through an <strong>explicit identity convention</strong> using two paired tag prefixes. Three tag types exist:</p>
 
-    <h3>Linking Tags</h3>
-    <p>Tags like <span class="tag tag-link">@FC-42</span> or <span class="tag tag-link">@regression</span> appear on both the Gherkin scenario and the test result. Any tag match links the test to the scenario (OR logic).</p>
+    <h3>Scenario Identity Tags (<code>@id:VALUE</code>)</h3>
+    <p>Placed on Gherkin scenarios in <code>.feature</code> files. Declares the scenario's stable identity &mdash; the canonical ID that test results reference. Example: <span class="tag tag-link">@id:FC-42</span>.</p>
+
+    <h3>Test Reference Tags (<code>@scenario:VALUE</code>)</h3>
+    <p>Placed on test results (via pytest markers, test names, or framework annotations). Declares which scenario this test satisfies. Example: <span class="tag tag-link">@scenario:FC-42</span>.</p>
 
     <h3>Layer Requirement Tags</h3>
     <p>Tags like <span class="tag tag-require">@require-unit</span>, <span class="tag tag-require">@require-integration</span>, or <span class="tag tag-require">@require-e2e</span> declare which layers <em>must</em> have coverage. Append <code>:modulename</code> on any of them (e.g. <span class="tag tag-require">@require-e2e:checkout</span>) to require results from a specific config module key. These are excluded from linking &mdash; they only affect the report's "Required Layers" status.</p>
@@ -124,17 +127,22 @@ spec-tracer path/to/other-config.json</code></pre>
     <div class="code-header"><span>Example feature file</span></div>
 <pre><code><span class="hl-section">Feature:</span> User Login
 
-  <span class="hl-tag">@FC-42</span> <span class="hl-tag">@regression</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:auth</span> <span class="hl-tag">@require-e2e:auth</span>
+  <span class="hl-tag">@id:FC-42</span> <span class="hl-tag">@regression</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:auth</span> <span class="hl-tag">@require-e2e:auth</span>
   <span class="hl-section">Scenario:</span> Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
     Then they should be redirected to the dashboard
 
-  <span class="hl-tag">@FC-43</span>
+  <span class="hl-tag">@id:FC-43</span>
   <span class="hl-section">Scenario:</span> Login with invalid password shows error
     Given the user is on the login page
     When they enter an invalid password
     Then an error message should be displayed</code></pre>
+
+    <div class="callout callout-info">
+      <strong>&#8505; Identity + reference pairing</strong>
+      Linking matches <strong>only</strong> <code>@scenario:VALUE</code> from results against <code>@id:VALUE</code> from scenarios. Other tags like <code>@regression</code> or <code>@smoke</code> never participate in linking &mdash; they are purely for test-runner filtering or organization.
+    </div>
 
     <h4>Matching Rules</h4>
     <table>
@@ -142,11 +150,11 @@ spec-tracer path/to/other-config.json</code></pre>
         <tr><th>Rule</th><th>Detail</th></tr>
       </thead>
       <tbody>
-        <tr><td>Exact string match</td><td><code>@FC-42</code> matches <code>@FC-42</code> only, not <code>@FC-4</code> or <code>@FC-42-smoke</code></td></tr>
-        <tr><td>OR logic</td><td>A scenario tagged <code>@FC-42</code> &amp; <code>@regression</code> links to a test carrying just <code>@regression</code></td></tr>
+        <tr><td>Exact VALUE match</td><td><code>@scenario:FC-42</code> on a result matches <code>@id:FC-42</code> on a scenario. The <code>FC-42</code> value must match exactly.</td></tr>
+        <tr><td>Prefix-filtered</td><td>Only <code>@scenario:</code> on results and <code>@id:</code> on scenarios participate. All other tags are ignored during linking.</td></tr>
         <tr><td>Scenario tags only</td><td>Tags on the <code>Feature:</code> line are <strong>not</strong> inherited by scenarios</td></tr>
         <tr><td>No linking for <code>@require-*</code></td><td>Layer requirement tags are excluded from linking logic</td></tr>
-        <tr><td>Collisions</td><td>If two scenarios share a tag, one matching test links to both</td></tr>
+        <tr><td>Collisions</td><td>If two scenarios share the same <code>@id:</code> value, one matching test links to both</td></tr>
       </tbody>
     </table>
 

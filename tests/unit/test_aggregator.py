@@ -6,23 +6,22 @@ from spec_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
 
 def _view(feature, name, results=None, required_layers=None):
     scenario = Scenario(
-        feature=feature, name=name, tags=[f"@{name}"],
+        feature=feature, name=name, tags=[f"@id:{name}"],
         required_layers=required_layers or [],
     )
     return ScenarioView(scenario=scenario, linked_results=results or [])
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_layer_order_is_unit_integration_e2e(tag):
     assert ReportAggregator.LAYER_ORDER == ["e2e", "integration", "unit"]
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
-def test_build_views_orders_layers_by_layer_order(tag):
-    scenario = Scenario(feature="F", name="S", tags=["@S"])
-    e2e_result = TestResult(layer="e2e", name="e2e test", tags=["@S"])
-    unit_result = TestResult(layer="unit", name="unit test", tags=["@S"])
-    integration_result = TestResult(layer="integration", name="integration test", tags=["@S"])
+def test_build_views_orders_layers_by_layer_order():
+    scenario = Scenario(feature="F", name="S", tags=["@id:S"])
+    e2e_result = TestResult(layer="e2e", name="e2e test", tags=["@scenario:S"])
+    unit_result = TestResult(layer="unit", name="unit test", tags=["@scenario:S"])
+    integration_result = TestResult(layer="integration", name="integration test", tags=["@scenario:S"])
     links = {id(scenario): [e2e_result, unit_result, integration_result]}
 
     views = ReportAggregator.build_views([scenario], links)
@@ -32,7 +31,7 @@ def test_build_views_orders_layers_by_layer_order(tag):
     assert layer_names == ["e2e", "integration", "unit"]
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_layer_stats_width_pct_proportional_to_max_count(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1"), TestResult(layer="unit", name="u2")]),
@@ -48,7 +47,7 @@ def test_layer_stats_width_pct_proportional_to_max_count(tag):
     assert by_name["e2e"]["width_pct"] == 50.0
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_layer_stats_width_pct_has_minimum_floor_for_nonzero_layers(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name=f"u{i}") for i in range(20)]),
@@ -62,7 +61,7 @@ def test_layer_stats_width_pct_has_minimum_floor_for_nonzero_layers(tag):
     assert by_name["e2e"]["width_pct"] == ReportAggregator.MIN_TIER_WIDTH_PCT
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_layer_stats_omits_layers_with_no_results(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
 
@@ -71,12 +70,12 @@ def test_layer_stats_omits_layers_with_no_results(tag):
     assert {m["name"] for m in metrics} == {"unit"}
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_layer_stats_empty_views_returns_empty_list(tag):
     assert ReportAggregator.layer_stats([]) == []
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_feature_breakdown_sorted_by_feature_name(tag):
     views = [_view("Zebra", "S1"), _view("Alpha", "S2")]
 
@@ -85,7 +84,7 @@ def test_feature_breakdown_sorted_by_feature_name(tag):
     assert [b["name"] for b in breakdown] == ["Alpha", "Zebra"]
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_flags_inverted_pyramid(tag):
     views = [
         _view("F", "S1", [TestResult(layer="e2e", name="e1")]),
@@ -99,7 +98,7 @@ def test_health_checks_flags_inverted_pyramid(tag):
     assert health["pyramid"]["status"] == "fail"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_passes_when_unit_dominates(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1")]),
@@ -114,7 +113,7 @@ def test_health_checks_passes_when_unit_dominates(tag):
     assert health["pyramid"]["status"] == "pass"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_pyramid_warns_when_at_parity(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1")]),
@@ -130,7 +129,7 @@ def test_health_checks_pyramid_warns_when_at_parity(tag):
     assert health["pyramid"]["status"] == "warn"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_end_to_end_runtime_passes_when_below_amber(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
@@ -144,7 +143,7 @@ def test_health_checks_end_to_end_runtime_passes_when_below_amber(tag):
     assert health["end_to_end_runtime"]["status"] == "pass"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_end_to_end_runtime_warns_when_between_amber_and_red(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
@@ -158,7 +157,7 @@ def test_health_checks_end_to_end_runtime_warns_when_between_amber_and_red(tag):
     assert health["end_to_end_runtime"]["status"] == "warn"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-008"])
 def test_health_checks_end_to_end_runtime_fails_when_exceeds_red(tag):
     views = [
         _view("F", "S1", [TestResult(layer="unit", name="u1", duration=0.5)]),
@@ -172,27 +171,24 @@ def test_health_checks_end_to_end_runtime_fails_when_exceeds_red(tag):
     assert health["end_to_end_runtime"]["status"] == "fail"
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
-def test_unlinked_results_excludes_tags_matching_scenarios(tag):
-    scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
-    linked = TestResult(layer="unit", name="t1", tags=["@FC-001"])
-    unlinked = TestResult(layer="unit", name="t2", tags=["@FC-999"])
+def test_unlinked_results_excludes_tags_matching_scenarios():
+    scenarios = [Scenario(feature="F", name="S1", tags=["@id:FC-001"])]
+    linked = TestResult(layer="unit", name="t1", tags=["@scenario:FC-001"])
+    unlinked = TestResult(layer="unit", name="t2", tags=["@scenario:FC-999"])
 
     result = ReportAggregator.unlinked_results(scenarios, [linked, unlinked])
 
     assert result == [unlinked]
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
-def test_unlinked_results_surfaces_non_fc_tags(tag):
-    """A result tagged with a non-@FC tag that matches no scenario is unlinked.
+def test_unlinked_results_surfaces_non_scenario_tags():
+    """A result tagged with a non-@scenario tag that matches no scenario @id is unlinked.
 
-    Regression test for the bug where the tool only reported results carrying an
-    ``@FC-`` prefixed tag as unlinked, silently dropping orphans tagged e.g.
-    ``@smoke``/``@regression``/``@OTHER-999`` that failed to match a scenario.
+    Category tags like ``@smoke``/``@regression`` that lack the ``@scenario:``
+    prefix are correctly surfaced as unlinked since they carry no linking weight.
     """
-    scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
-    linked = TestResult(layer="unit", name="t1", tags=["@FC-001"])
+    scenarios = [Scenario(feature="F", name="S1", tags=["@id:FC-001"])]
+    linked = TestResult(layer="unit", name="t1", tags=["@scenario:FC-001"])
     unlinked = TestResult(layer="unit", name="t2", tags=["@regression"])
 
     result = ReportAggregator.unlinked_results(scenarios, [linked, unlinked])
@@ -200,14 +196,13 @@ def test_unlinked_results_surfaces_non_fc_tags(tag):
     assert result == [unlinked]
 
 
-@pytest.mark.parametrize("tag", ["@FC-008"])
-def test_unlinked_results_excludes_tagless_results(tag):
+def test_unlinked_results_excludes_tagless_results():
     """Results carrying no tags are excluded — they can never link to a scenario.
 
     This keeps untagged test-runner output (e.g. plain pytest) from flooding the
     Unlinked Tests section as false positives.
     """
-    scenarios = [Scenario(feature="F", name="S1", tags=["@FC-001"])]
+    scenarios = [Scenario(feature="F", name="S1", tags=["@id:FC-001"])]
     tagless = TestResult(layer="unit", name="t1", tags=[])
 
     result = ReportAggregator.unlinked_results(scenarios, [tagless])
@@ -215,7 +210,7 @@ def test_unlinked_results_excludes_tagless_results(tag):
     assert result == []
 
 
-@pytest.mark.parametrize("tag", ["@FC-009"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_health_checks_unlinked_entry_passes_when_zero(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
     layer_stats = ReportAggregator.layer_stats(views)
@@ -227,7 +222,7 @@ def test_health_checks_unlinked_entry_passes_when_zero(tag):
     assert health["unlinked"]["value"] == "0"
 
 
-@pytest.mark.parametrize("tag", ["@FC-009"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_health_checks_unlinked_entry_fails_when_many(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
     layer_stats = ReportAggregator.layer_stats(views)
@@ -239,7 +234,7 @@ def test_health_checks_unlinked_entry_fails_when_many(tag):
     assert health["unlinked"]["value"] == "5"
 
 
-@pytest.mark.parametrize("tag", ["@FC-009"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_failure_breakdown_groups_failed_results_by_feature_and_scenario(tag):
     passing = TestResult(layer="unit", name="p1", status="passed")
     failing = TestResult(layer="unit", name="f1", status="failed")
@@ -259,14 +254,14 @@ def test_failure_breakdown_groups_failed_results_by_feature_and_scenario(tag):
     assert alpha["scenarios"][0]["failed_results"] == [failing]
 
 
-@pytest.mark.parametrize("tag", ["@FC-009"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_failure_breakdown_empty_when_no_failures(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="p1", status="passed")])]
 
     assert ReportAggregator.failure_breakdown(views) == []
 
 
-@pytest.mark.parametrize("tag", ["@FC-014"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-014"])
 def test_completion_stats_presence_based_not_link_count(tag):
     # Scenario declares @require-e2e (parser injects it when none declared).
     # A linked UNIT result is present but does NOT satisfy e2e, so the
@@ -282,7 +277,7 @@ def test_completion_stats_presence_based_not_link_count(tag):
     assert stats["complete"] == 0
 
 
-@pytest.mark.parametrize("tag", ["@FC-014"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-014"])
 def test_completion_stats_satisfied_when_requirement_present(tag):
     views = [_view("F", "S1", [TestResult(layer="e2e", name="e1", status="failed")], required_layers=[RequiredLayer("e2e")])]
     stats = ReportAggregator.completion_stats(views)
@@ -292,7 +287,7 @@ def test_completion_stats_satisfied_when_requirement_present(tag):
     assert stats["required"] == 1
 
 
-@pytest.mark.parametrize("tag", ["@FC-014"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-014"])
 def test_completion_stats_average_across_scenarios(tag):
     a = _view("F", "S1", [TestResult(layer="e2e", name="e1", status="passed")], required_layers=[RequiredLayer("e2e")])
     b = _view("F", "S2", [], required_layers=[RequiredLayer("e2e")])
@@ -302,7 +297,7 @@ def test_completion_stats_average_across_scenarios(tag):
     assert stats["required"] == 2
 
 
-@pytest.mark.parametrize("tag", ["@FC-014"])
+@pytest.mark.parametrize("tag", ["@scenario:FC-014"])
 def test_feature_breakdown_uses_average_completion(tag):
     a = _view("F", "S1", [TestResult(layer="e2e", name="e1", status="passed")], required_layers=[RequiredLayer("e2e")])
     b = _view("F", "S2", [], required_layers=[RequiredLayer("e2e")])

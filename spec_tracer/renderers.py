@@ -488,7 +488,7 @@ _TEMPLATE_STR = """<html lang="en">
     .badge.failed { background: var(--danger-soft); color: var(--danger); }
     .badge.skipped { background: var(--warning-soft); color: var(--warning); }
     .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 6px; background: var(--surface-alt); }
-    .scenario-id-pill { text-transform: none; letter-spacing: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, monospace; }
+    .scenario-id-pill { text-transform: none; letter-spacing: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, monospace; border-radius: 6px; white-space: normal; flex: 0 1 auto; }
     .steps { margin: 8px 0 0; padding-left: 52px; color: var(--text-soft); line-height: 1.65; font-size: 0.88rem; }
     .empty-state { padding: 14px 0 14px 32px; color: var(--text-soft); font-size: 0.88rem; }
     .table-list { display: grid; gap: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -569,7 +569,7 @@ _TEMPLATE_STR = """<html lang="en">
     .tree-row:hover { background: var(--primary-soft); }
     .tree-children { padding: 10px 16px 14px 16px; background: var(--surface-alt); width: 100%; }
     .tree-row.level-1 { font-weight: 600; }
-    .col-name { flex: 1 1 auto; min-width: 0; display: flex; align-items: flex-start; gap: 8px; }
+    .col-name { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 8px; }
     .col-name .name-text { min-width: 0; flex: 1 1 auto; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.35; }
     .col-name.lvl-2 { padding-left: 24px; }
     .col-name.lvl-3 { padding-left: 48px; }

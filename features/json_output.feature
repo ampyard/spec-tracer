@@ -1,6 +1,6 @@
 Feature: Machine Readable JSON Report
 
-  @id:FC-010 @scenario:FC-010 @require-unit:report_model @require-e2e:report_model
+  @id:FC-010 @scenario:FC-010 @require-unit:report_model @require-e2e:report_model @require-integration:report_model
   Scenario: JSON report is written alongside the HTML report and matches the schema
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"

@@ -26,6 +26,80 @@ PYTEST_STEPS = [
         "--junitxml=reports/int.xml",
         "--html=reports/int.html", "--self-contained-html", "-v",
     ]),
+    # Per-module JUnit XML for SpecTracer dogfood — one test file, one module,
+    # one XML, matching spectracer.config.json's module map (#module-scope).
+    ("Unit: aggregator", [
+        "uv", "run", "pytest", "tests/unit/test_aggregator.py",
+        "--junitxml=reports/unit-aggregator.xml", "-q",
+    ]),
+    ("Unit: renderers", [
+        "uv", "run", "pytest", "tests/unit/test_renderers.py",
+        "--junitxml=reports/unit-renderers.xml", "-q",
+    ]),
+    ("Unit: report_model", [
+        "uv", "run", "pytest", "tests/unit/test_report_model.py",
+        "--junitxml=reports/unit-report_model.xml", "-q",
+    ]),
+    ("Unit: cli", [
+        "uv", "run", "pytest", "tests/unit/test_cli.py",
+        "--junitxml=reports/unit-cli.xml", "-q",
+    ]),
+    ("Unit: linker", [
+        "uv", "run", "pytest", "tests/unit/test_linker.py",
+        "--junitxml=reports/unit-linker.xml", "-q",
+    ]),
+    ("Unit: collectors", [
+        "uv", "run", "pytest", "tests/unit/test_collectors.py",
+        "--junitxml=reports/unit-collectors.xml", "-q",
+    ]),
+    ("Unit: parsers", [
+        "uv", "run", "pytest", "tests/unit/test_parsers.py",
+        "--junitxml=reports/unit-parsers.xml", "-q",
+    ]),
+    ("Unit: build_pyramid", [
+        "uv", "run", "pytest", "tests/unit/test_build_pyramid.py",
+        "--junitxml=reports/unit-build_pyramid.xml", "-q",
+    ]),
+    ("Integration: linker", [
+        "uv", "run", "pytest", "tests/integration/test_integration_linking.py",
+        "--junitxml=reports/int-linker.xml", "-q",
+    ]),
+    ("Integration: collectors", [
+        "uv", "run", "pytest", "tests/integration/test_collectors_integration.py",
+        "--junitxml=reports/int-collectors.xml", "-q",
+    ]),
+    ("Integration: e2e_coverage", [
+        "uv", "run", "pytest", "tests/integration/test_e2e_coverage.py",
+        "--junitxml=reports/int-e2e_coverage.xml", "-q",
+    ]),
+    ("Integration: e2e_module_scope", [
+        "uv", "run", "pytest", "tests/integration/test_e2e_module_scope.py",
+        "--junitxml=reports/int-e2e_module_scope.xml", "-q",
+    ]),
+    ("Integration: edge_cases", [
+        "uv", "run", "pytest", "tests/integration/test_edge_cases.py",
+        "--junitxml=reports/int-edge_cases.xml", "-q",
+    ]),
+    ("Integration: fail_on", [
+        "uv", "run", "pytest", "tests/integration/test_fail_on.py",
+        "--junitxml=reports/int-fail_on.xml", "-q",
+    ]),
+    ("Integration: json_report", [
+        "uv", "run", "pytest", "tests/integration/test_json_report.py",
+        "--junitxml=reports/int-json_report.xml", "-q",
+    ]),
+    ("Integration: missing_required_layer", [
+        "uv", "run", "pytest", "tests/integration/test_missing_required_layer.py",
+        "--junitxml=reports/int-missing_required_layer.xml", "-q",
+    ]),
+    ("Integration: status_badges", [
+        "uv", "run", "pytest", "tests/integration/test_status_badges.py",
+        "--junitxml=reports/int-status_badges.xml", "-q",
+    ]),
+    ("Integration: unit_linking", [
+        "uv", "run", "pytest", "tests/integration/test_unit_linking.py",
+        "--junitxml=reports/int-unit_linking.xml", "-q",
+    ]),
 ]
 
 BEHAVE_STEPS = [

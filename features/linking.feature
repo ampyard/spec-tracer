@@ -13,7 +13,7 @@ Feature: Linking
     And the report should contain "<strong>e2e</strong>"
     And the report should contain "<strong>unit</strong>"
 
-  @id:FC-002 @scenario:FC-002 @require-unit:linker @require-e2e:linker
+  @id:FC-002 @scenario:FC-002 @require-unit:linker @require-e2e:linker @require-integration:linker
   Scenario: Report shows passed, failed, and skipped statuses
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"

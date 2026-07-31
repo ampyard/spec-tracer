@@ -1,6 +1,6 @@
 Feature: Edge Cases
 
-  @id:FC-EDGE-001 @scenario:FC-EDGE-001 @require-e2e:linker
+  @id:FC-EDGE-001 @scenario:FC-EDGE-001 @require-e2e:linker @require-unit:linker
   Scenario: Generate report with linked edge case coverage
     Given a feature file with scenario tagged "@FC-EDGE-001"
     And a unit JUnit XML result tagged "@FC-EDGE-001"

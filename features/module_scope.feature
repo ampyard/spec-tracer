@@ -1,6 +1,6 @@
 Feature: Module Scoped Layer Requirements
 
-  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers
+  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers @require-integration:parsers
   Scenario: Report marks the requirement satisfied when the module matches
     Given a feature file with scenario tagged "@FC-007"
     And a module-scoped unit JUnit XML result tagged "@FC-007" for module "parsers"

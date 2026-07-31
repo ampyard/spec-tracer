@@ -1,7 +1,27 @@
 {
   "features": ["./features"],
-  "unit": { "": ["./reports/unit.xml"] },
-  "integration": { "": ["./reports/int.xml"] },
+  "unit": {
+    "aggregator": ["./reports/unit-aggregator.xml"],
+    "renderers": ["./reports/unit-renderers.xml"],
+    "report_model": ["./reports/unit-report_model.xml"],
+    "cli": ["./reports/unit-cli.xml"],
+    "linker": ["./reports/unit-linker.xml"],
+    "collectors": ["./reports/unit-collectors.xml"],
+    "parsers": ["./reports/unit-parsers.xml"],
+    "build_pyramid": ["./reports/unit-build_pyramid.xml"]
+  },
+  "integration": {
+    "linker": ["./reports/int-linker.xml"],
+    "collectors": ["./reports/int-collectors.xml"],
+    "e2e_coverage": ["./reports/int-e2e_coverage.xml"],
+    "e2e_module_scope": ["./reports/int-e2e_module_scope.xml"],
+    "edge_cases": ["./reports/int-edge_cases.xml"],
+    "fail_on": ["./reports/int-fail_on.xml"],
+    "json_report": ["./reports/int-json_report.xml"],
+    "missing_required_layer": ["./reports/int-missing_required_layer.xml"],
+    "status_badges": ["./reports/int-status_badges.xml"],
+    "unit_linking": ["./reports/int-unit_linking.xml"]
+  },
   "e2e": {
     "linker": [
       "./reports/e2e-linker.json",

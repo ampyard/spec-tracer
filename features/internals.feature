@@ -7,7 +7,7 @@ Feature: Tool Internals
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 1
 
-  @id:FC-008 @scenario:FC-008 @require-unit:aggregator @require-e2e:aggregator
+  @id:FC-008 @scenario:FC-008 @require-unit:aggregator @require-e2e:aggregator @require-integration:aggregator
   Scenario: Aggregator computes pyramid and health metrics
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"

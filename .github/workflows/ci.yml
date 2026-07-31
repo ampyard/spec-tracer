@@ -27,10 +27,32 @@ jobs:
         run: mkdir -p reports
 
       - name: Run unit tests (XML output)
-        run: uv run pytest tests/unit/ --junitxml=reports/unit.xml --html=reports/unit.html  --self-contained-html -v
+        run: |
+          uv run pytest tests/unit/ --junitxml=reports/unit.xml --html=reports/unit.html --self-contained-html -v
+          # Module-scoped JUnit XML for SpecTracer dogfood — one test file, one module.
+          uv run pytest tests/unit/test_aggregator.py --junitxml=reports/unit-aggregator.xml -q
+          uv run pytest tests/unit/test_renderers.py --junitxml=reports/unit-renderers.xml -q
+          uv run pytest tests/unit/test_report_model.py --junitxml=reports/unit-report_model.xml -q
+          uv run pytest tests/unit/test_cli.py --junitxml=reports/unit-cli.xml -q
+          uv run pytest tests/unit/test_linker.py --junitxml=reports/unit-linker.xml -q
+          uv run pytest tests/unit/test_collectors.py --junitxml=reports/unit-collectors.xml -q
+          uv run pytest tests/unit/test_parsers.py --junitxml=reports/unit-parsers.xml -q
+          uv run pytest tests/unit/test_build_pyramid.py --junitxml=reports/unit-build_pyramid.xml -q
 
       - name: Run integration tests (XML output)
-        run: uv run pytest tests/integration/ --junitxml=reports/int.xml --html=reports/int.html --self-contained-html -v
+        run: |
+          uv run pytest tests/integration/ --junitxml=reports/int.xml --html=reports/int.html --self-contained-html -v
+          # Module-scoped JUnit XML for SpecTracer dogfood — one test file, one module.
+          uv run pytest tests/integration/test_integration_linking.py --junitxml=reports/int-linker.xml -q
+          uv run pytest tests/integration/test_collectors_integration.py --junitxml=reports/int-collectors.xml -q
+          uv run pytest tests/integration/test_e2e_coverage.py --junitxml=reports/int-e2e_coverage.xml -q
+          uv run pytest tests/integration/test_e2e_module_scope.py --junitxml=reports/int-e2e_module_scope.xml -q
+          uv run pytest tests/integration/test_edge_cases.py --junitxml=reports/int-edge_cases.xml -q
+          uv run pytest tests/integration/test_fail_on.py --junitxml=reports/int-fail_on.xml -q
+          uv run pytest tests/integration/test_json_report.py --junitxml=reports/int-json_report.xml -q
+          uv run pytest tests/integration/test_missing_required_layer.py --junitxml=reports/int-missing_required_layer.xml -q
+          uv run pytest tests/integration/test_status_badges.py --junitxml=reports/int-status_badges.xml -q
+          uv run pytest tests/integration/test_unit_linking.py --junitxml=reports/int-unit_linking.xml -q
 
       - name: Run BDD tests (JSON output)
         run: |

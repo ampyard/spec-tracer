@@ -417,3 +417,45 @@ def test_result_satisfies_one_of_multiple_requirements(tag):
     )
     assert _result_satisfies_requirement(view.linked_results[0], view) is True
     assert _result_satisfies_requirement(view.linked_results[1], view) is True
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-006"])
+def test_render_dashboard_sections_present(tag):
+    html = _render()
+    assert "Overview" in html
+    assert "Test Pyramid" in html
+    assert "Health Check" in html
+    assert 'placeholder="Search by name"' in html
+    assert "Failure Breakdown" in html
+    assert "Unlinked Tests" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-005"])
+def test_render_flags_missing_required_layer_with_chips(tag):
+    satisfied_result = TestResult(layer="unit", name="ok", tags=["@scenario:FC-050"], module="renderers")
+    satisfied_view = ScenarioView(
+        scenario=Scenario(
+            feature="F", name="Satisfied", tags=["@scenario:FC-050"],
+            required_layers=[RequiredLayer("unit", module="renderers")],
+        ),
+        linked_results=[satisfied_result], layers=[[satisfied_result]],
+    )
+    missing_view = ScenarioView(
+        scenario=Scenario(
+            feature="F", name="Missing", tags=["@scenario:FC-051"],
+            required_layers=[RequiredLayer("unit", module="renderers")],
+        ),
+        linked_results=[],
+    )
+
+    html = _render(
+        views=[satisfied_view, missing_view],
+        stats={"complete": 1, "total": 2, "percentage": 50, "pct": 50, "satisfied": 1, "required": 2},
+        feature_breakdown=[
+            {"name": "F", "complete": 1, "total": 2, "percentage": 50, "satisfied": 1, "required": 2, "completion_pct": 50},
+        ],
+    )
+
+    assert "Required" in html
+    assert "required-chip ok" in html
+    assert "required-chip missing" in html

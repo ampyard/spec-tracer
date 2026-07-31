@@ -73,7 +73,7 @@ uv run python run_local.py
 
 1. Write `.feature` files describing your scenarios, tagged so test results can link back to them (see [Tagging Convention](#tagging-convention) below).
 2. Run your test suites and produce JUnit XML (unit/integration) and/or Cucumber JSON (E2E) output.
-3. Create a `specspectracer.config.json` in your project root:
+3. Create a `spectracer.config.json` in your project root:
 
    ```json
    {
@@ -88,7 +88,7 @@ uv run python run_local.py
 4. Run the tool:
 
    ```bash
-   uv run python build_pyramid.py
+   uv run spec-tracer
    ```
 
    It auto-discovers `spectracer.config.json` in the current directory — no flags needed. Open the generated `report.html` in a browser.
@@ -96,32 +96,33 @@ uv run python run_local.py
 To point at a config file with a different name or location, pass it as the only argument:
 
 ```bash
-uv run python build_pyramid.py path/to/other-config.json
+uv run spec-tracer path/to/other-config.json
 ```
 
 > **Note on shells:** use forward slashes (`./spectracer.config.json`) or a bare filename. A leading `.\` (PowerShell-style) can be mangled by POSIX-style shells (Git Bash, WSL), since backslash is their escape character there.
 
 ## Tagging Convention
 
-Feature files and test results connect via **shared tags**. There are two kinds of tags a scenario can carry:
+Feature files and test results connect via **paired identity tags** (`@id:` on scenarios, `@scenario:` on results) and **layer requirement tags** (`@require-*`). There are three tag roles:
 
 ```gherkin
 Feature: User Login
 
-  @FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e:auth
+  @id:FC-42 @regression @require-unit:auth @require-integration:auth @require-e2e:auth
   Scenario: Successful login with valid credentials
     Given the user is on the login page
     When they enter valid credentials
     Then they should be redirected to the dashboard
 
-  @FC-43
+  @id:FC-43
   Scenario: Login with invalid password shows error
     Given the user is on the login page
     When they enter an invalid password
     Then an error message should be displayed
 ```
 
-- **Linking tags** (`@FC-42`, `@regression`) — shared with test results. Any test result carrying a matching tag links to that scenario.
+- **Scenario identity tags** (`@id:FC-42`) — placed on Gherkin scenarios. Declares the scenario's stable identity.
+- **Test reference tags** (`@scenario:FC-42`) — placed on test results (via pytest markers, test names, or annotations). A result with `@scenario:FC-42` links to any scenario carrying `@id:FC-42`.
 - **Layer requirement tags** (`@require-unit`, `@require-integration`, `@require-e2e`) — declare which layers *must* have coverage for this scenario. These are never used for linking, and the tool flags any declared layer that ends up with zero linked results.
 
 ### Module-scoped requirements
@@ -130,11 +131,12 @@ Feature: User Login
 
 ### Matching rules
 
-- **Exact string match** — `@FC-42` matches `@FC-42` only, not `@FC-4` or `@FC-42-smoke`.
-- **OR logic** — a scenario tagged `[@FC-42, @regression]` links to a test carrying just `@regression`.
+- **Prefix-filtered** — only `@scenario:VALUE` on results and `@id:VALUE` on scenarios participate. `@regression`, `@smoke`, and other tags are ignored during linking.
+- **Exact VALUE match** — `@scenario:FC-42` matches `@id:FC-42` only, not `@id:FC-4` or `@id:FC-42-smoke`.
+- **OR logic within prefixed tags** — a result tagged `[@scenario:FC-42, @scenario:FC-43]` links to any scenario carrying either `@id:FC-42` or `@id:FC-43`.
 - **Scenario tags only** — tags on the `Feature:` line are **not** inherited by scenarios.
 - **`@require-*` tags** are excluded from linking — no collision with linking tags is possible.
-- **Tag collisions link everywhere** — if two scenarios (in the same or different feature files) share a tag, one matching test result links to both.
+- **Tag collisions link everywhere** — if two scenarios (in the same or different feature files) share an `@id:` value, one matching test result links to both.
 
 ### Where the tool looks for tags in test results
 
@@ -186,13 +188,13 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 
 ## The Report
 
-The generated HTML is a single self-contained file (all CSS/JS inlined — no external assets, safe to email or archive) with five sections:
+The generated HTML is a single self-contained file (all CSS/JS inlined — a monospace font loads from a CDN with a system fallback — safe to email or archive) with five sections:
 
 <img src="docs/report-features.png" alt="SpecTracer report Feature Traceability view" style="max-width:100%;border-radius:12px;margin:1rem 0;">
 
-1. **Coverage Progress Summary** — the headline `Tested: X / Y scenarios (Z%)` metric, plus a per-feature breakdown. Color-coded green/amber/red using the configurable thresholds.
+1. **Coverage Progress Summary** — headline stats for declared-tests matched and scenarios fully matched, plus the four health checks. Color-coded green/amber/red using the configurable thresholds.
 2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer with excessive runtime.
-3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status with failure stack traces.
+3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status. (Failure stack traces live on the Failure Breakdown page.)
 4. **Detailed Failure Breakdown** — every failed test across all layers, with feature/scenario context and full stack trace on expand.
 5. **Unlinked Tests** — test results whose tags didn't match any scenario, to help catch orphaned or mis-tagged tests.
 
@@ -200,8 +202,8 @@ The generated HTML is a single self-contained file (all CSS/JS inlined — no ex
 
 Setting `output_json` in the config produces a JSON file alongside the HTML report, built from the exact same internal data — the two outputs can never drift apart. It conforms to [`spectracer-report.schema.json`](spectracer-report.schema.json) (Draft 7), which is the authoritative contract; the highlights:
 
-- `summary.completion` / `summary.pyramid` / `summary.health` — the same headline metric, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard.
-- `features[].scenarios[].results[]` — every linked test result per scenario, with `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
+- `summary.completion` / `summary.pyramid` / `summary.health` — the headline stats, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard. Note that `summary.completion.percent` is the *declared tests matched* percentage (satisfied/required); `tested`/`total` are scenario counts and `percent` is not `tested / total`.
+- `features[].scenarios[].results[]` — every linked test result per scenario, with `module`, `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
 - `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page.
 - `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.
 
@@ -241,12 +243,14 @@ That's the whole integration — one `curl` (or your metrics SDK's equivalent) r
 | No config file found and none specified | Errors out — a config file is mandatory. |
 | Config missing `features` or `output` | Errors out — both are mandatory keys. |
 | Empty or missing test result path | Silently ignored (zero tests for that layer). |
-| Malformed JUnit XML or Cucumber JSON | Aborts with a clear error message. |
+| Malformed JUnit XML | Aborts with a clear error message naming the offending file. |
+| Malformed Cucumber JSON | Aborts on the JSON decode error (the message is not contextualized with the file path). |
 | Test matches no scenario | Listed in "Unlinked Tests". |
 | Scenario matches no test | Shown as "incomplete". |
 | Scenario has `@require-*` but no matching test | That layer is flagged as missing. |
 | Feature-level tags | Not inherited by scenarios — only scenario-level tags are used for matching. |
-| Scenario Outline / Examples, `Rule:`, `Background:`, non-English dialects | Deferred to whatever your Gherkin/E2E framework does with them — the tool doesn't parse Gherkin syntax beyond `Feature:`, tags, and `Scenario:` lines. |
+| Scenario Outline / Examples | Parsed as a single scenario named from the `Scenario Outline:` line; expanded Examples rows are not individually parsed. |
+| `Rule:`, `Background:`, non-English dialects | Deferred to whatever your Gherkin/E2E framework does with them — the tool only understands `Feature:`, tags, `Scenario:` / `Scenario Outline:`, and steps. |
 | Unicode / special characters | Preserved, HTML-escaped in the report. |
 
 ## What This Tool Doesn't Do

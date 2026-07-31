@@ -97,12 +97,12 @@
       <div class="feature-card">
         <div class="feature-icon">&#128279;</div>
         <h4>linker.py</h4>
-        <p>Identity-based pairing. Matches <code>@scenario:VALUE</code> on test results against <code>@id:VALUE</code> on scenarios. 17 lines — the simplest module.</p>
+        <p>Identity-based pairing. Matches <code>@scenario:VALUE</code> on test results against <code>@id:VALUE</code> on scenarios. 26 lines — the simplest module.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128202;</div>
         <h4>aggregator.py</h4>
-        <p>Computes completion stats, layer breakdowns, feature trees, health checks, and unlinked results. 223 lines of pure logic.</p>
+        <p>Computes completion stats, layer breakdowns, feature trees, health checks, and unlinked results. 229 lines of pure logic.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128451;</div>
@@ -112,7 +112,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#128187;</div>
         <h4>renderers.py</h4>
-        <p>Jinja2 template with a few lines of embedded HTML/CSS/JS. Produces the self-contained report file.</p>
+        <p>Jinja2 template (~900 lines of embedded HTML/CSS/JS) plus render helpers. Produces the self-contained report file.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#128203;</div>
@@ -153,7 +153,7 @@
 
     <div class="feature-block">
       <h3>CucumberParser</h3>
-      <p>Parses Cucumber JSON output. Handles both array-of-scenarios and single-object formats. Extracts:</p>
+      <p>Parses Cucumber JSON output. Accepts both a single feature object and an array of feature objects. Extracts:</p>
       <ul>
         <li>Scenario-level <code>tags</code> array for linking</li>
         <li>Scenario name and status</li>
@@ -176,7 +176,7 @@
 <pre><code><span class="hl-kw">def</span> <span class="hl-fn">link</span>(scenarios, results):
     links = {}
     <span class="hl-kw">for</span> scenario <span class="hl-kw">in</span> scenarios:
-        ids = {t[<span class="hl-num">3</span>:] <span class="hl-kw">for</span> t <span class="hl-kw">in</span> scenario.tags <span class="hl-kw">if</span> t.<span class="hl-fn">startswith</span>(<span class="hl-str">"@id:"</span>)}
+        ids = {t[<span class="hl-num">4</span>:] <span class="hl-kw">for</span> t <span class="hl-kw">in</span> scenario.tags <span class="hl-kw">if</span> t.<span class="hl-fn">startswith</span>(<span class="hl-str">"@id:"</span>)}
         linked = [
             r <span class="hl-kw">for</span> r <span class="hl-kw">in</span> results
             <span class="hl-kw">if</span> <span class="hl-fn">any</span>(t.<span class="hl-fn">startswith</span>(<span class="hl-str">"@scenario:"</span>) <span class="hl-kw">and</span> t[<span class="hl-num">10</span>:] <span class="hl-kw">in</span> ids <span class="hl-kw">for</span> t <span class="hl-kw">in</span> r.tags)
@@ -208,7 +208,7 @@
       <li><strong>CSS:</strong> Full stylesheet with light/dark themes via <code>data-theme</code>, falling back to <code>prefers-color-scheme</code></li>
       <li><strong>JavaScript:</strong> Client-side hash routing (<code>#/</code>, <code>#/pyramid</code>, etc.), theme toggle (persisted in <code>localStorage</code>), sortable tables, search/filter</li>
       <li><strong>Logo:</strong> Optional base64-encoded PNG</li>
-      <li><strong>Data:</strong> All report data is embedded as JSON in a <code>&lt;script&gt;</code> tag</li>
+      <li><strong>Data:</strong> All report data is rendered server-side by Jinja2 into the HTML (no embedded JSON payload)</li>
     </ul>
 
     <p>The report file loads a monospace font from a CDN (Cascadia Mono via jsDelivr) but degrades gracefully to system <code>ui-monospace</code> if offline. No other external dependencies &mdash; it works on any OS in any modern browser.</p>
@@ -276,10 +276,10 @@
 uv run pytest tests/integration --junitxml=reports/int.xml
 
 <span class="hl-com"># E2E is split by module so @require-e2e:&lt;module&gt; can be dogfooded</span>
-uv run behave features/coverage_linking.feature --tags="not @scenario:FC-004" -f json -o reports/e2e-linker.json
-uv run behave features/coverage_health.feature -f json -o reports/e2e-aggregator.json
-uv run behave features/coverage_dashboard.feature -f json -o reports/e2e-renderers.json
-uv run behave features/coverage_module_scope.feature -f json -o reports/e2e-parsers.json
+uv run behave features/linking.feature --tags="not @scenario:FC-004" -f json -o reports/e2e-linker.json
+uv run behave features/health.feature -f json -o reports/e2e-aggregator.json
+uv run behave features/dashboard.feature -f json -o reports/e2e-renderers.json
+uv run behave features/module_scope.feature -f json -o reports/e2e-parsers.json
 <span class="hl-com"># …plus collectors / report_model / edge splits (see .github/workflows/ci.yml)</span>
 
 uv run spec-tracer

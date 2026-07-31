@@ -60,24 +60,19 @@
     <p><img src="report-hero.png" alt="Coverage Progress Dashboard with headline metric and health check cards" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin:1rem 0;"></p>
 
     <div class="feature-block">
-      <h3>&#9679; Headline Metric</h3>
-      <p><strong>Tested: X / Y scenarios (Z%)</strong> &mdash; prominently displayed with color coding, plus a large progress bar with the percentage overlaid on the bar fill:</p>
+      <h3>&#9679; Headline Stats</h3>
+      <p>Three stat cards are displayed, each with a colored progress bar:</p>
       <ul>
-        <li><span class="badge badge-green">Green</span> above the configurable green threshold (default 80%)</li>
-        <li><span class="badge badge-amber">Amber</span> between the amber and green thresholds</li>
-        <li><span class="badge badge-red">Red</span> below the amber threshold (default 50%)</li>
+        <li><strong>Declared tests matched:</strong> <code>X / Y declared tests matched &middot; Z%</code> &mdash; how many declared <code>@require-*</code> layer/module pairs have at least one linked result (presence-based, pass/fail ignored).</li>
+        <li><strong>Scenarios fully matched:</strong> <code>X / Y scenarios fully matched &middot; Z%</code> &mdash; how many scenarios satisfy <em>every</em> declared requirement.</li>
+        <li><strong>Tests passed:</strong> <code>X / Y tests passed &middot; Z%</code> &mdash; the pass/fail rate across all linked results, with a count of failures.</li>
       </ul>
-      <p>A scenario counts as <strong>complete</strong> when every declared <code>@require-*</code> layer has at least one linked test result (presence-based — pass/fail does not matter). The per-feature breakdown below uses a looser definition: a scenario is complete if any linked result exists across all layers.</p>
-    </div>
-
-    <div class="feature-block">
-      <h3>&#9776; Per-Feature Breakdown</h3>
-      <p>Each feature file gets its own mini progress bar with its own complete/incomplete count. This makes it easy to see which areas of the application are well-covered and which need attention.</p>
+      <p>A scenario counts as <strong>fully matched</strong> when every declared <code>@require-*</code> layer has at least one linked test result (presence-based — pass/fail does not matter).</p>
     </div>
 
     <div class="feature-block">
       <h3>&#9881; Health Check Cards</h3>
-      <p>Four health indicator cards sit below the progress bar. Each card shows its status (<span class="badge badge-green">pass</span> / <span class="badge badge-amber">warn</span> / <span class="badge badge-red">fail</span>) at a glance with a colored left border.</p>
+      <p>Four health indicator cards sit below the stats. Each card shows its status (<span class="badge badge-green">pass</span> / <span class="badge badge-amber">warn</span> / <span class="badge badge-red">fail</span>) at a glance with a colored left border. The per-feature completion status is visible in the Feature Traceability tree below, which lists every feature with its own completion bar.</p>
     </div>
 
     <h2 id="pyramid">Test Pyramid Dashboard</h2>
@@ -102,7 +97,7 @@
       <h3>&#9888; Health Indicators</h3>
       <ul>
         <li><strong>Speed Check:</strong> Flags if E2E takes too long (configurable: amber at 10 min, red at 30 min by default)</li>
-        <li><strong>Ratio Check:</strong> Flags if Unit test count &le; Integration + E2E count (inverted pyramid)</li>
+        <li><strong>Ratio Check:</strong> Flags when the pyramid inverts — Unit count &lt; Integration + E2E count (failing). Exact parity (Unit = I+E) is a warning; Unit &gt; I+E passes.</li>
       </ul>
     </div>
 
@@ -117,12 +112,12 @@
 
     <div class="feature-block">
       <h3>&#128269; Search &amp; Filter</h3>
-      <p>A text input at the top of the matrix. Type a tag name or scenario name and the matrix filters to show only matching entries. Client-side JavaScript — no page reload needed.</p>
+      <p>A text input at the top of the matrix. Type a feature or scenario name and the matrix filters to show only matching entries. Client-side JavaScript — no page reload needed.</p>
     </div>
 
     <div class="feature-block">
       <h3>&#9881; Sortable Columns</h3>
-      <p>The tree-table has six columns, each clickable to sort:</p>
+      <p>The tree-table has six columns; four of them (<strong>Name</strong>, <strong>Completion</strong>, <strong>Result</strong>, <strong>Duration</strong>) are clickable to sort:</p>
       <table>
         <thead>
           <tr><th>Column</th><th>Description</th></tr>
@@ -131,7 +126,7 @@
           <tr><td>Name</td><td>Feature / Scenario name with a type pill (e.g. <span class="badge">Feature</span>, <span class="badge">Scenario</span>)</td></tr>
           <tr><td>Completion</td><td>Presence-based completion bar. A horizontal bar fills proportionally (green 100%, amber partial, red 0%) with the percentage <strong>overlaid on the bar itself</strong>. Beside the bar, the <code>N/M</code> requirement count shows how many declared <code>@require-*</code> layers have a match.</td></tr>
           <tr><td>Result</td><td>Outcome pill showing the worst-case result across all linked tests for that feature / scenario (<span class="badge badge-green">pass</span>, <span class="badge badge-amber">skipped</span>, or <span class="badge badge-red">failed</span>)</td></tr>
-          <tr><td>Expected</td><td>Number of test cases the feature file's scenarios declare they need</td></tr>
+          <tr><td>Declared</td><td>Number of declared <code>@require-*</code> requirements for the feature / scenario</td></tr>
           <tr><td>Actual</td><td>Number of individually linked test results found during the run</td></tr>
           <tr><td>Duration</td><td>Total execution time across all linked tests</td></tr>
         </tbody>
@@ -140,7 +135,7 @@
 
     <div class="feature-block">
       <h3>&#9660; Expandable Layer Details</h3>
-      <p>Click a layer pill to expand and see individual test names, their pass/fail/skip statuses, and expandable failure stack traces for any failed test.</p>
+      <p>Expand a scenario to see its declared layer requirements (<code>OK</code>/<code>Missing</code> chips) and individual linked test results with their pass/fail/skip statuses. Full stack traces for failed tests live in the Failure Breakdown page below.</p>
     </div>
 
     <h2 id="failures">Failure Breakdown</h2>
@@ -165,7 +160,7 @@
     </div>
 
     <h2 id="unlinked">Unlinked Tests</h2>
-    <p>Test results whose <code>@scenario:VALUE</code> tag doesn't match any scenario's <code>@id:VALUE</code> end up here. Results without a <code>@scenario:</code> tag are excluded (they can never participate in identity-based linking).</p>
+    <p>Test results that carry at least one tag but whose <code>@scenario:VALUE</code> tags (if any) don't match any scenario's <code>@id:VALUE</code> end up here. Results with no tags at all are silently excluded (they can never participate in identity-based linking).</p>
 
     <p>This is invaluable for catching:</p>
     <ul>
@@ -211,7 +206,7 @@
     <p>Fully opt-in and backward compatible: omit <code>output_json</code> and nothing changes.</p>
 
     <h2 id="health-checks">Health Checks</h2>
-    <p>Four health indicators on the Dashboard section. Each card has a colored left border reflecting its status. They are visual by default, but any of them can gate CI: list a check under <code>fail_on</code> and a failing (red) status makes the tool exit <code>1</code> (see the <a href="usage.html#health-checks">Usage guide</a>).</p>
+    <p>Four health indicators on the Dashboard section. Each card has a colored left border reflecting its status. They are visual by default, but most can gate CI: list a check under <code>fail_on</code> and a failing (red) status makes the tool exit <code>1</code>. The Unlinked check is visual-only and cannot gate CI (see the <a href="usage.html#health-checks">Usage guide</a>).</p>
 
     <div class="feature-grid">
       <div class="feature-card">
@@ -232,7 +227,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#9872;</div>
         <h4>Unlinked Tests</h4>
-        <p>Test results with <code>@scenario:VALUE</code> that matched no scenario's <code>@id:VALUE</code>. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
+        <p>Test results carrying at least one tag whose <code>@scenario:VALUE</code> (if any) matched no scenario's <code>@id:VALUE</code>. Pass at 0, warn at 1&ndash;3, fail at 4+.</p>
       </div>
     </div>
 
@@ -291,7 +286,7 @@
   }
 }</code></pre>
       <p>In your feature file:</p>
-<pre><code><span class="hl-tag">@id:FC-42</span> <span class="hl-tag">@scenario:FC-42</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:billing</span> <span class="hl-tag">@require-e2e:checkout</span>
+<pre><code><span class="hl-tag">@id:FC-42</span> <span class="hl-tag">@require-unit:auth</span> <span class="hl-tag">@require-integration:billing</span> <span class="hl-tag">@require-e2e:checkout</span>
 <span class="hl-section">Scenario:</span> Authenticated billing checkout</code></pre>
       <p>Each module-scoped requirement is <strong>only</strong> satisfied by a linked result registered under that exact module key. Unscoped results (config key <code>""</code>) never satisfy a module-scoped requirement. A bare <code>@require-unit</code> / <code>@require-e2e</code> (no module) is satisfied by any linked result for that layer.</p>
       <p>In the HTML report, satisfied modules show as chips like <code>e2e (checkout) OK</code>; missing ones show <code>Missing</code>.</p>
@@ -308,7 +303,8 @@
         <tr><td>Empty/missing test result path</td><td>Silently ignored (zero tests for that layer)</td></tr>
         <tr><td>Malformed XML or JSON</td><td>Aborts with a clear error message</td></tr>
         <tr><td>Test with <code>@scenario:</code> matches no <code>@id:</code></td><td>Listed in "Unlinked Tests"</td></tr>
-        <tr><td>Test has no <code>@scenario:</code> tag</td><td>Silently excluded — cannot participate in identity-based linking</td></tr>
+        <tr><td>Test has tags but no <code>@scenario:</code> tag</td><td>Listed in "Unlinked Tests" — it can never link, but is surfaced so it isn't silently lost</td></tr>
+        <tr><td>Test has no tags at all</td><td>Silently excluded — cannot participate in identity-based linking</td></tr>
         <tr><td>Scenario matches no test</td><td>Shown as "incomplete"</td></tr>
         <tr><td><code>@require-*</code> with no matching test</td><td>Layer flagged as missing</td></tr>
         <tr><td>Feature-level tags</td><td>Not inherited by scenarios</td></tr>

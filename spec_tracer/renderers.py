@@ -102,6 +102,14 @@ def _outcome(view: ScenarioView) -> dict:
     return {"word": word, "cls": cls, "status": status}
 
 
+def _scenario_id(view: ScenarioView) -> str:
+    """The scenario's declared ``@id:...`` tag value, if any."""
+    for tag in view.scenario.tags:
+        if tag.startswith("@id:"):
+            return tag[len("@id:"):]
+    return ""
+
+
 def _scenario_status(view: ScenarioView) -> dict:
     if any(r.status == "failed" for r in view.linked_results):
         return {"word": "Failed", "cls": "failed"}
@@ -480,6 +488,7 @@ _TEMPLATE_STR = """<html lang="en">
     .badge.failed { background: var(--danger-soft); color: var(--danger); }
     .badge.skipped { background: var(--warning-soft); color: var(--warning); }
     .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 6px; background: var(--surface-alt); }
+    .scenario-id-pill { text-transform: none; letter-spacing: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, monospace; }
     .steps { margin: 8px 0 0; padding-left: 52px; color: var(--text-soft); line-height: 1.65; font-size: 0.88rem; }
     .empty-state { padding: 14px 0 14px 32px; color: var(--text-soft); font-size: 0.88rem; }
     .table-list { display: grid; gap: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -560,8 +569,8 @@ _TEMPLATE_STR = """<html lang="en">
     .tree-row:hover { background: var(--primary-soft); }
     .tree-children { padding: 10px 16px 14px 16px; background: var(--surface-alt); width: 100%; }
     .tree-row.level-1 { font-weight: 600; }
-    .col-name { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; }
-    .col-name .name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+    .col-name { flex: 1 1 auto; min-width: 0; display: flex; align-items: flex-start; gap: 8px; }
+    .col-name .name-text { min-width: 0; flex: 1 1 auto; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.35; }
     .col-name.lvl-2 { padding-left: 24px; }
     .col-name.lvl-3 { padding-left: 48px; }
     .col-status { flex: 0 0 110px; width: 110px; min-width: 0; overflow: hidden; }
@@ -810,9 +819,10 @@ _TEMPLATE_STR = """<html lang="en">
                 {% set sstatus = scenario_status(view) %}
                 {% set scompletion = completion(view) %}
                 {% set soutcome = outcome(view) %}
-                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-completion="{{ scompletion.pct }}" data-sort-result="{{ status_rank(soutcome.status) }}" data-sort-status="{{ 100 if view.is_complete else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ view.scenario.name | lower }}">
+                {% set sid = scenario_id(view) %}
+                <details class="tree-row level-2" data-sort-name="{{ view.scenario.name }}" data-sort-completion="{{ scompletion.pct }}" data-sort-result="{{ status_rank(soutcome.status) }}" data-sort-status="{{ 100 if view.is_complete else 0 }}" data-sort-duration="{{ scenario_duration }}" data-search="{{ (view.scenario.name ~ ' ' ~ sid) | lower }}">
                   <summary>
-                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span><span class="name-text">{{ view.scenario.name }}</span></span>
+                    <span class="col-name lvl-2"><span class="tree-caret"></span><span class="pill"><strong>Scenario</strong></span>{% if sid %}<span class="pill scenario-id-pill" title="Scenario id">{{ sid }}</span>{% endif %}<span class="name-text">{{ view.scenario.name }}</span></span>
                     <span class="col-completion">{{ _completion_bar(scompletion) }}</span>
                     <span class="col-result"><span class="badge {{ soutcome.cls }}">{{ soutcome.word }}</span></span>
                     <span class="col-expected">{{ scenario_expected }}</span>
@@ -1142,6 +1152,7 @@ class HtmlRenderer:
             template.globals["result_satisfies_requirement"] = _result_satisfies_requirement
             template.globals["expected_test_count"] = _expected_test_count
             template.globals["scenario_status"] = _scenario_status
+            template.globals["scenario_id"] = _scenario_id
             template.globals["feature_status"] = _feature_status
             template.globals["completion"] = _completion
             template.globals["outcome"] = _outcome

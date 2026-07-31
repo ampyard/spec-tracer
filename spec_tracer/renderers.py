@@ -604,6 +604,20 @@ _TEMPLATE_STR = """<html lang="en">
     .required-chip.missing { background: var(--danger-soft); color: var(--danger); }
     .required-chip.none { background: var(--surface); color: var(--text-soft); border: 1px solid var(--border); }
     .module-tag { font-weight: 400; text-transform: none; opacity: 0.75; }
+    .module-chip {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-soft);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
     .req-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
     .req-tag.matched { background: var(--primary-soft); color: var(--primary); }
     .req-tag.extra { background: var(--surface-alt); color: var(--text-soft); border: 1px solid var(--border); }
@@ -828,7 +842,7 @@ _TEMPLATE_STR = """<html lang="en">
                     {% for result in view.linked_results %}
                     {% set is_required = result_satisfies_requirement(result, view) %}
                     <div class="tree-row level-3 leaf" data-sort-name="{{ result.name }}" data-sort-status="{{ status_rank(result.status) }}" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }} {{ 'matched' if is_required else 'extra' }}">
-                      <span class="col-name lvl-3"><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span></span>
+                      <span class="col-name lvl-3"><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span>{% if result.module %}<span class="module-chip" title="Discovered under module &quot;{{ result.module }}&quot;">{{ result.module }}</span>{% endif %}</span>
                       <span class="col-status"><span class="badge {{ _status_class(result.status) }}">{{ _status_label(result.status) }}</span></span>
                       <span class="col-expected"><span class="req-tag {{ 'matched' if is_required else 'extra' }}">{{ 'Matched' if is_required else 'Extra' }}</span></span>
                       <span class="col-actual">&mdash;</span>
@@ -892,7 +906,7 @@ _TEMPLATE_STR = """<html lang="en">
                     {% for result in s.failed_results %}
                     <details class="tree-row level-3" data-sort-name="{{ result.name }}" data-sort-status="0" data-sort-duration="{{ result.duration }}" data-search="{{ result.name | lower }}">
                       <summary>
-                        <span class="col-name lvl-3"><span class="tree-caret"></span><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span></span>
+                        <span class="col-name lvl-3"><span class="tree-caret"></span><span class="pill"><strong>{{ result.layer }}</strong></span><span class="name-text">{{ result.name }}</span>{% if result.module %}<span class="module-chip" title="Discovered under module &quot;{{ result.module }}&quot;">{{ result.module }}</span>{% endif %}</span>
                         <span class="col-status"><span class="badge failed">{{ _status_label(result.status) }}</span></span>
                         <span class="col-duration">{{ format_duration(result.duration) }}</span>
                       </summary>

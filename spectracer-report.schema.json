@@ -79,7 +79,7 @@
                 "completion": {
                     "type": "object",
                     "title": "CompletionSummary",
-                    "description": "The headline 'Complete: X / Y scenarios (Z%)' metric.",
+                    "description": "Scenario-completion counts plus the declared-tests-matched percentage. `tested`/`total` are scenario counts (scenarios fully matched / total scenarios); `percent` is the declared-tests-matched percentage (satisfied/required), which is not `tested / total`.",
                     "required": ["tested", "total", "percent"],
                     "properties": {
                         "tested": { "type": "integer", "minimum": 0 },
@@ -144,7 +144,7 @@
                     "layer": { "$ref": "#/definitions/layer" },
                     "module": {
                         "type": "string",
-                        "description": "Module key this result was registered under, if any (unit/integration only)."
+                        "description": "Module key this result was registered under, if any (any layer)."
                     },
                     "testId": { "type": "string" },
                     "name": { "type": "string" },
@@ -185,7 +185,7 @@
                 "name": { "type": "string" },
                 "tags": {
                     "type": "array",
-                    "description": "Linking tags on this scenario (e.g. @FC-42, @regression). Excludes @require-* tags.",
+                    "description": "Linking tags on this scenario (e.g. @id:FC-42, @regression). Excludes @require-* tags.",
                     "items": { "type": "string" }
                 },
                 "requirements": {
@@ -217,7 +217,7 @@
                             "layer": { "$ref": "#/definitions/layer" },
                             "module": {
                                 "type": "string",
-                                "description": "Module key this result was registered under, if any (unit/integration only)."
+                                "description": "Module key this result was registered under, if any (any layer)."
                             },
                             "testId": { "type": "string" },
                             "name": { "type": "string" },

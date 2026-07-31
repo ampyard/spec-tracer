@@ -319,7 +319,9 @@ spec-tracer path/to/other-config.json</code></pre>
         <tr><th>Top-level key</th><th>Contents</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>summary.completion</code></td><td>The headline <code>tested</code> / <code>total</code> / <code>percent</code> metric</td></tr>
+        <tr><td><code>schemaVersion</code></td><td>Version of the report format (for compatibility)</td></tr>
+        <tr><td><code>generatedAt</code></td><td>ISO 8601 UTC timestamp of when the report was generated</td></tr>
+        <tr><td><code>summary.completion</code></td><td><code>tested</code> = scenarios fully matched, <code>total</code> = scenario count, <code>percent</code>/<code>pct</code> = <em>declared tests matched</em> percentage (satisfied / required) — note that <code>percent</code> is not <code>tested / total</code>. Also includes <code>satisfied</code> and <code>required</code>.</td></tr>
         <tr><td><code>summary.pyramid</code></td><td>Per-layer test count, duration (ms), and pass rate</td></tr>
         <tr><td><code>summary.health</code></td><td><code>status</code> (<code>green</code>/<code>amber</code>/<code>red</code>) and <code>reasons[]</code>, derived from the same health checks shown on the dashboard</td></tr>
         <tr><td><code>features[]</code></td><td>Every feature, with <code>scenarios[]</code> containing tags, layer <code>requirements[]</code>, and linked <code>results[]</code></td></tr>
@@ -330,7 +332,7 @@ spec-tracer path/to/other-config.json</code></pre>
 
     <div class="callout callout-info">
       <strong>&#8505; Omitted, not null</strong>
-      <code>duration</code> and <code>failureMessage</code> on a result are omitted entirely when not available from the underlying JUnit/Cucumber data, rather than emitted as <code>null</code>.
+      <code>module</code> on a result or unlinked test, <code>duration</code> on a result, and <code>failureMessage</code> on a failed result are omitted entirely when not available from the underlying JUnit/Cucumber data, rather than emitted as <code>null</code>.
     </div>
 
     <div class="callout callout-success">

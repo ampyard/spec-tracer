@@ -126,6 +126,38 @@ def test_render_feature_and_scenario_rows_have_type_pills(tag):
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_render_test_row_shows_module_chip_when_module_present(tag):
+    scenario = Scenario(feature="Alpha Feature", name="Scenario A", tags=["@scenario:FC-100"])
+    result = TestResult(layer="unit", name="test_a", tags=["@scenario:FC-100"], status="passed", module="billing")
+    view = ScenarioView(scenario=scenario, linked_results=[result], layers=[[result]])
+    html = _render(views=[view])
+    assert '<span class="module-chip" title="Discovered under module &quot;billing&quot;">billing</span>' in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_render_test_row_omits_module_chip_when_module_absent(tag):
+    html = _render()  # default view's TestResult has no module set
+    assert '<span class="module-chip"' not in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_render_failure_breakdown_row_shows_module_chip_when_module_present(tag):
+    scenario = Scenario(feature="Alpha Feature", name="Scenario A", tags=["@scenario:FC-100"])
+    failed_result = TestResult(
+        layer="unit", name="test_a", tags=["@scenario:FC-100"], status="failed",
+        failure_message="boom", module="billing",
+    )
+    view = ScenarioView(scenario=scenario, linked_results=[failed_result], layers=[[failed_result]])
+    failure_breakdown = [{
+        "name": "Alpha Feature",
+        "scenarios": [{"view": view, "failed_results": [failed_result]}],
+        "failed_count": 1,
+    }]
+    html = _render(views=[view], failure_breakdown=failure_breakdown)
+    assert '<span class="module-chip" title="Discovered under module &quot;billing&quot;">billing</span>' in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_render_pyramid_tier_uses_layer_specific_class(tag):
     html = _render()
     assert 'class="tier unit"' in html

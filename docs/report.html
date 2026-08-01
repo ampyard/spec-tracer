@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report tour — SpecTracer</title>
+<meta name="description" content="A guided tour of the SpecTracer HTML report: Overview, Test Pyramid, Feature Breakdown, Failure Breakdown, Unlinked Tests — what each number means and how to act on it.">
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="css/style.css">
+<script>(function(){var t;try{t=localStorage.getItem('st-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))})();</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo"><img src="logo.png" alt="">SpecTracer</a>
+    <ul class="nav-links">
+      <li><a href="getting-started.html">Docs</a></li>
+      <li><a href="report.html" class="active">Report tour</a></li>
+      <li><a href="configuration.html">Configuration</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+    </ul>
+    <button class="icon-btn theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="https://github.com/ampyard/spec-tracer" class="nav-cta">GitHub</a>
+  </div>
+</nav>
+
+<div class="docs">
+  <aside class="sidebar">
+    <nav class="sidebar-nav" aria-label="Documentation">
+      <div class="sidebar-group">
+        <span class="sidebar-label">Start here</span>
+        <a href="getting-started.html">Getting started</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Core concepts</span>
+        <a href="tagging.html">Tagging model</a>
+        <a href="configuration.html">Configuration</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Using the output</span>
+        <a href="report.html" class="active">Report tour</a>
+        <div class="sub">
+          <a href="#shell">The file itself</a>
+          <a href="#overview">1 · Overview</a>
+          <a href="#pyramid">2 · Test Pyramid</a>
+          <a href="#features">3 · Feature Breakdown</a>
+          <a href="#failures">4 · Failure Breakdown</a>
+          <a href="#unlinked">5 · Unlinked Tests</a>
+          <a href="#json">The JSON twin</a>
+          <a href="#standup">Using it in a standup</a>
+        </div>
+        <a href="ci-cd.html">CI/CD recipes</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Reference</span>
+        <a href="architecture.html">How it works</a>
+        <a href="troubleshooting.html">Troubleshooting &amp; FAQ</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="doc" id="main">
+    <span class="eyebrow">Using the output</span>
+    <h1>Report tour</h1>
+    <p class="lede">Five pages, one file. This is what each one is for, what the numbers mean, and what
+    to do when they're bad. Every screenshot here is SpecTracer's own self-report — real numbers, not a
+    mockup.</p>
+
+    <h2 id="shell">The file itself</h2>
+    <p>The report is a single self-contained HTML file. All CSS and JavaScript are inlined, and the data
+    is rendered into the markup server-side rather than shipped as a JSON payload. The one network
+    request is a monospace webfont from a CDN, which degrades to the system monospace if you're
+    offline.</p>
+
+    <ul>
+      <li><strong>Email it, archive it, attach it to a build.</strong> No server, no build step, no
+      dependency on the repo it came from.</li>
+      <li><strong>Client-side hash routing</strong> (<code>#/</code>, <code>#/pyramid</code>, …) means
+      you can deep-link to a page and the browser back button works.</li>
+      <li><strong>Light and dark themes</strong>, following your system preference and toggleable in the
+      top-right; the choice persists in <code>localStorage</code>.</li>
+    </ul>
+
+    <h2 id="overview">1 · Overview</h2>
+    <p>The page that answers "how are we doing" in about three seconds.</p>
+
+    <figure class="shot">
+      <img src="report-hero.png" alt="The Overview page: three headline tiles reading 25/44 declared tests matched, 7/25 scenarios fully matched, 220/220 tests passed; below them four health-check cards for Progress, Test pyramid, E2E runtime, and Unlinked." loading="lazy">
+      <figcaption>Overview — headline coverage plus the four health signals.</figcaption>
+    </figure>
+
+    <h3>The three headline tiles</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tile</th><th>Numerator / denominator</th><th>Read it as</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Declared tests matched</strong></td>
+            <td>Satisfied <code>@require-*</code> layer/module pairs, over all declared pairs.</td>
+            <td>"How much of the coverage we said we needed do we actually have?" This is the headline metric and the one <code>fail_on: ["progress"]</code> gates on.</td>
+          </tr>
+          <tr>
+            <td><strong>Scenarios fully matched</strong></td>
+            <td>Scenarios with every declared layer satisfied, over all scenarios.</td>
+            <td>Strictly harder. A scenario needing three layers and having two contributes 2/3 to the first tile but 0 to this one.</td>
+          </tr>
+          <tr>
+            <td><strong>Tests passed</strong></td>
+            <td>Passing results over all collected results.</td>
+            <td>Plain suite health. Counts every result, linked or not.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <strong>Why the two coverage numbers differ so much</strong>
+      In the screenshot above, 57% of declared tests are matched but only 28% of scenarios are fully
+      matched. That gap is the normal shape of a partially-tagged codebase: coverage is spread thinly
+      across many scenarios rather than completed on a few. Watch the gap close as you finish scenarios
+      rather than start them.
+    </div>
+
+    <h3>The four health cards</h3>
+    <p>Each card is green, amber, or red, and links through to the page that explains it. Thresholds
+    come from <code>health_checks</code> in your config — see
+    <a href="configuration.html#health">Health checks</a>.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Progress <span class="pill warnp">amber</span></h3>
+        <p>Declared-tests-matched percentage against your green/amber thresholds. Amber means "below
+        target but not alarming"; red means below the amber floor.</p>
+      </div>
+      <div class="card">
+        <h3>Test pyramid <span class="pill pass">green</span></h3>
+        <p>Green while unit tests outnumber integration + E2E combined. Amber at exact parity, red when
+        inverted.</p>
+      </div>
+      <div class="card">
+        <h3>E2E runtime <span class="pill pass">green</span></h3>
+        <p>Total E2E wall time against your time budget. This is the check that catches a suite getting
+        slowly, invisibly slower.</p>
+      </div>
+      <div class="card">
+        <h3>Unlinked <span class="pill fail">red</span></h3>
+        <p>Orphaned results. Green at zero, amber at 1–3, red at 4 or more. Visual only — this one
+        cannot gate CI.</p>
+      </div>
+    </div>
+
+    <h2 id="pyramid">2 · Test Pyramid</h2>
+    <p>Test count, duration, and pass rate for each layer, drawn as proportional bars.</p>
+
+    <figure class="shot">
+      <img src="report-pyramid.png" alt="The Test Pyramid page: three horizontal bars for E2E (53 tests, 4.9s), Integration (42 tests, 4.4s), and Unit (125 tests, 556ms), each with pass, fail, and skip percentages." loading="lazy">
+      <figcaption>Test Pyramid — execution mix across unit, integration, and E2E.</figcaption>
+    </figure>
+
+    <p>The shape is the point. A healthy pyramid has a long unit bar and short integration and E2E bars.
+    What to look for:</p>
+
+    <ul>
+      <li><strong>Bar length</strong> — relative test counts. If the E2E bar approaches the unit bar,
+      the pyramid is inverting and CI is about to get slow.</li>
+      <li><strong>Duration</strong> — in the screenshot, 125 unit tests take 556ms while 53 E2E tests
+      take 4.9s. That ~20× per-test cost difference is exactly why the shape matters.</li>
+      <li><strong>Pass / fail / skip pills</strong> — a layer with a high skip rate is quietly not
+      testing anything, and no coverage metric will tell you that.</li>
+    </ul>
+
+    <div class="note warn">
+      <strong>Counts, not opinions</strong>
+      The pyramid reflects what you registered under <code>unit</code>, <code>integration</code>, and
+      <code>e2e</code> in the config. If your "unit" tests spin up a database, SpecTracer will happily
+      report a beautiful pyramid — it can only classify what you tell it.
+    </div>
+
+    <h2 id="features">3 · Feature Breakdown</h2>
+    <p>The traceability matrix, and where you'll spend most of your time. A searchable tree:
+    <strong>feature → scenario → individual test result</strong>.</p>
+
+    <figure class="shot">
+      <img src="report-features.png" alt="The Feature Breakdown page: an expandable tree of features with completion bars and result pills; one scenario expanded to show required-layer chips, the full Gherkin steps, and the individual E2E and unit results that linked to it." loading="lazy">
+      <figcaption>Feature Breakdown — one scenario expanded to show requirements, Gherkin text, and linked results.</figcaption>
+    </figure>
+
+    <h3>Row by row</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Column</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Name</strong></td><td>Feature or scenario name. Scenario rows also carry the scenario id pill (e.g. <code>FC-006</code>) and, on result rows, the discovery module.</td></tr>
+          <tr><td><strong>Completion</strong></td><td>A bar and a satisfied/declared fraction — green at 100%, amber below.</td></tr>
+          <tr><td><strong>Result</strong></td><td>Rolled-up pass/fail/skip status.</td></tr>
+          <tr><td><strong>Declared</strong></td><td>How many <code>@require-*</code> pairs this row declares.</td></tr>
+          <tr><td><strong>Actual</strong></td><td>How many test results actually linked. This can exceed <em>Declared</em> — three unit tests can link to a scenario that declares one unit requirement.</td></tr>
+          <tr><td><strong>Duration</strong></td><td>Summed wall time of the linked results.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Expanding a scenario</h3>
+    <p>Expanding a scenario row reveals three things:</p>
+    <ol>
+      <li><strong>Required-layer chips</strong> — one per declared requirement, showing the layer, the
+      module in parentheses, and <code>OK</code> or <code>MISSING</code>. This is the single most
+      actionable thing in the report: <code>INTEGRATION (renderers) MISSING</code> tells you precisely
+      what to go write.</li>
+      <li><strong>The full Gherkin text</strong> — the Given/When/Then as written, so a reader who isn't
+      in the code can still judge whether the scenario is worth the coverage it's demanding.</li>
+      <li><strong>The linked results</strong> — every test that claimed this scenario, with its layer,
+      module, status, and duration.</li>
+    </ol>
+
+    <p>Search filters the tree by name. Failure stack traces are deliberately <em>not</em> here — they
+    live on the Failure Breakdown page so this view stays scannable.</p>
+
+    <h2 id="failures">4 · Failure Breakdown</h2>
+    <p>Every failed test across all three layers, in one list, with feature and scenario context and the
+    full stack trace on expand.</p>
+    <p>The value is not that it shows failures — your CI log does that. It's that a failure here arrives
+    attached to the <em>business scenario</em> it broke, across layers that normally live in separate
+    jobs. "Three failures, all under checkout" is a different triage conversation than three unrelated
+    red lines in three log files.</p>
+
+    <h2 id="unlinked">5 · Unlinked Tests</h2>
+    <p>Test results that carry tags but whose <code>@scenario:</code> values matched no scenario's
+    <code>@id:</code>.</p>
+    <p>This page is your typo detector. On a first run, a large unlinked count and a near-zero coverage
+    number almost always mean the same thing: the tags on one side don't match the tags on the other.
+    Common causes:</p>
+    <ul>
+      <li>A test tagged <code>@scenario:FC-42</code> against a scenario tagged <code>@id:FC42</code></li>
+      <li>A scenario that was renamed and had its <code>@id:</code> changed, orphaning its tests</li>
+      <li>Tests for a scenario that was deleted from the feature file</li>
+      <li>A test tagged with the id of a scenario in a feature file the config doesn't include</li>
+    </ul>
+    <p>Unlinked results still count toward the pyramid and the pass-rate tile — they ran, after all.
+    They just don't count toward coverage.</p>
+
+    <h2 id="json">The JSON twin</h2>
+    <p>Set <code>output_json</code> and the same data is written as schema-validated JSON alongside the
+    HTML. It's built from the same internal model as the HTML renderer, so the two physically cannot
+    disagree.</p>
+
+    <div class="code">
+      <div class="code-head"><span>reading the headline number in CI</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>jq -r <span class="c-str">'.summary.completion.percent'</span> reports/spectracer-report.json
+jq -r <span class="c-str">'.summary.health.status'</span>       reports/spectracer-report.json
+jq -r <span class="c-str">'.summary.health.reasons[]'</span>    reports/spectracer-report.json</code></pre>
+    </div>
+
+    <p>Use it for PR bots, custom gates the built-in checks don't cover, or posting trends to your own
+    dashboard. Full field reference: <a href="configuration.html#json">Configuration → JSON report</a>.</p>
+
+    <h2 id="standup">Using it in a standup</h2>
+    <p>The headline numbers are designed to be said out loud. Unlike line coverage, they mean something
+    to people who don't read code:</p>
+
+    <ul>
+      <li><strong>To a product owner:</strong> "We haven't tested the password reset flow at all yet" —
+      a sentence you can read straight off the Feature Breakdown.</li>
+      <li><strong>To a developer:</strong> "<code>FC-43</code> is missing its unit test" — the
+      required-layer chips name the exact gap.</li>
+      <li><strong>To a lead:</strong> "We went from 78% to 72% this sprint" — usually because scenarios
+      were added faster than tests, which is worth knowing in week two rather than week six.</li>
+    </ul>
+
+    <p>Track that trend properly by posting <code>summary</code> from the JSON report to whatever
+    metrics system you already run — see <a href="ci-cd.html#trends">Historical trends</a>.</p>
+
+    <nav class="doc-nextprev">
+      <a href="configuration.html"><span class="dir">Previous</span><span class="ttl">&larr; Configuration</span></a>
+      <a href="ci-cd.html" class="next"><span class="dir">Next</span><span class="ttl">CI/CD recipes &rarr;</span></a>
+    </nav>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" class="footer-brand"><img src="logo.png" alt="">SpecTracer</a>
+      <p class="footer-blurb">Gherkin-driven test traceability across unit, integration, and E2E. Built by Ampyard.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Docs</h5>
+      <a href="getting-started.html">Getting started</a>
+      <a href="tagging.html">Tagging model</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="report.html">Report tour</a>
+    </div>
+    <div class="footer-col">
+      <h5>Reference</h5>
+      <a href="ci-cd.html">CI/CD recipes</a>
+      <a href="architecture.html">How it works</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+    <div class="footer-col">
+      <h5>Project</h5>
+      <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+      <a href="https://pypi.org/project/spec-tracer/">PyPI</a>
+      <a href="https://github.com/ampyard/spec-tracer/issues">Issues</a>
+      <a href="https://github.com/ampyard/spec-tracer/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Ampyard · MIT Licensed</span>
+    <span>Not a test runner. Not a coverage tool. A traceability report.</span>
+  </div>
+</footer>
+
+<script src="js/site.js" defer></script>
+</body>
+</html>

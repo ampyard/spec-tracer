@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tagging model — SpecTracer</title>
+<meta name="description" content="How SpecTracer links test results to Gherkin scenarios: identity tags, reference tags, layer requirement tags, module scope, and the exact matching rules.">
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="css/style.css">
+<script>(function(){var t;try{t=localStorage.getItem('st-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))})();</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo"><img src="logo.png" alt="">SpecTracer</a>
+    <ul class="nav-links">
+      <li><a href="getting-started.html" class="active">Docs</a></li>
+      <li><a href="report.html">Report tour</a></li>
+      <li><a href="configuration.html">Configuration</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+    </ul>
+    <button class="icon-btn theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="https://github.com/ampyard/spec-tracer" class="nav-cta">GitHub</a>
+  </div>
+</nav>
+
+<div class="docs">
+  <aside class="sidebar">
+    <nav class="sidebar-nav" aria-label="Documentation">
+      <div class="sidebar-group">
+        <span class="sidebar-label">Start here</span>
+        <a href="getting-started.html">Getting started</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Core concepts</span>
+        <a href="tagging.html" class="active">Tagging model</a>
+        <div class="sub">
+          <a href="#roles">The three tag roles</a>
+          <a href="#linking">How linking works</a>
+          <a href="#where">Where tags are read from</a>
+          <a href="#requirements">Layer requirements</a>
+          <a href="#module-scope">Module scope</a>
+          <a href="#defaults">Defaults &amp; edge cases</a>
+          <a href="#conventions">Naming conventions</a>
+        </div>
+        <a href="configuration.html">Configuration</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Using the output</span>
+        <a href="report.html">Report tour</a>
+        <a href="ci-cd.html">CI/CD recipes</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Reference</span>
+        <a href="architecture.html">How it works</a>
+        <a href="troubleshooting.html">Troubleshooting &amp; FAQ</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="doc" id="main">
+    <span class="eyebrow">Core concepts</span>
+    <h1>The tagging model</h1>
+    <p class="lede">Tags are the entire interface between your specification and your test suites.
+    There are exactly three kinds, they do three different jobs, and they never interfere with each
+    other. Understanding this page means understanding SpecTracer.</p>
+
+    <h2 id="roles">The three tag roles</h2>
+
+    <div class="grid-3">
+      <div class="card">
+        <span class="card-mark unit">@id:</span>
+        <h3>Identity</h3>
+        <p>Goes on a <strong>Gherkin scenario</strong>. Declares that scenario's stable handle.</p>
+        <p><span class="tag tag-id">@id:FC-42</span></p>
+      </div>
+      <div class="card">
+        <span class="card-mark e2e">@scenario:</span>
+        <h3>Reference</h3>
+        <p>Goes on a <strong>test result</strong>. Claims "I am one of the tests covering that scenario."</p>
+        <p><span class="tag tag-ref">@scenario:FC-42</span></p>
+      </div>
+      <div class="card">
+        <span class="card-mark warn">@require-*</span>
+        <h3>Expectation</h3>
+        <p>Goes on a <strong>Gherkin scenario</strong>. Declares which layers must cover it. Never used for matching.</p>
+        <p><span class="tag tag-req">@require-unit</span></p>
+      </div>
+    </div>
+
+    <p>The split matters. Identity and reference tags decide <em>what links to what</em>. Requirement
+    tags decide <em>what counts as done</em>. Because they use different prefixes, adding a requirement
+    can never accidentally create or break a link.</p>
+
+    <div class="code">
+      <div class="code-head"><span>features/login.feature</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code><span class="c-key">Feature:</span> User Login
+
+  <span class="c-tag">@id:FC-42</span> <span class="c-com">@regression</span> <span class="c-req">@require-unit:auth @require-integration:auth @require-e2e:auth</span>
+  <span class="c-key">Scenario:</span> Successful login with valid credentials
+    <span class="c-key">Given</span> the user is on the login page
+    <span class="c-key">When</span> they enter valid credentials
+    <span class="c-key">Then</span> they should be redirected to the dashboard
+
+  <span class="c-tag">@id:FC-43</span>
+  <span class="c-key">Scenario:</span> Login with invalid password shows error
+    <span class="c-key">Given</span> the user is on the login page
+    <span class="c-key">When</span> they enter an invalid password
+    <span class="c-key">Then</span> an error message should be displayed</code></pre>
+    </div>
+
+    <p><code>FC-43</code> declares no requirements, so it falls back to a bare
+    <code>@require-e2e</code> — see <a href="#defaults">defaults</a>.</p>
+
+    <h2 id="linking">How linking works</h2>
+    <p>The linker is deliberately the dumbest part of the tool. For each scenario it collects the set
+    of values after <code>@id:</code>, then keeps every test result carrying an
+    <code>@scenario:</code> tag whose value is in that set.</p>
+
+    <div class="code">
+      <div class="code-head"><span>spec_tracer/linker.py — abridged</span></div>
+<pre><code><span class="c-key">def</span> <span class="c-fn">link</span>(scenarios, results):
+    links = {}
+    <span class="c-key">for</span> scenario <span class="c-key">in</span> scenarios:
+        ids = {t[<span class="c-num">4</span>:] <span class="c-key">for</span> t <span class="c-key">in</span> scenario.tags <span class="c-key">if</span> t.<span class="c-fn">startswith</span>(<span class="c-str">"@id:"</span>)}
+        linked = [
+            r <span class="c-key">for</span> r <span class="c-key">in</span> results
+            <span class="c-key">if</span> <span class="c-fn">any</span>(t.<span class="c-fn">startswith</span>(<span class="c-str">"@scenario:"</span>) <span class="c-key">and</span> t[<span class="c-num">10</span>:] <span class="c-key">in</span> ids <span class="c-key">for</span> t <span class="c-key">in</span> r.tags)
+        ]
+        links[<span class="c-fn">id</span>(scenario)] = linked
+    <span class="c-key">return</span> links</code></pre>
+    </div>
+
+    <h3>The rules that follow from that</h3>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Rule</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Prefix-filtered</strong></td>
+            <td>Only <code>@scenario:</code> on results and <code>@id:</code> on scenarios participate. <code>@regression</code>, <code>@smoke</code>, and everything else is ignored during linking.</td>
+          </tr>
+          <tr>
+            <td><strong>Exact value match</strong></td>
+            <td><code>@scenario:FC-42</code> matches <code>@id:FC-42</code> only — not <code>@id:FC-4</code>, not <code>@id:FC-42-smoke</code>. No prefix matching, no globbing, no case folding.</td>
+          </tr>
+          <tr>
+            <td><strong>OR within a result</strong></td>
+            <td>A result tagged <code>@scenario:FC-42</code> <em>and</em> <code>@scenario:FC-43</code> links to any scenario carrying either id. One test can legitimately cover several scenarios.</td>
+          </tr>
+          <tr>
+            <td><strong>Collisions link everywhere</strong></td>
+            <td>If two scenarios share an <code>@id:</code> value — in the same file or different files — a single matching result links to both. Usually a mistake; keep ids unique.</td>
+          </tr>
+          <tr>
+            <td><strong>Scenario-level tags only</strong></td>
+            <td>Tags on the <code>Feature:</code> line are <strong>not</strong> inherited by its scenarios. This is a common surprise.</td>
+          </tr>
+          <tr>
+            <td><strong><code>@require-*</code> is inert</strong></td>
+            <td>Requirement tags are excluded from linking entirely, so they can never collide with identity tags.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note bad">
+      <strong>No tag expressions</strong>
+      Matching is exact string equality. There is no <code>and</code> / <code>or</code> / <code>not</code>
+      boolean tag logic, and no wildcards. If you need selective execution, do it in your test runner's
+      own tag filtering before the results reach SpecTracer.
+    </div>
+
+    <h2 id="where">Where tags are read from</h2>
+    <p>Different frameworks put metadata in different places, so SpecTracer checks all the plausible
+    ones rather than mandating a single convention.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Source</th><th>Locations checked</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>JUnit XML</strong><br>(unit &amp; integration)</td>
+            <td>
+              The <code>name</code> attribute of <code>&lt;testcase&gt;</code><br>
+              The <code>classname</code> attribute of <code>&lt;testcase&gt;</code><br>
+              <code>&lt;properties&gt;&lt;property&gt;</code> elements inside <code>&lt;testcase&gt;</code>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Cucumber JSON</strong><br>(E2E)</td>
+            <td>The native scenario-level <code>tags</code> array</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>For JUnit, the <code>&lt;property&gt;</code> route is the cleanest — it keeps tags out of your
+    test names. But embedding the tag in the test name works fine and needs no plugin, which is why
+    SpecTracer's own suite does it:</p>
+
+    <div class="code">
+      <div class="code-head"><span>a real test name from SpecTracer's own report</span></div>
+<pre><code>test_render_dashboard_sections_present[@scenario:FC-006]</code></pre>
+    </div>
+
+    <h2 id="requirements">Layer requirements</h2>
+    <p>A link tells you a test exists. A requirement tells you whether that's <em>enough</em>. Three
+    requirement tags exist, matching the three layers:</p>
+
+    <ul>
+      <li><span class="tag tag-req">@require-unit</span> — satisfied by a linked result collected under <code>unit</code></li>
+      <li><span class="tag tag-req">@require-integration</span> — satisfied by a linked result collected under <code>integration</code></li>
+      <li><span class="tag tag-req">@require-e2e</span> — satisfied by a linked result collected under <code>e2e</code></li>
+    </ul>
+
+    <p>Each declared requirement that has no linked result is flagged as <strong>missing</strong> on the
+    scenario row in the report, and drags down both headline numbers. The set of all declared
+    requirements across all scenarios is the denominator of the <em>declared tests matched</em>
+    percentage.</p>
+
+    <div class="note">
+      <strong>Requirements are a promise, not a filter</strong>
+      Declaring <code>@require-unit</code> doesn't stop an E2E test from linking to the scenario — links
+      are independent of requirements. It only means the scenario isn't considered fully covered until a
+      unit-layer result shows up too.
+    </div>
+
+    <h2 id="module-scope">Module scope</h2>
+    <p>On a large codebase "there is a unit test for this" is often too weak. You want "there is a unit
+    test <em>in the billing module</em> for this". All three requirement tags accept an optional
+    <code>:modulename</code> suffix for exactly that.</p>
+
+    <p>The module names come from the keys of the layer objects in your config:</p>
+
+    <div class="code">
+      <div class="code-head"><span>spectracer.config.json</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>{
+  <span class="c-fn">"unit"</span>: {
+    <span class="c-str">""</span>:        [<span class="c-str">"./reports/unit.xml"</span>],          <span class="c-com">// unscoped</span>
+    <span class="c-str">"auth"</span>:    [<span class="c-str">"./reports/auth-unit.xml"</span>],     <span class="c-com">// module "auth"</span>
+    <span class="c-str">"billing"</span>: [<span class="c-str">"./reports/billing-unit.xml"</span>]
+  },
+  <span class="c-fn">"e2e"</span>: {
+    <span class="c-str">""</span>:         [<span class="c-str">"./reports/e2e.json"</span>],
+    <span class="c-str">"checkout"</span>: [<span class="c-str">"./reports/checkout-e2e.json"</span>]
+  }
+}</code></pre>
+    </div>
+
+    <p>Every result parsed out of a file is stamped with the module key it was registered under. Then:</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Requirement</th><th>Satisfied by</th><th>Not satisfied by</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-req">@require-unit</span><br><span style="font-size:0.82em">(bare)</span></td>
+            <td>Any linked unit result, whatever module it came from — including unscoped.</td>
+            <td>A linked result from a different layer.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-req">@require-unit:auth</span></td>
+            <td>Only a linked unit result registered under exactly the <code>"auth"</code> key.</td>
+            <td>An <strong>unscoped</strong> result (key <code>""</code>), or one under <code>"billing"</code>. Module matching is strict.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <strong>The strictness catches people out</strong>
+      If you tag <code>@require-unit:auth</code> but leave all your unit XML registered under
+      <code>""</code>, the requirement will read as missing forever. Either split the files by module in
+      the config, or drop the <code>:auth</code> suffix.
+    </div>
+
+    <p>Module scope works identically for all three layers, which makes it a good fit for
+    microservice-per-team repos: tag scenarios <code>@require-unit:my-service</code> and only that
+    team's results count.</p>
+
+    <h2 id="defaults">Defaults &amp; edge cases</h2>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Situation</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Scenario has no <code>@require-*</code> tag at all</td><td>Defaults to a bare, unscoped <code>@require-e2e</code>.</td></tr>
+          <tr><td>Scenario has no <code>@id:</code> tag</td><td>Nothing can ever link to it. It appears in the report as permanently incomplete.</td></tr>
+          <tr><td>Test result matches no scenario</td><td>Listed under <strong>Unlinked Tests</strong>. It still counts toward the pyramid and pass-rate stats.</td></tr>
+          <tr><td>Scenario matches no test</td><td>Shown as incomplete, with each declared layer flagged missing.</td></tr>
+          <tr><td>Tags on the <code>Feature:</code> line</td><td>Ignored. Not inherited by scenarios.</td></tr>
+          <tr><td><code>Scenario Outline:</code> / <code>Examples:</code></td><td>Parsed as a <em>single</em> scenario, named from the <code>Scenario Outline:</code> line. Individual Examples rows are not expanded.</td></tr>
+          <tr><td><code>Rule:</code>, <code>Background:</code>, non-English dialects</td><td>Left to whatever your Gherkin or E2E framework does with them. SpecTracer only understands <code>Feature:</code>, tags, <code>Scenario:</code> / <code>Scenario Outline:</code>, and steps.</td></tr>
+          <tr><td>Unicode and special characters</td><td>Preserved, and HTML-escaped in the report.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="conventions">Naming conventions that hold up</h2>
+    <p>None of this is enforced by the tool — it's what tends to survive contact with a real team.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Pattern</th><th>Example</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>@id:&lt;VALUE&gt;</code></td><td><code>@id:FC-42</code></td><td>Scenario identity, on Gherkin scenarios</td></tr>
+          <tr><td><code>@scenario:&lt;VALUE&gt;</code></td><td><code>@scenario:FC-42</code></td><td>Test reference, on test results</td></tr>
+          <tr><td><code>@require-&lt;layer&gt;</code></td><td><code>@require-unit</code></td><td>Required layer coverage</td></tr>
+          <tr><td><code>@require-&lt;layer&gt;:&lt;module&gt;</code></td><td><code>@require-e2e:checkout</code></td><td>Required layer, scoped to a config module key</td></tr>
+          <tr><td><code>@&lt;classification&gt;</code></td><td><code>@regression</code>, <code>@smoke</code></td><td>Your own tags — ignored by SpecTracer</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul>
+      <li><strong>Make ids opaque and stable.</strong> <code>FC-42</code> or a ticket key beats
+      <code>login-happy-path</code>, because a renamed scenario shouldn't break every test that
+      references it.</li>
+      <li><strong>Never reuse an id.</strong> Collisions link one result to several scenarios and
+      quietly inflate coverage.</li>
+      <li><strong>Agree the module vocabulary once.</strong> Module keys live in two places — the config
+      and the <code>@require-*:</code> suffixes — and they must match exactly.</li>
+      <li><strong>Review tags like code.</strong> A missing <code>@scenario:</code> tag looks identical
+      to a missing test in the report, which is the point.</li>
+    </ul>
+
+    <nav class="doc-nextprev">
+      <a href="getting-started.html"><span class="dir">Previous</span><span class="ttl">&larr; Getting started</span></a>
+      <a href="configuration.html" class="next"><span class="dir">Next</span><span class="ttl">Configuration &rarr;</span></a>
+    </nav>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" class="footer-brand"><img src="logo.png" alt="">SpecTracer</a>
+      <p class="footer-blurb">Gherkin-driven test traceability across unit, integration, and E2E. Built by Ampyard.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Docs</h5>
+      <a href="getting-started.html">Getting started</a>
+      <a href="tagging.html">Tagging model</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="report.html">Report tour</a>
+    </div>
+    <div class="footer-col">
+      <h5>Reference</h5>
+      <a href="ci-cd.html">CI/CD recipes</a>
+      <a href="architecture.html">How it works</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+    <div class="footer-col">
+      <h5>Project</h5>
+      <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+      <a href="https://pypi.org/project/spec-tracer/">PyPI</a>
+      <a href="https://github.com/ampyard/spec-tracer/issues">Issues</a>
+      <a href="https://github.com/ampyard/spec-tracer/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Ampyard · MIT Licensed</span>
+    <span>Not a test runner. Not a coverage tool. A traceability report.</span>
+  </div>
+</footer>
+
+<script src="js/site.js" defer></script>
+</body>
+</html>

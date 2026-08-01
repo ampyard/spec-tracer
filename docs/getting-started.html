@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting started — SpecTracer</title>
+<meta name="description" content="Install SpecTracer and generate your first scenario-coverage report in about ten minutes — tag a scenario, tag its tests, write the config, run the CLI.">
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="css/style.css">
+<script>(function(){var t;try{t=localStorage.getItem('st-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))})();</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo"><img src="logo.png" alt="">SpecTracer</a>
+    <ul class="nav-links">
+      <li><a href="getting-started.html" class="active">Docs</a></li>
+      <li><a href="report.html">Report tour</a></li>
+      <li><a href="configuration.html">Configuration</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+    </ul>
+    <button class="icon-btn theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="https://github.com/ampyard/spec-tracer" class="nav-cta">GitHub</a>
+  </div>
+</nav>
+
+<div class="docs">
+  <aside class="sidebar">
+    <nav class="sidebar-nav" aria-label="Documentation">
+      <div class="sidebar-group">
+        <span class="sidebar-label">Start here</span>
+        <a href="getting-started.html" class="active">Getting started</a>
+        <div class="sub">
+          <a href="#prerequisites">Prerequisites</a>
+          <a href="#install">1 · Install</a>
+          <a href="#tag-scenario">2 · Tag a scenario</a>
+          <a href="#tag-tests">3 · Tag the tests</a>
+          <a href="#emit">4 · Emit result files</a>
+          <a href="#config">5 · Write the config</a>
+          <a href="#run">6 · Run it</a>
+          <a href="#read">Read the report</a>
+          <a href="#grow">Grow from here</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Core concepts</span>
+        <a href="tagging.html">Tagging model</a>
+        <a href="configuration.html">Configuration</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Using the output</span>
+        <a href="report.html">Report tour</a>
+        <a href="ci-cd.html">CI/CD recipes</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Reference</span>
+        <a href="architecture.html">How it works</a>
+        <a href="troubleshooting.html">Troubleshooting &amp; FAQ</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="doc" id="main">
+    <span class="eyebrow">Start here</span>
+    <h1>Getting started</h1>
+    <p class="lede">By the end of this page you'll have a real SpecTracer report open in your browser,
+    built from one tagged scenario and the test output your project already produces. Budget about
+    ten minutes.</p>
+
+    <div class="note">
+      <strong>What SpecTracer is not</strong>
+      It doesn't run your tests and it never reads your source code. It reads <code>.feature</code>
+      files, reads test-result files your runners emit, and matches them to each other. Everything
+      below assumes you already have tests that run.
+    </div>
+
+    <h2 id="prerequisites">Prerequisites</h2>
+    <ul>
+      <li><strong>Python 3.12 or newer.</strong> Check with <code>python --version</code>. SpecTracer runs on Python, but the project it reports on can be in any language.</li>
+      <li><strong>At least one test suite</strong> that can emit <strong>JUnit XML</strong> (almost all runners can) or <strong>Cucumber JSON</strong>.</li>
+      <li><strong>Gherkin <code>.feature</code> files</strong>, or the willingness to write one. If you have no feature files at all, write a single one with a single scenario — that's enough to see the tool work.</li>
+    </ul>
+
+    <h2 id="install">1 · Install</h2>
+
+    <div class="code">
+      <div class="code-head"><span>pip</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>pip install spec-tracer</code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-head"><span>uv</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>uv pip install spec-tracer</code></pre>
+    </div>
+
+    <p>Either way you get a global <code>spec-tracer</code> command. Confirm it resolves:</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span></div>
+<pre><code>spec-tracer
+<span class="c-com"># Errors out because there's no config yet — that's the expected</span>
+<span class="c-com"># result at this point, and it means the CLI is installed.</span></code></pre>
+    </div>
+
+    <h3>From source</h3>
+    <p>If you want to hack on SpecTracer itself:</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>git clone https://github.com/ampyard/spec-tracer.git
+<span class="c-key">cd</span> spec-tracer
+uv sync
+
+<span class="c-com"># run the tool from the checkout</span>
+uv run spec-tracer
+
+<span class="c-com"># build a wheel for local testing</span>
+uv build   <span class="c-com"># → dist/spec_tracer-*.whl</span>
+
+<span class="c-com"># run SpecTracer's own suites and regenerate its self-report</span>
+uv sync --group dev
+uv run python run_local.py</code></pre>
+    </div>
+
+    <h2 id="tag-scenario">2 · Tag a scenario</h2>
+    <p>Pick one scenario in one <code>.feature</code> file. Give it a stable identity with
+    <span class="tag tag-id">@id:</span> and declare which layers you expect to cover it with
+    <span class="tag tag-req">@require-*</span>.</p>
+
+    <div class="code">
+      <div class="code-head"><span>features/checkout.feature</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code><span class="c-key">Feature:</span> Checkout
+
+  <span class="c-tag">@id:FC-42</span> <span class="c-req">@require-unit @require-e2e</span> <span class="c-com">@regression</span>
+  <span class="c-key">Scenario:</span> Card payment succeeds
+    <span class="c-key">Given</span> a cart with one item
+    <span class="c-key">When</span> the customer pays by card
+    <span class="c-key">Then</span> the order is confirmed</code></pre>
+    </div>
+
+    <p>Three different jobs are being done by those tags:</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tag</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-id">@id:FC-42</span></td><td><strong>Identity.</strong> The handle tests use to point back at this scenario. Any stable string works — <code>FC-42</code>, <code>CHECKOUT-1</code>, a Jira key.</td></tr>
+          <tr><td><span class="tag tag-req">@require-unit</span> <span class="tag tag-req">@require-e2e</span></td><td><strong>Expectation.</strong> "This scenario is not properly covered until both a unit test and an E2E test link to it." Never used for matching.</td></tr>
+          <tr><td><span class="tag tag-other">@regression</span></td><td><strong>Ignored.</strong> Your own classification tags pass through untouched and never interfere.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note warn">
+      <strong>If you omit <code>@require-*</code> entirely</strong>
+      The scenario defaults to a bare <code>@require-e2e</code>. That's a deliberate default — but it
+      means an untagged scenario will read as "missing E2E coverage" rather than "no expectations set".
+    </div>
+
+    <h2 id="tag-tests">3 · Tag the tests</h2>
+    <p>Now point the tests back. A test claims a scenario with
+    <span class="tag tag-ref">@scenario:FC-42</span>. Matching is exact string equality on the value
+    after the prefix — <code>@scenario:FC-42</code> matches <code>@id:FC-42</code> and nothing else.</p>
+
+    <p>SpecTracer reads tags from wherever your framework happens to put them, so you have options:</p>
+
+    <div class="code">
+      <div class="code-head"><span>pytest — in the test name</span></div>
+<pre><code><span class="c-key">def</span> <span class="c-fn">test_card_payment_succeeds</span>():  <span class="c-com"># rename to embed the tag:</span>
+    ...
+
+<span class="c-key">def</span> <span class="c-fn">test_card_payment_succeeds_at_scenario_FC_42</span>():
+    ...
+
+<span class="c-com"># …or parametrise the id so it lands in the JUnit `name`:</span>
+<span class="c-fn">@pytest.mark.parametrize</span>(<span class="c-str">"tag"</span>, [<span class="c-str">"@scenario:FC-42"</span>])
+<span class="c-key">def</span> <span class="c-fn">test_card_payment_succeeds</span>(tag):
+    ...</code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-head"><span>JUnit XML — as a property (the cleanest option)</span></div>
+<pre><code><span class="c-key">&lt;testcase</span> <span class="c-fn">name</span>=<span class="c-str">"test_card_payment_succeeds"</span> <span class="c-fn">classname</span>=<span class="c-str">"tests.unit.test_payment"</span><span class="c-key">&gt;</span>
+  <span class="c-key">&lt;properties&gt;</span>
+    <span class="c-key">&lt;property</span> <span class="c-fn">name</span>=<span class="c-str">"scenario"</span> <span class="c-fn">value</span>=<span class="c-str">"@scenario:FC-42"</span><span class="c-key">/&gt;</span>
+  <span class="c-key">&lt;/properties&gt;</span>
+<span class="c-key">&lt;/testcase&gt;</span></code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-head"><span>Cucumber / behave — a native scenario tag</span></div>
+<pre><code>  <span class="c-tag">@scenario:FC-42</span>
+  <span class="c-key">Scenario:</span> Card payment succeeds end to end
+    <span class="c-key">Given</span> ...</code></pre>
+    </div>
+
+    <div class="note">
+      <strong>Where SpecTracer looks</strong>
+      <p><strong>JUnit XML</strong> — the <code>name</code> attribute, the <code>classname</code>
+      attribute, and <code>&lt;properties&gt;&lt;property&gt;</code> elements.</p>
+      <p><strong>Cucumber JSON</strong> — the scenario-level <code>tags</code> array.</p>
+      <p>Whichever of those your framework populates, the tag will be found. Pick the one that's least
+      awkward for your team.</p>
+    </div>
+
+    <h2 id="emit">4 · Emit the result files</h2>
+    <p>Run your suites as you normally would, adding the flag that writes machine-readable output.
+    Nothing about how your tests execute changes.</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code><span class="c-com"># unit + integration → JUnit XML</span>
+pytest tests/unit        --junitxml=reports/unit.xml
+pytest tests/integration --junitxml=reports/int.xml
+
+<span class="c-com"># E2E → Cucumber JSON</span>
+behave features/ --format json -o reports/e2e.json</code></pre>
+    </div>
+
+    <p>Other stacks, same idea:</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Runner</th><th>Flag</th><th>Format</th></tr></thead>
+        <tbody>
+          <tr><td>pytest</td><td><code>--junitxml=out.xml</code></td><td>JUnit XML</td></tr>
+          <tr><td>Maven Surefire / Gradle</td><td>on by default</td><td>JUnit XML in <code>target/surefire-reports</code> / <code>build/test-results</code></td></tr>
+          <tr><td>Jest</td><td><code>jest-junit</code> reporter</td><td>JUnit XML</td></tr>
+          <tr><td>Vitest</td><td><code>--reporter=junit --outputFile=out.xml</code></td><td>JUnit XML</td></tr>
+          <tr><td>Go</td><td><code>go test -v ./... | go-junit-report</code></td><td>JUnit XML</td></tr>
+          <tr><td>Cucumber-JVM / Cucumber.js</td><td><code>--format json:out.json</code></td><td>Cucumber JSON</td></tr>
+          <tr><td>Cypress / Playwright with Cucumber</td><td>Cucumber JSON formatter</td><td>Cucumber JSON</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="config">5 · Write the config</h2>
+    <p>SpecTracer has no CLI flags at all — everything lives in one JSON file. Create
+    <code>spectracer.config.json</code> in your project root:</p>
+
+    <div class="code">
+      <div class="code-head"><span>spectracer.config.json</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>{
+  <span class="c-fn">"features"</span>: [<span class="c-str">"./features"</span>],
+  <span class="c-fn">"unit"</span>:        { <span class="c-str">""</span>: [<span class="c-str">"./reports/unit.xml"</span>] },
+  <span class="c-fn">"integration"</span>: { <span class="c-str">""</span>: [<span class="c-str">"./reports/int.xml"</span>] },
+  <span class="c-fn">"e2e"</span>:         { <span class="c-str">""</span>: [<span class="c-str">"./reports/e2e.json"</span>] },
+  <span class="c-fn">"output"</span>:      <span class="c-str">"./reports/spectracer-report.html"</span>
+}</code></pre>
+    </div>
+
+    <p>Two things about that shape usually surprise people the first time:</p>
+    <ul>
+      <li>The layer keys are <strong>objects, not arrays</strong>. The key is a <em>module name</em>; <code>""</code> means "not scoped to any module". You only need more keys once you start using <code>@require-unit:billing</code>-style tags — see <a href="tagging.html#module-scope">module scope</a>.</li>
+      <li>Every path may be a <strong>file or a directory</strong>. Directories are searched recursively, so <code>"./reports"</code> picks up every <code>.xml</code> under it.</li>
+    </ul>
+    <p>Only <code>features</code> and <code>output</code> are mandatory. Full key-by-key reference:
+    <a href="configuration.html">Configuration</a>.</p>
+
+    <h2 id="run">6 · Run it</h2>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>
+<pre><code>spec-tracer</code></pre>
+    </div>
+
+    <p>That's the whole command. It auto-discovers <code>spectracer.config.json</code> in the current
+    directory. To use a differently named or located config, pass it as the one and only argument:</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span></div>
+<pre><code>spec-tracer config/coverage.json</code></pre>
+    </div>
+
+    <div class="note warn">
+      <strong>Shell note</strong>
+      Use forward slashes (<code>./spectracer.config.json</code>) or a bare filename. A leading
+      <code>.\</code> in PowerShell style gets mangled by POSIX shells such as Git Bash and WSL, where
+      backslash is the escape character.
+    </div>
+
+    <p>Open <code>reports/spectracer-report.html</code> in any browser. It's a single self-contained
+    file — no server, no build step, safe to email or archive.</p>
+
+    <h2 id="read">Read the report</h2>
+    <p>The first thing to look at is the two headline numbers on the Overview page.</p>
+
+    <figure class="shot">
+      <img src="report-hero.png" alt="SpecTracer Overview page showing declared tests matched, scenarios fully matched, tests passed, and four health-check cards." loading="lazy">
+      <figcaption>Overview — headline coverage plus the four health signals.</figcaption>
+    </figure>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Number</th><th>What it counts</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Declared tests matched</strong></td>
+            <td>Of all the <code>@require-*</code> layer/module pairs you declared across every scenario, how many actually have a linked result. This is the headline coverage percentage.</td>
+          </tr>
+          <tr>
+            <td><strong>Scenarios fully matched</strong></td>
+            <td>How many scenarios have <em>every</em> layer they declared satisfied. Strictly harder than the number above — one missing layer disqualifies the whole scenario.</td>
+          </tr>
+          <tr>
+            <td><strong>Tests passed</strong></td>
+            <td>Straightforward pass rate across all collected results, linked or not.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>If your first run shows <strong>0%</strong>, that's almost always a tag mismatch rather than a
+    broken setup. Check the <strong>Unlinked Tests</strong> page — results with tags that matched
+    nothing are listed there, which usually makes the typo obvious. See
+    <a href="troubleshooting.html#zero-coverage">Troubleshooting</a> for the full checklist.</p>
+
+    <h2 id="grow">Grow from here</h2>
+    <p>Rolling this out across a real codebase works best in this order:</p>
+
+    <div class="steps" style="margin:1.5rem 0">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One layer, then more</h3>
+          <p>Start with whichever layer is easiest to tag. Add <code>@require-unit</code> and
+          <code>@require-integration</code> expectations as those suites get tagged, not before —
+          otherwise your first report is a wall of red and nobody trusts it.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Commit the config</h3>
+          <p><code>spectracer.config.json</code> belongs in version control — it's your team's coverage
+          contract. Add the generated report to <code>.gitignore</code>; it's a build artifact.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Put it in CI</h3>
+          <p>Generate the report on every run and upload it as an artifact. See
+          <a href="ci-cd.html">CI/CD recipes</a> for GitHub Actions, GitLab CI, and Jenkins.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Then make it a gate</h3>
+          <p>Once the numbers are honest, turn on <code>error_on_failure</code> and add health checks to
+          <code>fail_on</code>. Enforcing a standard you haven't met yet just teaches people to skip
+          the check.</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="doc-nextprev">
+      <a href="tagging.html"><span class="dir">Next</span><span class="ttl">Tagging model &rarr;</span></a>
+      <a href="configuration.html" class="next"><span class="dir">Reference</span><span class="ttl">Configuration</span></a>
+    </nav>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" class="footer-brand"><img src="logo.png" alt="">SpecTracer</a>
+      <p class="footer-blurb">Gherkin-driven test traceability across unit, integration, and E2E. Built by Ampyard.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Docs</h5>
+      <a href="getting-started.html">Getting started</a>
+      <a href="tagging.html">Tagging model</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="report.html">Report tour</a>
+    </div>
+    <div class="footer-col">
+      <h5>Reference</h5>
+      <a href="ci-cd.html">CI/CD recipes</a>
+      <a href="architecture.html">How it works</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+    <div class="footer-col">
+      <h5>Project</h5>
+      <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+      <a href="https://pypi.org/project/spec-tracer/">PyPI</a>
+      <a href="https://github.com/ampyard/spec-tracer/issues">Issues</a>
+      <a href="https://github.com/ampyard/spec-tracer/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Ampyard · MIT Licensed</span>
+    <span>Not a test runner. Not a coverage tool. A traceability report.</span>
+  </div>
+</footer>
+
+<script src="js/site.js" defer></script>
+</body>
+</html>

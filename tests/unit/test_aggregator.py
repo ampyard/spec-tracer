@@ -211,6 +211,84 @@ def test_unlinked_results_excludes_tagless_results():
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_health_checks_progress_passes_when_all_declared_tests_matched(tag):
+    views = [
+        _view("F", "S1", [TestResult(layer="e2e", name="e1")], required_layers=[RequiredLayer(layer="e2e")]),
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert progress_stats["satisfied"] == progress_stats["required"]
+    assert health["Progress"]["status"] == "pass"
+    assert health["Progress"]["message"] == "All declared tests are matched."
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_health_checks_progress_passing_but_incomplete_never_claims_all_matched(tag):
+    # 44 of 50 declared requirements matched → 88% clears the green (80%)
+    # threshold but must not read "All declared tests are matched." (#28).
+    matched = [
+        _view("F", f"S{i}", [TestResult(layer="e2e", name="e")], required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(44)
+    ]
+    unmatched = [
+        _view("F", f"S{i}", required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(44, 50)
+    ]
+    views = matched + unmatched
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert progress_stats["satisfied"] == 44
+    assert progress_stats["required"] == 50
+    assert health["Progress"]["value"] == "44/50"
+    assert health["Progress"]["status"] == "pass"
+    assert health["Progress"]["message"] == "Most declared tests are matched."
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_health_checks_progress_warns_below_green_threshold(tag):
+    views = [
+        _view("F", f"S{i}", [TestResult(layer="e2e", name="e")], required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(6)
+    ] + [
+        _view("F", f"S{i}", required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(6, 10)
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert progress_stats["pct"] == 60
+    assert health["Progress"]["status"] == "warn"
+    assert health["Progress"]["message"] == "Progress still needs attention."
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_health_checks_progress_fails_below_amber_threshold(tag):
+    views = [
+        _view("F", f"S{i}", [TestResult(layer="e2e", name="e")], required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(3)
+    ] + [
+        _view("F", f"S{i}", required_layers=[RequiredLayer(layer="e2e")])
+        for i in range(3, 10)
+    ]
+    layer_stats = ReportAggregator.layer_stats(views)
+    progress_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, progress_stats)
+
+    assert progress_stats["pct"] == 30
+    assert health["Progress"]["status"] == "fail"
+    assert health["Progress"]["message"] == "Progress is below the comfort threshold."
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
 def test_health_checks_unlinked_entry_passes_when_zero(tag):
     views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
     layer_stats = ReportAggregator.layer_stats(views)

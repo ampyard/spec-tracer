@@ -143,9 +143,17 @@ class ReportAggregator:
         e2e_duration_red_seconds: float = 1800,
     ) -> dict:
         progress_pct = progress_stats["pct"]
-        if progress_pct >= progress_threshold_green:
+        # "All declared tests are matched." is only truthful at 100% completion.
+        # A passing-but-incomplete card (>= green threshold) must not claim that
+        # every declared test matched — that contradicts the satisfied/required
+        # value shown on the card (#28).
+        all_matched = progress_stats["satisfied"] == progress_stats["required"]
+        if all_matched and progress_pct >= progress_threshold_green:
             progress_status = "pass"
             progress_message = "All declared tests are matched."
+        elif progress_pct >= progress_threshold_green:
+            progress_status = "pass"
+            progress_message = "Most declared tests are matched."
         elif progress_pct >= progress_threshold_amber:
             progress_status = "warn"
             progress_message = "Progress still needs attention."

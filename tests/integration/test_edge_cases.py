@@ -100,7 +100,11 @@ def test_no_matching_tags_shows_incomplete(tag):
     content = output.read_text(encoding="utf-8")
     assert "<strong>0/1</strong>" in content
     assert "scenarios fully matched" in content
-    assert "<strong>unit</strong>" not in content
+    # No unit layer pill appears inside the Feature Breakdown tree rows
+    assert '<span class="pill"><strong>unit</strong></span>' not in content
+    # The unmatched result surfaces under Unlinked Tests instead of linking
+    assert "Unlinked Tests" in content
+    assert "test_unrelated_@OTHER-999" in content
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-005"])

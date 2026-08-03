@@ -7,6 +7,7 @@ from spec_tracer.cli import (
     FAIL_ON_ALIASES,
     _failing_gated_checks,
     _load_config,
+    main,
 )
 
 
@@ -16,6 +17,49 @@ def _write_config(tmp_path: Path, **extra) -> Path:
     path = tmp_path / "spectracer.config.json"
     path.write_text(json.dumps(config), encoding="utf-8")
     return path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_main_prints_generated_html_output(tag, tmp_path, capsys):
+    config_path = tmp_path / "spectracer.config.json"
+    output = tmp_path / "report.html"
+    config_path.write_text(
+        json.dumps({"features": [str(ROOT / "features")], "output": str(output)}),
+        encoding="utf-8",
+    )
+
+    assert main([str(config_path)]) == 0
+    out = capsys.readouterr().out
+    assert "Report generated:" in out
+    assert f"HTML: {output}" in out
+    assert "JSON:" not in out
+    assert output.exists()
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_main_prints_json_output_when_configured(tag, tmp_path, capsys):
+    config_path = tmp_path / "spectracer.config.json"
+    output = tmp_path / "report.html"
+    output_json = tmp_path / "report.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "features": [str(ROOT / "features")],
+                "output": str(output),
+                "output_json": str(output_json),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main([str(config_path)]) == 0
+    out = capsys.readouterr().out
+    assert f"HTML: {output}" in out
+    assert f"JSON: {output_json}" in out
+    assert output_json.exists()
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])

@@ -177,6 +177,11 @@ def main(argv: List[str] | None = None) -> int:
         output_json_path.parent.mkdir(parents=True, exist_ok=True)
         output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
+    print("Report generated:")
+    print(f"  HTML: {output_path}")
+    if config.get("output_json"):
+        print(f"  JSON: {output_json_path}")
+
     failing_checks = _failing_gated_checks(health_checks, config.get("fail_on", []))
     if failing_checks:
         print(

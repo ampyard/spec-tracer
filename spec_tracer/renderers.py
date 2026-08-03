@@ -496,6 +496,7 @@ _TEMPLATE_STR = """<html lang="en">
     .table-row:last-child { border-bottom: none; }
     .table-row:nth-child(even) { background: var(--surface-alt); }
     .table-row:hover { background: var(--primary-soft); }
+    .table-row .layer-pill { justify-content: center; width: 100%; }
     .table-row .mono { font-size: 0.79rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
     .table-row .wrap { overflow-wrap: anywhere; }
     .hidden { display: none !important; }
@@ -951,7 +952,7 @@ _TEMPLATE_STR = """<html lang="en">
         <div class="table-list">
           {% for result in unlinked_results %}
           <div class="table-row">
-            <span class="pill">{{ result.layer }}</span>
+            <span class="pill layer-pill"><strong>{{ result.layer }}</strong></span>
             <span class="wrap">{{ result.name }}</span>
             <span class="wrap">{{ result.tags | join(', ') }}</span>
             <span class="mono">{{ _status_label(result.status) }}</span>

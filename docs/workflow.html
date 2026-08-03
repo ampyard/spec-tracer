@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Declare → Tag → Run workflow — SpecTracer</title>
+<meta name="description" content="How SpecTracer's three-step workflow fits into a real project: declare scenarios in Gherkin, tag the tests that cover them, run your suites and feed the results to spec-tracer.">
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="css/style.css">
+<script>(function(){var t;try{t=localStorage.getItem('st-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))})();</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo"><img src="logo.png" alt="">SpecTracer</a>
+    <ul class="nav-links">
+      <li><a href="getting-started.html">Docs</a></li>
+      <li><a href="report.html">Report tour</a></li>
+      <li><a href="configuration.html">Configuration</a></li>
+      <li><a href="ci-cd.html">CI/CD</a></li>
+    </ul>
+    <button class="icon-btn theme-toggle" aria-label="Toggle colour theme">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="icon-btn nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="https://github.com/ampyard/spec-tracer" class="nav-cta">GitHub</a>
+  </div>
+</nav>
+
+<div class="docs">
+  <aside class="sidebar">
+    <nav class="sidebar-nav" aria-label="Documentation">
+      <div class="sidebar-group">
+        <span class="sidebar-label">Start here</span>
+        <a href="getting-started.html">Getting started</a>
+        <a href="workflow.html" class="active">Declare → Tag → Run</a>
+        <div class="sub">
+          <a href="#diagram">The workflow at a glance</a>
+          <a href="#declare">1 · Declare</a>
+          <a href="#tag">2 · Tag</a>
+          <a href="#run">3 · Run</a>
+          <a href="#together">Putting it together</a>
+          <a href="#why">Why this shape</a>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Core concepts</span>
+        <a href="tagging.html">Tagging model</a>
+        <a href="configuration.html">Configuration</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Using the output</span>
+        <a href="report.html">Report tour</a>
+        <a href="ci-cd.html">CI/CD recipes</a>
+      </div>
+      <div class="sidebar-group">
+        <span class="sidebar-label">Reference</span>
+        <a href="architecture.html">How it works</a>
+        <a href="troubleshooting.html">Troubleshooting &amp; FAQ</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="doc" id="main">
+    <span class="eyebrow">Start here</span>
+    <h1>The Declare → Tag → Run workflow</h1>
+    <p class="lede">Everything SpecTracer does reduces to three verbs, done by three different people
+    at three different times, on three files that never need to import or know about each other.
+    This page walks through the loop end to end, then explains why it's shaped that way.</p>
+
+    <div class="note">
+      <strong>The one-sentence version</strong>
+      <strong>Declare</strong> a scenario in a <code>.feature</code> file and state which layers must
+      cover it. <strong>Tag</strong> the unit, integration, or E2E test that satisfies it.
+      <strong>Run</strong> the suites and hand the results to <code>spec-tracer</code>, which reports
+      whether the declaration was kept.
+    </div>
+
+    <h2 id="diagram">The workflow at a glance</h2>
+    <p>Three stages, three artifacts, one command that ties them together. Nothing here talks to
+    anything else directly — SpecTracer is the only thing that reads all three.</p>
+
+    <div class="flow">
+      <div class="flow-stage stage-declare">
+        <span class="flow-step">Step 1</span>
+        <div class="flow-icon" style="color:var(--primary)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <h3>Declare</h3>
+        <p>Give the scenario a stable <code>@id:</code> and declare which layers must cover it.</p>
+        <div class="flow-tags">
+          <span class="tag tag-id">@id:FC-42</span>
+          <span class="tag tag-req">@require-unit</span>
+          <span class="tag tag-req">@require-e2e</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow" aria-hidden="true">
+        <svg width="26" height="16" viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8h22M17 2l6 6-6 6"/></svg>
+      </div>
+
+      <div class="flow-stage stage-tag">
+        <span class="flow-step">Step 2</span>
+        <div class="flow-icon" style="color:var(--warning-ink)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L4 3v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l3.59-3.59a2 2 0 0 0 0-2.58z"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <h3>Tag</h3>
+        <p>Add <code>@scenario:FC-42</code> to the test that covers it, in name or tag form.</p>
+        <div class="flow-tags">
+          <span class="tag tag-ref">@scenario:FC-42</span>
+          <span class="tag tag-other">pytest / JUnit / behave</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow" aria-hidden="true">
+        <svg width="26" height="16" viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8h22M17 2l6 6-6 6"/></svg>
+      </div>
+
+      <div class="flow-stage stage-run">
+        <span class="flow-step">Step 3</span>
+        <div class="flow-icon" style="color:var(--e2e)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        </div>
+        <h3>Run</h3>
+        <p>Run your suites, then point <code>spec-tracer</code> at the results for one report.</p>
+        <div class="flow-tags">
+          <span class="tag tag-other">pytest --junitxml</span>
+          <span class="tag tag-other">behave --format json</span>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="declare">1 · Declare — the feature file is the contract</h2>
+    <p>A scenario is declared once, in one place, independent of which layers will eventually test
+    it — and it can exist before any test does.</p>
+
+    <div class="code">
+      <div class="code-head"><span>features/checkout.feature</span></div>
+<pre><code><span class="c-key">Feature:</span> Checkout
+
+  <span class="c-tag">@id:FC-42</span> <span class="c-req">@require-unit @require-integration @require-e2e</span>
+  <span class="c-key">Scenario:</span> Card payment succeeds
+    <span class="c-key">Given</span> a cart with one item
+    <span class="c-key">When</span> the customer pays by card
+    <span class="c-key">Then</span> the order is confirmed</code></pre>
+    </div>
+
+    <p><span class="tag tag-id">@id:</span> is the handle everything else points back at.
+    <span class="tag tag-req">@require-*</span> is the promise: "this isn't done until every named
+    layer has a passing, linked test." Full detail on both: <a href="tagging.html#roles">Tagging
+    model</a>.</p>
+
+    <h2 id="tag">2 · Tag — tests claim a scenario, not the other way round</h2>
+    <p>The dependency runs one direction only. A test says "I cover FC-42"; the feature file never
+    references a test. That means tests can be added, renamed, or moved between suites without
+    ever touching the <code>.feature</code> file, and a scenario can sit un-covered for a while
+    without breaking anything — it just shows up honestly as a gap in the report.</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <span class="card-mark unit">unit</span>
+        <h3>In the test name</h3>
+        <p>Rename or parametrize so the tag lands in the JUnit <code>name</code> attribute — no
+        framework changes required.</p>
+      </div>
+      <div class="card">
+        <span class="card-mark integration">XML</span>
+        <h3>As a JUnit property</h3>
+        <p>The cleanest option where supported: a <code>&lt;property name="scenario"
+        value="@scenario:FC-42"/&gt;</code> that never collides with the test's own name.</p>
+      </div>
+      <div class="card">
+        <span class="card-mark e2e">.feature</span>
+        <h3>A native Cucumber tag</h3>
+        <p>E2E scenarios that mirror the declaration can just carry the tag directly — Cucumber
+        already puts it in the JSON <code>tags</code> array.</p>
+      </div>
+    </div>
+
+    <p>Every mechanism is covered in depth, with copy-pasteable examples per framework, in
+    <a href="tagging.html#where">where tags are read from</a>.</p>
+
+    <h2 id="run">3 · Run — your suites, unchanged, plus one new command</h2>
+    <p>Nothing about how tests execute changes. You add the flag that writes machine-readable
+    output, then run <code>spec-tracer</code> once, pointed at a config file that lists where those
+    outputs (and the feature files) live.</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span></div>
+<pre><code><span class="c-com"># suites run exactly as before — just add the output flag</span>
+pytest tests/unit        --junitxml=reports/unit.xml
+pytest tests/integration --junitxml=reports/int.xml
+behave features/         --format json -o reports/e2e.json
+
+<span class="c-com"># then the one new step</span>
+spec-tracer</code></pre>
+    </div>
+
+    <p><code>spec-tracer</code> reads <code>spectracer.config.json</code>, links every result back to
+    a scenario by its <span class="tag tag-id">@id:</span> / <span class="tag tag-ref">@scenario:</span>
+    pair, and writes a self-contained HTML report — optionally a JSON twin and a non-zero exit code
+    for CI. Config keys: <a href="configuration.html">Configuration</a>. What the report shows:
+    <a href="report.html">Report tour</a>.</p>
+
+    <h2 id="together">Putting it together</h2>
+    <p>One scenario, tracked through all three stages:</p>
+
+    <div class="code">
+      <div class="code-head"><span>features/checkout.feature — declare</span></div>
+<pre><code>  <span class="c-tag">@id:FC-42</span> <span class="c-req">@require-unit @require-e2e</span>
+  <span class="c-key">Scenario:</span> Card payment succeeds
+    <span class="c-key">Given</span> a cart with one item
+    <span class="c-key">When</span> the customer pays by card
+    <span class="c-key">Then</span> the order is confirmed</code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-head"><span>tests/unit/test_payment.py — tag</span></div>
+<pre><code><span class="c-fn">@pytest.mark.parametrize</span>(<span class="c-str">"tag"</span>, [<span class="c-str">"@scenario:FC-42"</span>])
+<span class="c-key">def</span> <span class="c-fn">test_card_payment_succeeds</span>(tag):
+    ...</code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-head"><span>spectracer.config.json — run</span></div>
+<pre><code>{
+  <span class="c-fn">"features"</span>: [<span class="c-str">"./features"</span>],
+  <span class="c-fn">"unit"</span>: { <span class="c-str">""</span>: [<span class="c-str">"./reports/unit.xml"</span>] },
+  <span class="c-fn">"e2e"</span>:  { <span class="c-str">""</span>: [<span class="c-str">"./reports/e2e.json"</span>] },
+  <span class="c-fn">"output"</span>: <span class="c-str">"./reports/spectracer-report.html"</span>
+}</code></pre>
+    </div>
+
+    <figure class="shot">
+      <img src="report-features.png" alt="The Feature Breakdown page showing FC-style scenarios with required-layer status chips per layer, matching the declare/tag/run example above." loading="lazy">
+      <figcaption>The report ties the three files back together: declared layers on the left, linked results on the right.</figcaption>
+    </figure>
+
+    <h2 id="why">Why this shape</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Ownership stays separated</h3>
+        <p>Declaring what needs testing and writing the test that does it are often different jobs,
+        sometimes different people, sometimes weeks apart. A one-directional pointer (test →
+        scenario) lets both happen independently without a merge conflict in either direction.</p>
+      </div>
+      <div class="card">
+        <h3>No test runner in the loop</h3>
+        <p>SpecTracer never executes anything and never imports your source. It only reads text
+        files your tools already produce, so adding it can't slow down or destabilize a suite.</p>
+      </div>
+      <div class="card">
+        <h3>Gaps are visible, not silent</h3>
+        <p>An un-tagged test and an un-covered <code>@require-*</code> both show up explicitly —
+        on the <a href="report.html#unlinked">Unlinked Tests</a> page and in the coverage
+        percentage — instead of just quietly not existing.</p>
+      </div>
+      <div class="card">
+        <h3>The loop is cheap to repeat</h3>
+        <p>Because step 3 is one CLI call reading files that already exist, running the whole loop
+        again — after adding a test, after adding a scenario — costs nothing beyond CI time you're
+        already spending.</p>
+      </div>
+    </div>
+
+    <nav class="doc-nextprev">
+      <a href="getting-started.html"><span class="dir">Back</span><span class="ttl">&larr; Getting started</span></a>
+      <a href="tagging.html" class="next"><span class="dir">Next</span><span class="ttl">Tagging model &rarr;</span></a>
+    </nav>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <a href="index.html" class="footer-brand"><img src="logo.png" alt="">SpecTracer</a>
+      <p class="footer-blurb">Gherkin-driven test traceability across unit, integration, and E2E. Built by Ampyard.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Docs</h5>
+      <a href="getting-started.html">Getting started</a>
+      <a href="workflow.html">Declare → Tag → Run</a>
+      <a href="tagging.html">Tagging model</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="report.html">Report tour</a>
+    </div>
+    <div class="footer-col">
+      <h5>Reference</h5>
+      <a href="ci-cd.html">CI/CD recipes</a>
+      <a href="architecture.html">How it works</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+    <div class="footer-col">
+      <h5>Project</h5>
+      <a href="https://github.com/ampyard/spec-tracer">GitHub</a>
+      <a href="https://pypi.org/project/spec-tracer/">PyPI</a>
+      <a href="https://github.com/ampyard/spec-tracer/issues">Issues</a>
+      <a href="https://github.com/ampyard/spec-tracer/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Ampyard · MIT Licensed</span>
+    <span>Not a test runner. Not a coverage tool. A traceability report.</span>
+  </div>
+</footer>
+
+<script src="js/site.js" defer></script>
+</body>
+</html>

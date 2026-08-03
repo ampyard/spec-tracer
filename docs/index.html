@@ -170,7 +170,8 @@
       <span class="eyebrow">How it works</span>
       <h2>Three moving parts, and you already have two of them</h2>
       <p>SpecTracer never reads your source code and never runs your tests. It reads
-      <code>.feature</code> files, reads test-result files, and matches one against the other by tag.</p>
+      <code>.feature</code> files, reads test-result files, and matches one against the other by tag.
+      This is the <a href="workflow.html">Declare &rarr; Tag &rarr; Run</a> workflow, visualized:</p>
     </div>
 
     <div class="split">
@@ -178,6 +179,7 @@
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-body">
+            <span class="step-label">Declare</span>
             <h3>Give each scenario an identity</h3>
             <p>Add <span class="tag tag-id">@id:FC-42</span> to a scenario, and declare which layers
             must cover it with <span class="tag tag-req">@require-unit</span> /
@@ -187,6 +189,7 @@
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
+            <span class="step-label">Tag</span>
             <h3>Point your tests back at it</h3>
             <p>Tag the corresponding tests <span class="tag tag-ref">@scenario:FC-42</span> — in the test
             name, the classname, a JUnit property, or a Cucumber tag. Then run your suites the way you
@@ -196,6 +199,7 @@
         <div class="step">
           <div class="step-num">3</div>
           <div class="step-body">
+            <span class="step-label">Run</span>
             <h3>Run <code>spec-tracer</code></h3>
             <p>It auto-discovers <code>spectracer.config.json</code>, links results to scenarios, and
             writes the report. Add <code>output_json</code> to get the machine-readable twin, and
@@ -430,6 +434,7 @@
     <div class="footer-col">
       <h5>Docs</h5>
       <a href="getting-started.html">Getting started</a>
+      <a href="workflow.html">Declare → Tag → Run</a>
       <a href="tagging.html">Tagging model</a>
       <a href="configuration.html">Configuration</a>
       <a href="report.html">Report tour</a>

@@ -297,6 +297,86 @@ def test_completion_stats_average_across_scenarios(tag):
     assert stats["required"] == 2
 
 
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_unconfigured_requirements_flags_module_absent_from_config(tag):
+    scenario = Scenario(
+        feature="F", name="S1", tags=["@id:FC-012"],
+        required_layers=[RequiredLayer(layer="e2e", module="shipping")],
+    )
+
+    entries = ReportAggregator.unconfigured_requirements(
+        [scenario], known_modules={"unit": set(), "integration": set(), "e2e": {"billing"}}
+    )
+
+    assert entries == [{"feature": "F", "scenario": "S1", "layer": "e2e", "module": "shipping"}]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_unconfigured_requirements_ignores_configured_module(tag):
+    scenario = Scenario(
+        feature="F", name="S1", tags=["@id:FC-012"],
+        required_layers=[RequiredLayer(layer="e2e", module="shipping")],
+    )
+
+    entries = ReportAggregator.unconfigured_requirements(
+        [scenario], known_modules={"unit": set(), "integration": set(), "e2e": {"shipping"}}
+    )
+
+    assert entries == []
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_unconfigured_requirements_ignores_unscoped_requirements(tag):
+    scenario = Scenario(
+        feature="F", name="S1", tags=["@id:FC-012"],
+        required_layers=[RequiredLayer(layer="e2e")],
+    )
+
+    entries = ReportAggregator.unconfigured_requirements(
+        [scenario], known_modules={"unit": set(), "integration": set(), "e2e": set()}
+    )
+
+    assert entries == []
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_unconfigured_requirements_case_insensitive(tag):
+    scenario = Scenario(
+        feature="F", name="S1", tags=["@id:FC-012"],
+        required_layers=[RequiredLayer(layer="e2e", module="Shipping")],
+    )
+
+    entries = ReportAggregator.unconfigured_requirements(
+        [scenario], known_modules={"unit": set(), "integration": set(), "e2e": {"shipping"}}
+    )
+
+    assert entries == []
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_health_checks_unconfigured_modules_entry_passes_when_zero(tag):
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
+    layer_stats = ReportAggregator.layer_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats, unconfigured_count=0)
+
+    assert health["unconfigured_modules"]["status"] == "pass"
+    assert health["unconfigured_modules"]["value"] == "0"
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_health_checks_unconfigured_modules_entry_fails_when_nonzero(tag):
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1")])]
+    layer_stats = ReportAggregator.layer_stats(views)
+    completion_stats = ReportAggregator.completion_stats(views)
+
+    health = ReportAggregator.health_checks(views, layer_stats, completion_stats, unconfigured_count=1)
+
+    assert health["unconfigured_modules"]["status"] == "fail"
+    assert health["unconfigured_modules"]["value"] == "1"
+
+
 @pytest.mark.parametrize("tag", ["@scenario:FC-014"])
 def test_feature_breakdown_uses_average_completion(tag):
     a = _view("F", "S1", [TestResult(layer="e2e", name="e1", status="passed")], required_layers=[RequiredLayer("e2e")])

@@ -20,6 +20,7 @@ TAG_FIXTURES = {
     "@FC-006": "fc002",
     "@FC-007": "module_scope",
     "@FC-011": "fail_on_gate",
+    "@FC-012": "unconfigured_module",
     "@FC-EDGE-001": "edge_cases/collision_across",
     "@FC-EDGE-002": "edge_cases/collision_within",
     "@FC-EDGE-003": "edge_cases/feature_tags_not_inherited",

@@ -56,7 +56,7 @@
                     "description": "Health checks that gate CI. If any listed check reports a failing (red) status, the tool exits 1. Independent of and additive to error_on_failure.",
                     "items": {
                         "type": "string",
-                        "enum": ["progress", "pyramid", "e2e_runtime"]
+                        "enum": ["progress", "pyramid", "e2e_runtime", "unconfigured_modules"]
                     },
                     "uniqueItems": true
                 },
@@ -203,6 +203,10 @@
                             "satisfied": {
                                 "type": "boolean",
                                 "description": "False if this declared requirement ended up with zero linked results."
+                            },
+                            "unconfigured": {
+                                "type": "boolean",
+                                "description": "Present and true only when this module-scoped requirement names a module that isn't a registered config key at all (likely a typo), as distinct from a configured-but-empty module (#8)."
                             }
                         }
                     }

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import Dict, List, Optional, Set
 
-from spec_tracer.models import ScenarioView, TestResult, completion_fraction
+from spec_tracer.models import ScenarioView, TestResult, completion_fraction, requirement_state
 
 SCHEMA_VERSION = "2"
 
@@ -29,30 +29,32 @@ def _result_dict(result: TestResult) -> dict:
     return data
 
 
-def _requirements(view: ScenarioView) -> List[dict]:
+def _requirements(view: ScenarioView, known_modules: Optional[Dict[str, Set[str]]] = None) -> List[dict]:
     requirements = []
     for req in view.scenario.required_layers:
-        satisfied = any(
-            r.layer == req.layer and (req.module == "" or r.module.lower() == req.module.lower())
-            for r in view.linked_results
-        )
-        entry = {"layer": req.layer, "satisfied": satisfied}
+        state = requirement_state(req, view.linked_results, known_modules)
+        entry = {"layer": req.layer, "satisfied": state == "ok"}
         if req.module:
             entry["module"] = req.module
+        # Only present when a config cross-check ran and flagged the module as
+        # unregistered — additive so reports built without known_modules (or
+        # where nothing is unconfigured) keep the old requirement shape (#8).
+        if state == "unconfigured":
+            entry["unconfigured"] = True
         requirements.append(entry)
     return requirements
 
 
-def _scenario_result(view: ScenarioView) -> dict:
+def _scenario_result(view: ScenarioView, known_modules: Optional[Dict[str, Set[str]]] = None) -> dict:
     return {
         "name": view.scenario.name,
         "tags": list(view.scenario.tags),
-        "requirements": _requirements(view),
+        "requirements": _requirements(view, known_modules),
         "results": [_result_dict(result) for result in view.linked_results],
     }
 
 
-def _features(views: List[ScenarioView], feature_files: dict) -> List[dict]:
+def _features(views: List[ScenarioView], feature_files: dict, known_modules: Optional[Dict[str, Set[str]]] = None) -> List[dict]:
     order: List[str] = []
     by_feature: dict = {}
     for view in views:
@@ -60,7 +62,7 @@ def _features(views: List[ScenarioView], feature_files: dict) -> List[dict]:
         if name not in by_feature:
             by_feature[name] = []
             order.append(name)
-        by_feature[name].append(_scenario_result(view))
+        by_feature[name].append(_scenario_result(view, known_modules))
     return [
         {
             "name": name,
@@ -116,6 +118,7 @@ def build_report(
     health_checks: dict,
     unlinked_results: List[TestResult],
     feature_files: dict | None = None,
+    known_modules: Optional[Dict[str, Set[str]]] = None,
 ) -> dict:
     return {
         "schemaVersion": SCHEMA_VERSION,
@@ -133,6 +136,6 @@ def build_report(
             "pyramid": _layer_stats(layer_stats),
             "health": _health_summary(health_checks),
         },
-        "features": _features(views, feature_files or {}),
+        "features": _features(views, feature_files or {}, known_modules),
         "unlinkedTests": _unlinked_tests(unlinked_results),
     }

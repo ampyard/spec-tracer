@@ -36,3 +36,12 @@ Feature: Health Signals
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 0
 
+  @id:FC-012 @scenario:FC-012 @require-unit:aggregator @require-e2e:aggregator
+  Scenario: A required module absent from config is flagged distinctly from missing
+    Given a feature file with scenario tagged "@FC-012"
+    And a unit JUnit XML result tagged "@FC-012"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "required-chip ok"
+    And the report should contain "required-chip unconfigured"
+

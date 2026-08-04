@@ -14,7 +14,7 @@ def _view(feature, name, tags=None, required_layers=None, results=None):
     return ScenarioView(scenario=scenario, linked_results=results or [])
 
 
-def _build(views, stats=None, layer_stats=None, health_checks=None, unlinked_results=None, config=None, feature_files=None):
+def _build(views, stats=None, layer_stats=None, health_checks=None, unlinked_results=None, config=None, feature_files=None, known_modules=None):
     return build_report(
         config or {"features": ["./features"], "output": "./out.html"},
         views,
@@ -27,6 +27,7 @@ def _build(views, stats=None, layer_stats=None, health_checks=None, unlinked_res
         or {"Progress": {"status": "pass", "message": "ok", "value": "1/1"}},
         unlinked_results or [],
         feature_files=feature_files,
+        known_modules=known_modules,
     )
 
 
@@ -181,6 +182,48 @@ def test_e2e_requirement_unsatisfied_when_module_does_not_match(tag):
 
     req = report["features"][0]["scenarios"][0]["requirements"][0]
     assert req["satisfied"] is False
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_requirement_flagged_unconfigured_when_module_absent_from_known_modules(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="e2e", module="shipping")],
+        results=[],
+    )
+
+    report = _build([view], known_modules={"unit": set(), "integration": set(), "e2e": {"billing"}})
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req == {"layer": "e2e", "satisfied": False, "module": "shipping", "unconfigured": True}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_requirement_not_flagged_unconfigured_when_module_is_known(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="e2e", module="shipping")],
+        results=[],
+    )
+
+    report = _build([view], known_modules={"unit": set(), "integration": set(), "e2e": {"shipping"}})
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req == {"layer": "e2e", "satisfied": False, "module": "shipping"}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_requirement_omits_unconfigured_key_when_known_modules_not_supplied(tag):
+    view = _view(
+        "F", "S1",
+        required_layers=[RequiredLayer(layer="e2e", module="shipping")],
+        results=[],
+    )
+
+    report = _build([view])
+
+    req = report["features"][0]["scenarios"][0]["requirements"][0]
+    assert req == {"layer": "e2e", "satisfied": False, "module": "shipping"}
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-010"])

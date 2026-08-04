@@ -20,6 +20,7 @@ FAIL_ON_ALIASES = {
     "progress": "Progress",
     "pyramid": "pyramid",
     "e2e_runtime": "end_to_end_runtime",
+    "unconfigured_modules": "unconfigured_modules",
 }
 
 
@@ -111,6 +112,29 @@ def _collect_and_parse_e2e_results(entries: Dict[str, List[str]], parser: Cucumb
     return results
 
 
+def _known_modules(config: dict) -> Dict[str, set]:
+    """Configured module keys per layer, lowercased for case-insensitive lookup."""
+    return {
+        layer: {module.lower() for module in config.get(layer, {})}
+        for layer in ("unit", "integration", "e2e")
+    }
+
+
+def _warn_unconfigured_requirements(unconfigured: List[dict]) -> None:
+    """Startup diagnostic for #8: a required module with no matching config key.
+
+    Printed distinctly from the report's generic MISSING status so a typo in
+    the config key can't be mistaken for genuinely absent test coverage.
+    """
+    for entry in unconfigured:
+        print(
+            f"warning: scenario '{entry['scenario']}' ({entry['feature']}) requires "
+            f"{entry['layer']} module '{entry['module']}', but no such module is configured. "
+            "Check for a typo in the config key.",
+            file=sys.stderr,
+        )
+
+
 def main(argv: List[str] | None = None) -> int:
     config_path = _find_config_path(argv)
     config = _load_config(config_path)
@@ -126,6 +150,10 @@ def main(argv: List[str] | None = None) -> int:
 
     results = e2e_results + unit_results + integration_results
 
+    known_modules = _known_modules(config)
+    unconfigured_requirements = ReportAggregator.unconfigured_requirements(scenarios, known_modules)
+    _warn_unconfigured_requirements(unconfigured_requirements)
+
     links = ResultLinker.link(scenarios, results)
     views = ReportAggregator.build_views(scenarios, links)
     stats = ReportAggregator.completion_stats(views)
@@ -139,6 +167,7 @@ def main(argv: List[str] | None = None) -> int:
         layer_stats,
         stats,
         unlinked_count=len(unlinked_results),
+        unconfigured_count=len(unconfigured_requirements),
         progress_threshold_green=health_check_config.get("progress_threshold_green", 80),
         progress_threshold_amber=health_check_config.get("progress_threshold_amber", 50),
         e2e_duration_amber_seconds=health_check_config.get("e2e_duration_amber_seconds", 600),
@@ -157,6 +186,7 @@ def main(argv: List[str] | None = None) -> int:
         unlinked_results=unlinked_results,
         failure_breakdown=failure_breakdown,
         logo_data_uri=_load_logo(config_path.parent),
+        known_modules=known_modules,
     )
 
     output_path = Path(config["output"])
@@ -172,6 +202,7 @@ def main(argv: List[str] | None = None) -> int:
             health_checks,
             unlinked_results,
             feature_files=feature_files,
+            known_modules=known_modules,
         )
         output_json_path = Path(config["output_json"])
         output_json_path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from spec_tracer.linker import _scenario_ids
 from spec_tracer.models import Scenario, ScenarioView, TestResult
@@ -132,11 +132,36 @@ class ReportAggregator:
         return breakdown
 
     @staticmethod
+    def unconfigured_requirements(scenarios: List[Scenario], known_modules: Dict[str, Set[str]]) -> List[dict]:
+        """Declared ``@require-*:module`` requirements whose module isn't a configured key (#8).
+
+        Distinct from a "missing" requirement (module configured, zero linked
+        results): this flags a likely typo or misconfiguration rather than a
+        genuine coverage gap, which is otherwise indistinguishable from the
+        report alone.
+        """
+        entries: List[dict] = []
+        for scenario in scenarios:
+            for req in scenario.required_layers:
+                if not req.module:
+                    continue
+                configured = known_modules.get(req.layer)
+                if configured is not None and req.module.lower() not in configured:
+                    entries.append({
+                        "feature": scenario.feature,
+                        "scenario": scenario.name,
+                        "layer": req.layer,
+                        "module": req.module,
+                    })
+        return entries
+
+    @staticmethod
     def health_checks(
         views: List[ScenarioView],
         layer_stats: List[dict],
         progress_stats: dict,
         unlinked_count: int = 0,
+        unconfigured_count: int = 0,
         progress_threshold_green: float = 80,
         progress_threshold_amber: float = 50,
         e2e_duration_amber_seconds: float = 600,
@@ -187,6 +212,13 @@ class ReportAggregator:
             unlinked_status = "fail"
             unlinked_message = "Several results didn't link to any scenario."
 
+        if unconfigured_count == 0:
+            unconfigured_status = "pass"
+            unconfigured_message = "Every required module is a registered config key."
+        else:
+            unconfigured_status = "fail"
+            unconfigured_message = "Some required modules aren't configured — check for a typo in the config key."
+
         return {
             "Progress": {"status": progress_status, "message": progress_message, "value": f"{progress_stats['satisfied']}/{progress_stats['required']}"},
             "pyramid": {
@@ -201,6 +233,7 @@ class ReportAggregator:
             },
             "end_to_end_runtime": {"status": e2e_status, "message": e2e_message, "value": f"{e2e_duration:.1f}s"},
             "unlinked": {"status": unlinked_status, "message": unlinked_message, "value": str(unlinked_count)},
+            "unconfigured_modules": {"status": unconfigured_status, "message": unconfigured_message, "value": str(unconfigured_count)},
         }
 
     @staticmethod

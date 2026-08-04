@@ -24,7 +24,10 @@ def test_e2e_module_match_marks_requirement_ok(tag, tmp_path):
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-007"])
-def test_e2e_module_mismatch_marks_requirement_missing(tag, tmp_path):
+def test_e2e_module_mismatch_marks_requirement_unconfigured(tag, tmp_path):
+    """The required module ("parsers") is never registered as a config key here — only
+    "other" is — so this is the #8 "unconfigured" case (likely typo), not a generic
+    "missing" (configured-but-empty) requirement."""
     output = tmp_path / "report.html"
     result = run_tool(
         FEATURES,
@@ -33,4 +36,5 @@ def test_e2e_module_mismatch_marks_requirement_missing(tag, tmp_path):
     )
     assert result.returncode == 0, result.stderr
     content = output.read_text(encoding="utf-8")
-    assert "required-chip missing" in content
+    assert "required-chip unconfigured" in content
+    assert "required-chip missing" not in content

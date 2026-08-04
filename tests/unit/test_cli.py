@@ -6,6 +6,7 @@ import pytest
 from spec_tracer.cli import (
     FAIL_ON_ALIASES,
     _failing_gated_checks,
+    _known_modules,
     _load_config,
     main,
 )
@@ -68,7 +69,28 @@ def test_fail_on_aliases_map_to_internal_health_check_keys(tag):
         "progress": "Progress",
         "pyramid": "pyramid",
         "e2e_runtime": "end_to_end_runtime",
+        "unconfigured_modules": "unconfigured_modules",
     }
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_known_modules_collects_lowercased_keys_per_layer(tag):
+    config = {
+        "unit": {"Billing": ["u.xml"]},
+        "integration": {},
+        "e2e": {"Shipping": ["e.json"], "cart": ["e2.json"]},
+    }
+
+    assert _known_modules(config) == {
+        "unit": {"billing"},
+        "integration": set(),
+        "e2e": {"shipping", "cart"},
+    }
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_known_modules_defaults_to_empty_sets_when_layer_absent(tag):
+    assert _known_modules({}) == {"unit": set(), "integration": set(), "e2e": set()}
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])

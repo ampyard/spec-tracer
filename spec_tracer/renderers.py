@@ -7,9 +7,12 @@ except ImportError:
     Environment = None
     Markup = None
 
-from spec_tracer.models import ScenarioView, TestResult, completion_fraction, completion_ratio, worst_outcome
+from spec_tracer.models import ScenarioView, TestResult, completion_fraction, completion_ratio, requirement_state, worst_outcome
 
 LOGO_DATA_URI = ""
+
+_REQUIRED_STATUS_TAG = {"ok": "[OK]", "missing": "[MISSING]", "unconfigured": "[UNCONFIGURED]"}
+_REQUIRED_CHIP_LABEL = {"ok": "OK", "missing": "Missing", "unconfigured": "Unconfigured"}
 
 
 def _layer_satisfied(req, linked_results) -> bool:
@@ -19,20 +22,20 @@ def _layer_satisfied(req, linked_results) -> bool:
     )
 
 
-def _required_status(view: ScenarioView) -> str:
+def _required_status(view: ScenarioView, known_modules=None) -> str:
     parts = []
     for req in view.scenario.required_layers:
-        has = _layer_satisfied(req, view.linked_results)
+        state = requirement_state(req, view.linked_results, known_modules)
         label = f"{req.layer}({req.module})" if req.module else req.layer
-        parts.append(f"{label} {'[OK]' if has else '[MISSING]'}")
+        parts.append(f"{label} {_REQUIRED_STATUS_TAG[state]}")
     return " | ".join(parts) if parts else "none"
 
 
-def _required_layers(view: ScenarioView) -> list:
+def _required_layers(view: ScenarioView, known_modules=None) -> list:
     result = []
     for req in view.scenario.required_layers:
-        has = _layer_satisfied(req, view.linked_results)
-        result.append({"layer": req.layer, "module": req.module, "ok": has})
+        state = requirement_state(req, view.linked_results, known_modules)
+        result.append({"layer": req.layer, "module": req.module, "ok": state == "ok", "state": state})
     return result
 
 
@@ -612,6 +615,7 @@ _TEMPLATE_STR = """<html lang="en">
     .required-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 600; text-transform: uppercase; }
     .required-chip.ok { background: var(--success-soft); color: var(--success); }
     .required-chip.missing { background: var(--danger-soft); color: var(--danger); }
+    .required-chip.unconfigured { background: var(--warning-soft); color: var(--warning); }
     .required-chip.none { background: var(--surface); color: var(--text-soft); border: 1px solid var(--border); }
     .module-tag { font-weight: 400; text-transform: none; opacity: 0.75; }
     .module-chip {
@@ -707,7 +711,7 @@ _TEMPLATE_STR = """<html lang="en">
         <div class="health-grid">
           {% for key, item in health_checks.items() %}
           <div class="health-card {{ item.status }}">
-            <div class="health-title">{{ {'end_to_end_runtime': 'E2E runtime', 'Progress': 'Progress', 'pyramid': 'Test pyramid', 'unlinked': 'Unlinked'}.get(key, key.replace('_', ' ') | title) }}</div>
+            <div class="health-title">{{ {'end_to_end_runtime': 'E2E runtime', 'Progress': 'Progress', 'pyramid': 'Test pyramid', 'unlinked': 'Unlinked', 'unconfigured_modules': 'Unconfigured modules'}.get(key, key.replace('_', ' ') | title) }}</div>
             {% if key == 'pyramid' %}
             <div class="pyramid-mini">
               {% for entry in item.layers %}
@@ -836,7 +840,7 @@ _TEMPLATE_STR = """<html lang="en">
                       <span class="required-label">Required</span>
                       {% if req_layers %}
                       {% for item in req_layers %}
-                      <span class="required-chip {{ 'ok' if item.ok else 'missing' }}">{{ item.layer }}{% if item.module %} <span class="module-tag">({{ item.module }})</span>{% endif %} <strong>{{ 'OK' if item.ok else 'Missing' }}</strong></span>
+                      <span class="required-chip {{ item.state }}" title="{{ 'This module is not a registered config key — check for a typo.' if item.state == 'unconfigured' else '' }}">{{ item.layer }}{% if item.module %} <span class="module-tag">({{ item.module }})</span>{% endif %} <strong>{{ {'ok': 'OK', 'missing': 'Missing', 'unconfigured': 'Unconfigured'}[item.state] }}</strong></span>
                       {% endfor %}
                       {% else %}
                       <span class="required-chip none">No required layers</span>
@@ -1137,6 +1141,7 @@ class HtmlRenderer:
         unlinked_results: List[TestResult] | None = None,
         failure_breakdown: List[dict] | None = None,
         logo_data_uri: str | None = None,
+        known_modules: dict | None = None,
     ) -> str:
         layer_stats = layer_stats or []
         health_checks = health_checks or {}
@@ -1148,8 +1153,8 @@ class HtmlRenderer:
         if Environment is not None:
             env = Environment(autoescape=select_autoescape(["html", "xml"]))
             template = env.from_string(_TEMPLATE_STR)
-            template.globals["_required_status"] = _required_status
-            template.globals["required_layers"] = _required_layers
+            template.globals["_required_status"] = lambda view: _required_status(view, known_modules)
+            template.globals["required_layers"] = lambda view: _required_layers(view, known_modules)
             template.globals["result_satisfies_requirement"] = _result_satisfies_requirement
             template.globals["expected_test_count"] = _expected_test_count
             template.globals["scenario_status"] = _scenario_status

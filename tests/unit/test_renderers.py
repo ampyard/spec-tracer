@@ -459,3 +459,48 @@ def test_render_flags_missing_required_layer_with_chips(tag):
     assert "Required" in html
     assert "required-chip ok" in html
     assert "required-chip missing" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_render_flags_unconfigured_module_distinctly_from_missing(tag):
+    unconfigured_view = ScenarioView(
+        scenario=Scenario(
+            feature="F", name="Unconfigured", tags=["@scenario:FC-052"],
+            required_layers=[RequiredLayer("e2e", module="shipping")],
+        ),
+        linked_results=[],
+    )
+
+    html = _render(
+        views=[unconfigured_view],
+        stats={"complete": 0, "total": 1, "percentage": 0, "pct": 0, "satisfied": 0, "required": 1},
+        feature_breakdown=[
+            {"name": "F", "complete": 0, "total": 1, "percentage": 0, "satisfied": 0, "required": 1, "completion_pct": 0},
+        ],
+        known_modules={"unit": set(), "integration": set(), "e2e": {"billing"}},
+    )
+
+    assert "required-chip unconfigured" in html
+    assert "required-chip missing" not in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-012"])
+def test_render_without_known_modules_falls_back_to_missing(tag):
+    view = ScenarioView(
+        scenario=Scenario(
+            feature="F", name="Missing", tags=["@scenario:FC-053"],
+            required_layers=[RequiredLayer("e2e", module="shipping")],
+        ),
+        linked_results=[],
+    )
+
+    html = _render(
+        views=[view],
+        stats={"complete": 0, "total": 1, "percentage": 0, "pct": 0, "satisfied": 0, "required": 1},
+        feature_breakdown=[
+            {"name": "F", "complete": 0, "total": 1, "percentage": 0, "satisfied": 0, "required": 1, "completion_pct": 0},
+        ],
+    )
+
+    assert "required-chip missing" in html
+    assert "required-chip unconfigured" not in html

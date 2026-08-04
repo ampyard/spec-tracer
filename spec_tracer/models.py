@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 
 
 def requirement_satisfied(req, linked_results: List["TestResult"]) -> bool:
@@ -14,6 +14,25 @@ def requirement_satisfied(req, linked_results: List["TestResult"]) -> bool:
         r.layer == req.layer and (req.module == "" or r.module.lower() == req.module.lower())
         for r in linked_results
     )
+
+
+def requirement_state(req, linked_results: List["TestResult"], known_modules: Optional[Dict[str, Set[str]]] = None) -> str:
+    """Three-way state of a ``@require-*`` requirement: ``"ok"``, ``"missing"``, or ``"unconfigured"``.
+
+    ``"unconfigured"`` means the requirement names a module that isn't a
+    registered config key for that layer at all — distinct from ``"missing"``,
+    where the module is configured but has zero linked results (#8). This
+    distinction only applies to module-scoped requirements; when
+    ``known_modules`` is not supplied the state degrades to the old two-way
+    ``"ok"``/``"missing"`` split.
+    """
+    if requirement_satisfied(req, linked_results):
+        return "ok"
+    if req.module and known_modules is not None:
+        configured = known_modules.get(req.layer)
+        if configured is not None and req.module.lower() not in configured:
+            return "unconfigured"
+    return "missing"
 
 
 def completion_fraction(view) -> tuple:

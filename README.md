@@ -190,6 +190,8 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 
 The generated HTML is a single self-contained file (all CSS/JS inlined — a monospace font loads from a CDN with a system fallback — safe to email or archive) with five sections:
 
+You can see what SpecTracer produces without running anything yourself. **[Open the live sample report](https://artifact.ci/artifact/blob/ampyard/spec-tracer/branch/main/reports/spectracer-report.html)** — it's exactly the same HTML your own output will look like, showing all five pages including coverage progress, pyramid dashboard, feature traceability matrix, failure breakdown, and unlinked tests.
+
 <img src="docs/report-features.png" alt="SpecTracer report Feature Traceability view" style="max-width:100%;border-radius:12px;margin:1rem 0;">
 
 1. **Coverage Progress Summary** — headline stats for declared-tests matched and scenarios fully matched, plus the four health checks. Color-coded green/amber/red using the configurable thresholds.

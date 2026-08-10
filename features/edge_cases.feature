@@ -63,3 +63,12 @@ Feature: Edge Cases
     And a unit JUnit XML result tagged "@FC-EDGE-006"
     When I run the tool with --features, --unit, and --output
     Then the exit code should be 1
+
+  @id:FC-EDGE-007 @scenario:FC-EDGE-007 @require-e2e:parsers @require-unit:parsers
+  Scenario: Scenario failed in a before-scenario hook is not dropped from the report
+    Given a feature file with scenario tagged "@FC-EDGE-007"
+    And an E2E Cucumber JSON result tagged "@FC-EDGE-007"
+    When I run the tool with --features, --e2e, and --output
+    Then the exit code should be 0
+    And the report should contain "Basic DuckDuckGo Search"
+    And the report should contain "1 failed"

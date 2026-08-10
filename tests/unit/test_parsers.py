@@ -79,3 +79,54 @@ def test_cucumber_parser_reads_scenario_status_and_tags(tmp_path):
     assert results[0].module == "parsers"
     assert "@scenario:FC-200" in results[0].tags
     assert results[0].duration == 1.0
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-007"])
+def test_cucumber_parser_keeps_scenario_failed_in_before_scenario_hook(tag, tmp_path):
+    """Regression for #31: a before_scenario hook crash fails the scenario
+    before any step runs, so no step carries a ``result`` object. Such
+    scenarios must still surface in the report rather than being dropped.
+    """
+    payload_path = tmp_path / "e2e.json"
+    payload_path.write_text(
+        """
+        [{
+          "elements": [{
+            "keyword": "Scenario",
+            "name": "Basic DuckDuckGo Search",
+            "status": "failed",
+            "tags": [{"name": "@scenario:FC-300"}],
+            "steps": [{"keyword": "Given", "name": "a browser"}]
+          }]
+        }]
+        """,
+        encoding="utf-8",
+    )
+
+    results = CucumberParser().parse([payload_path], module="e2e")
+
+    assert len(results) == 1
+    assert results[0].name == "Basic DuckDuckGo Search"
+    assert results[0].status == "failed"
+
+
+def test_cucumber_parser_drops_tag_filtered_skipped_scenario_with_no_step_results(tmp_path):
+    payload_path = tmp_path / "e2e.json"
+    payload_path.write_text(
+        """
+        [{
+          "elements": [{
+            "keyword": "Scenario",
+            "name": "Never selected",
+            "status": "skipped",
+            "tags": [],
+            "steps": [{"keyword": "Given", "name": "a step"}]
+          }]
+        }]
+        """,
+        encoding="utf-8",
+    )
+
+    results = CucumberParser().parse([payload_path], module="e2e")
+
+    assert results == []

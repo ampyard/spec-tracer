@@ -1,0 +1,20 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "Search",
+    "tags": [],
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "name": "Basic DuckDuckGo Search",
+        "tags": [{"name": "@scenario:FC-EDGE-007"}],
+        "steps": [
+          {"keyword": "Given", "name": "the browser is launched"},
+          {"keyword": "When", "name": "the user searches for \"spec-tracer\""},
+          {"keyword": "Then", "name": "results should be displayed"}
+        ],
+        "status": "failed"
+      }
+    ]
+  }
+]

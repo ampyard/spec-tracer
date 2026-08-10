@@ -66,7 +66,7 @@ jobs:
           uv run behave features/dashboard.feature -f json -o reports/e2e-renderers.json
           uv run behave features/internals.feature --tags=@scenario:FC-009 -f json -o reports/e2e-renderers-internals.json
           uv run behave features/module_scope.feature -f json -o reports/e2e-parsers.json
-          uv run behave features/edge_cases.feature --tags=@scenario:FC-EDGE-006 -f json -o reports/e2e-parsers-edge.json
+          uv run behave features/edge_cases.feature --tags="@scenario:FC-EDGE-006 or @scenario:FC-EDGE-007" -f json -o reports/e2e-parsers-edge.json
           uv run behave features/internals.feature --tags=@scenario:FC-007 -f json -o reports/e2e-parsers-internals.json
           uv run behave features/json_output.feature -f json -o reports/e2e-report-model.json
 

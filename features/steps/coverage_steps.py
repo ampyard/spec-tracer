@@ -27,6 +27,7 @@ TAG_FIXTURES = {
     "@FC-EDGE-004": "edge_cases/no_match",
     "@FC-EDGE-005": "edge_cases/empty_result",
     "@FC-EDGE-006": "edge_cases/malformed_xml",
+    "@FC-EDGE-007": "edge_cases/hook_failure",
 }
 
 

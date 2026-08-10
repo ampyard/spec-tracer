@@ -126,3 +126,19 @@ def test_malformed_junit_xml_errors(tag):
     output = base / "report.html"
     result = run_tool(base / "features", output, unit=base / "unit.xml")
     assert result.returncode != 0
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-EDGE-007"])
+def test_scenario_failed_in_before_scenario_hook_is_not_dropped(tag):
+    """Regression for #31: a scenario that fails inside a before_scenario
+    hook has status "failed" but no step carries a "result" object (the
+    hook crashed before any step ran). It must still surface in the report
+    as a failure instead of vanishing.
+    """
+    base = FIXTURES / "hook_failure"
+    output = base / "report.html"
+    result = run_tool(base / "features", output, e2e=base / "e2e.json")
+    assert result.returncode == 0, result.stderr
+    content = output.read_text(encoding="utf-8")
+    assert "Basic DuckDuckGo Search" in content
+    assert "1 failed" in content

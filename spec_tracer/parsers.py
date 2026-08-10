@@ -136,7 +136,14 @@ class CucumberParser(ResultParser):
         Behave still emits non-selected scenarios as ``status: skipped`` with
         steps that have no ``result`` object. Real skips include step results
         (``result.status == "skipped"``), so those remain.
+
+        Scenarios that fail in a ``before_scenario`` hook (before any step
+        runs) also have steps with no ``result`` object, but Behave marks
+        them ``status: failed``. Those must always be kept, or genuine
+        failures silently vanish from the report.
         """
+        if element.get("status") == "failed":
+            return True
         steps = element.get("steps") or []
         if not steps:
             # Empty-scenario fixtures used in unit tests: keep unless skipped.

@@ -59,7 +59,7 @@ jobs:
           uv run behave features/ -f modern -o reports/e2e-report.html
           # Module-scoped Cucumber JSON for SpecTracer dogfood
           uv run behave features/linking.feature --tags="not @scenario:FC-004" -f json -o reports/e2e-linker.json
-          uv run behave features/edge_cases.feature --tags="not @scenario:FC-EDGE-006" -f json -o reports/e2e-linker-edge.json
+          uv run behave features/edge_cases.feature --tags="not @scenario:FC-EDGE-006 and not @scenario:FC-EDGE-007" -f json -o reports/e2e-linker-edge.json
           uv run behave features/linking.feature --tags=@scenario:FC-004 -f json -o reports/e2e-collectors.json
           uv run behave features/health.feature -f json -o reports/e2e-aggregator.json
           uv run behave features/internals.feature --tags=@scenario:FC-008 -f json -o reports/e2e-aggregator-internals.json

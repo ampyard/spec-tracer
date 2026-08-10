@@ -112,7 +112,7 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: linker (edge)", [
         "uv", "run", "behave", "features/edge_cases.feature",
-        "--tags=not @scenario:FC-EDGE-006", "-f", "json", "-o", "reports/e2e-linker-edge.json",
+        "--tags=not @scenario:FC-EDGE-006 and not @scenario:FC-EDGE-007", "-f", "json", "-o", "reports/e2e-linker-edge.json",
     ]),
     ("E2E: collectors", [
         "uv", "run", "behave", "features/linking.feature",
@@ -140,7 +140,7 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: parsers (edge)", [
         "uv", "run", "behave", "features/edge_cases.feature",
-        "--tags=@scenario:FC-EDGE-006", "-f", "json", "-o", "reports/e2e-parsers-edge.json",
+        "--tags=@scenario:FC-EDGE-006 or @scenario:FC-EDGE-007", "-f", "json", "-o", "reports/e2e-parsers-edge.json",
     ]),
     ("E2E: parsers (internals)", [
         "uv", "run", "behave", "features/internals.feature",

@@ -36,6 +36,15 @@ Feature: Linking
     And the report should contain "scenarios fully matched"
     And the report should contain "<strong>integration</strong>"
 
+  @id:FC-013 @scenario:FC-013 @require-unit:collectors
+  Scenario: Generate report with a unit-layer result supplied as Cucumber JSON
+    Given a feature file with scenario tagged "@FC-013"
+    And a unit Cucumber JSON result tagged "@FC-013"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "<strong>unit</strong>"
+    And the report should contain "Login form accepts valid credentials"
+
   @id:FC-004 @scenario:FC-004 @require-unit:collectors @require-integration:collectors @require-e2e:collectors
   Scenario: Generate report when unit and integration flags are repeated
     Given a feature file with scenario tagged "@FC-004"

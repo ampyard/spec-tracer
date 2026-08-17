@@ -96,11 +96,40 @@ def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
     return scenarios, feature_files
 
 
-def _collect_and_parse_junit_results(entries: Dict[str, List[str]], parser: JunitParser, layer: str) -> List:
+def _detect_result_format(path: Path) -> str:
+    """Distinguish JUnit XML from Cucumber JSON for a unit/integration result file.
+
+    Extension decides when unambiguous; otherwise the first non-whitespace
+    byte does (``[``/``{`` for JSON, everything else assumed XML).
+    """
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return "json"
+    if suffix == ".xml":
+        return "xml"
+    with path.open("r", encoding="utf-8") as handle:
+        for char in iter(lambda: handle.read(1), ""):
+            if char.isspace():
+                continue
+            return "json" if char in "[{" else "xml"
+    return "xml"
+
+
+def _collect_and_parse_layer_results(
+    entries: Dict[str, List[str]],
+    junit_parser: JunitParser,
+    cucumber_parser: CucumberParser,
+    layer: str,
+) -> List:
+    """Parse unit/integration results, accepting JUnit XML or Cucumber JSON per file."""
     results = []
     for module, paths in entries.items():
-        files = FileCollector.xml_files(paths)
-        results.extend(parser.parse(files, layer=layer, module=module))
+        files = FileCollector.result_files(paths)
+        formats = {f: _detect_result_format(f) for f in files}
+        xml_files = [f for f, fmt in formats.items() if fmt == "xml"]
+        json_files = [f for f, fmt in formats.items() if fmt == "json"]
+        results.extend(junit_parser.parse(xml_files, layer=layer, module=module))
+        results.extend(cucumber_parser.parse(json_files, layer=layer, module=module))
     return results
 
 
@@ -142,10 +171,11 @@ def main(argv: List[str] | None = None) -> int:
     scenarios, feature_files = _collect_and_parse_features(config["features"], config_path.parent)
 
     junit_parser = JunitParser()
-    unit_results = _collect_and_parse_junit_results(config.get("unit", {}), junit_parser, "unit")
-    integration_results = _collect_and_parse_junit_results(config.get("integration", {}), junit_parser, "integration")
-
     cucumber_parser = CucumberParser()
+    unit_results = _collect_and_parse_layer_results(config.get("unit", {}), junit_parser, cucumber_parser, "unit")
+    integration_results = _collect_and_parse_layer_results(
+        config.get("integration", {}), junit_parser, cucumber_parser, "integration"
+    )
     e2e_results = _collect_and_parse_e2e_results(config.get("e2e", {}), cucumber_parser)
 
     results = e2e_results + unit_results + integration_results

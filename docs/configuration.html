@@ -158,11 +158,11 @@ spec-tracer path/to/other-config.json</code></pre>
           </tr>
           <tr>
             <td><code>unit</code></td><td>No</td>
-            <td>Object keyed by module name; each value an array of JUnit XML file or directory paths. Use <code>""</code> for results not tied to a module. Matched against <code>@require-unit</code> / <code>@require-unit:&lt;module&gt;</code>.</td>
+            <td>Object keyed by module name; each value an array of JUnit XML and/or Cucumber JSON file or directory paths — format is auto-detected per file. Use <code>""</code> for results not tied to a module. Matched against <code>@require-unit</code> / <code>@require-unit:&lt;module&gt;</code>.</td>
           </tr>
           <tr>
             <td><code>integration</code></td><td>No</td>
-            <td>Same shape as <code>unit</code>, matched against <code>@require-integration</code>.</td>
+            <td>Same shape as <code>unit</code> (JUnit XML and/or Cucumber JSON, auto-detected), matched against <code>@require-integration</code>.</td>
           </tr>
           <tr>
             <td><code>e2e</code></td><td>No</td>
@@ -209,8 +209,11 @@ spec-tracer path/to/other-config.json</code></pre>
       files listed under it, and it's what <code>@require-unit:billing</code> matches against.</li>
       <li><strong><code>""</code> means unscoped.</strong> Results under it satisfy bare
       <code>@require-unit</code> but never <code>@require-unit:anything</code>.</li>
-      <li><strong>Values may be files or directories.</strong> Directories are scanned recursively for
-      <code>.xml</code> (unit/integration) or <code>.json</code> (E2E).</li>
+      <li><strong>Values may be files or directories.</strong> E2E directories are scanned recursively for
+      <code>.json</code>. Unit/integration directories are scanned recursively for both <code>.xml</code>
+      and <code>.json</code> — so a module can be JUnit-based, Cucumber-based (BDD-style scenarios tagged
+      <code>@scenario:xxx</code>), or a mix of both. Individual files are read regardless of extension,
+      with format sniffed from content when the extension is ambiguous.</li>
       <li><strong>Empty or missing paths are silently ignored</strong> — that layer simply contributes
       zero tests. This keeps a partially-wired pipeline from blowing up, but it also means a typo'd
       path looks exactly like "no tests yet". Check the pyramid counts if a layer seems empty.</li>
@@ -222,8 +225,8 @@ spec-tracer path/to/other-config.json</code></pre>
       <strong>Malformed input is fatal, missing input is not</strong>
       <p>A JUnit XML file that fails to parse aborts the run with an error naming the offending file.</p>
       <p>A Cucumber JSON file that fails to parse aborts on the JSON decode error — note that this
-      message is <em>not</em> contextualised with the file path, so if you have several E2E files you
-      may have to bisect.</p>
+      message is <em>not</em> contextualised with the file path, so if you have several Cucumber JSON
+      files (E2E, or BDD-style unit/integration) you may have to bisect.</p>
     </div>
 
     <h2 id="health">Health checks</h2>

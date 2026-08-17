@@ -65,3 +65,26 @@ def test_json_files_collects_from_directory_and_skips_missing_paths(tag, tmp_pat
     files = FileCollector.json_files([str(tmp_path), str(missing)])
 
     assert files == [payload.resolve()]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-013"])
+def test_result_files_collects_both_xml_and_json_from_directory(tag, tmp_path):
+    xml = tmp_path / "unit.xml"
+    xml.write_text("<testsuite/>", encoding="utf-8")
+    payload = tmp_path / "unit.json"
+    payload.write_text("[]", encoding="utf-8")
+    missing = tmp_path / "does-not-exist"
+
+    files = FileCollector.result_files([str(tmp_path), str(missing)])
+
+    assert files == sorted([xml.resolve(), payload.resolve()])
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-013"])
+def test_result_files_includes_explicit_files_regardless_of_extension(tag, tmp_path):
+    extensionless = tmp_path / "result"
+    extensionless.write_text("[]", encoding="utf-8")
+
+    files = FileCollector.result_files([str(extensionless)])
+
+    assert files == [extensionless.resolve()]

@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -171,6 +172,16 @@ class CucumberParser(ResultParser):
                         tags = [f"@{t}" if t and not t.startswith("@") else t for t in tags]
                     else:
                         tags = [f"@{tag}" if not str(tag).startswith("@") else tag for tag in raw_tags]
+                    if layer != "e2e":
+                        id_tags = [t for t in tags if t.startswith("@id:")]
+                        if id_tags:
+                            print(
+                                f"warning: {layer} result '{element.get('name', '')}' in {path} "
+                                f"carries {', '.join(id_tags)} — '@id:' only has effect in files "
+                                "listed under 'features'; it is ignored here. Did you mean "
+                                "'@scenario:'?",
+                                file=sys.stderr,
+                            )
                     status = element.get("status", "passed")
                     if status == "undefined":
                         status = "skipped"

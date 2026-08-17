@@ -9,7 +9,7 @@ from spec_tracer.renderers import _required_status
 from spec_tracer.cli import (
     _collect_and_parse_e2e_results,
     _collect_and_parse_features,
-    _collect_and_parse_junit_results,
+    _collect_and_parse_layer_results,
     _load_config,
 )
 
@@ -95,13 +95,48 @@ def test_collect_and_parse_junit_results_groups_by_module(tmp_path):
         '<testsuite><testcase name="test_b @scenario:FC-004" time="0.1" /></testsuite>', encoding="utf-8"
     )
 
-    results = _collect_and_parse_junit_results(
-        {"billing": [str(module_a)], "": [str(module_b)]}, _junit_parser, "unit"
+    results = _collect_and_parse_layer_results(
+        {"billing": [str(module_a)], "": [str(module_b)]}, _junit_parser, _cucumber_parser, "unit"
     )
 
     modules = {r.module for r in results}
     assert modules == {"billing", ""}
     assert all(r.layer == "unit" for r in results)
+
+
+def test_collect_and_parse_layer_results_auto_detects_cucumber_json(tmp_path):
+    xml_path = tmp_path / "unit.xml"
+    xml_path.write_text(
+        '<testsuite><testcase name="test_a @scenario:FC-500" time="0.1" /></testsuite>', encoding="utf-8"
+    )
+    json_path = tmp_path / "unit.json"
+    json_path.write_text(
+        json.dumps(
+            [
+                {
+                    "elements": [
+                        {
+                            "keyword": "Scenario",
+                            "name": "A BDD unit scenario",
+                            "status": "passed",
+                            "tags": [{"name": "@scenario:FC-501"}],
+                            "steps": [{"result": {"status": "passed", "duration": 1000000}}],
+                        }
+                    ]
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    results = _collect_and_parse_layer_results(
+        {"billing": [str(xml_path), str(json_path)]}, _junit_parser, _cucumber_parser, "unit"
+    )
+
+    tags = {tag for r in results for tag in r.tags}
+    assert "@scenario:FC-500" in tags
+    assert "@scenario:FC-501" in tags
+    assert all(r.layer == "unit" and r.module == "billing" for r in results)
 
 
 def test_collect_and_parse_e2e_results_groups_by_module(tmp_path):

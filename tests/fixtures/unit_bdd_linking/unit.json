@@ -1,0 +1,17 @@
+[
+  {
+    "keyword": "Feature",
+    "name": "Login form validation",
+    "elements": [
+      {
+        "keyword": "Scenario",
+        "name": "Login form accepts valid credentials",
+        "status": "passed",
+        "tags": [{"name": "@scenario:FC-013"}],
+        "steps": [
+          {"result": {"status": "passed", "duration": 1000000}}
+        ]
+      }
+    ]
+  }
+]

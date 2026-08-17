@@ -110,6 +110,53 @@ def test_cucumber_parser_keeps_scenario_failed_in_before_scenario_hook(tag, tmp_
     assert results[0].status == "failed"
 
 
+def test_cucumber_parser_warns_on_id_tag_in_non_e2e_layer(tmp_path, capsys):
+    payload_path = tmp_path / "unit.json"
+    payload_path.write_text(
+        """
+        [{
+          "elements": [{
+            "keyword": "Scenario",
+            "name": "A unit-level scenario",
+            "status": "passed",
+            "tags": [{"name": "@id:FC-400"}, {"name": "@scenario:FC-400"}],
+            "steps": [{"result": {"status": "passed", "duration": 1000000000}}]
+          }]
+        }]
+        """,
+        encoding="utf-8",
+    )
+
+    results = CucumberParser().parse([payload_path], layer="unit", module="parsers")
+
+    assert len(results) == 1
+    err = capsys.readouterr().err
+    assert "@id:FC-400" in err
+    assert "@scenario:" in err
+
+
+def test_cucumber_parser_does_not_warn_on_id_tag_in_e2e_layer(tmp_path, capsys):
+    payload_path = tmp_path / "e2e.json"
+    payload_path.write_text(
+        """
+        [{
+          "elements": [{
+            "keyword": "Scenario",
+            "name": "An e2e scenario",
+            "status": "passed",
+            "tags": [{"name": "@id:FC-401"}, {"name": "@scenario:FC-401"}],
+            "steps": [{"result": {"status": "passed", "duration": 1000000000}}]
+          }]
+        }]
+        """,
+        encoding="utf-8",
+    )
+
+    CucumberParser().parse([payload_path], layer="e2e", module="")
+
+    assert capsys.readouterr().err == ""
+
+
 def test_cucumber_parser_drops_tag_filtered_skipped_scenario_with_no_step_results(tmp_path):
     payload_path = tmp_path / "e2e.json"
     payload_path.write_text(

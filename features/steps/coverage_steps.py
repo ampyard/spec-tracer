@@ -21,6 +21,7 @@ TAG_FIXTURES = {
     "@FC-007": "module_scope",
     "@FC-011": "fail_on_gate",
     "@FC-012": "unconfigured_module",
+    "@FC-013": "unit_bdd_linking",
     "@FC-EDGE-001": "edge_cases/collision_across",
     "@FC-EDGE-002": "edge_cases/collision_within",
     "@FC-EDGE-003": "edge_cases/feature_tags_not_inherited",
@@ -41,6 +42,12 @@ def step_feature_with_tag(context, tag):
 def step_unit_with_tag(context, tag):
     dir_name = TAG_FIXTURES.get(tag, "unit_linking")
     context.unit = str(FIXTURES / dir_name / "unit.xml")
+
+
+@given('a unit Cucumber JSON result tagged "{tag}"')
+def step_unit_bdd_with_tag(context, tag):
+    dir_name = TAG_FIXTURES.get(tag, "unit_bdd_linking")
+    context.unit = str(FIXTURES / dir_name / "unit.json")
 
 
 @given('a module-scoped unit JUnit XML result tagged "{tag}" for module "{module}"')

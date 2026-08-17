@@ -141,7 +141,7 @@ Feature: User Login
 ### Where the tool looks for tags in test results
 
 - **JUnit XML (unit/integration):** the `name` attribute, `classname` attribute, or `<properties><property>` elements — whichever your framework populates.
-- **Cucumber JSON (E2E):** the native scenario-level `tags` array.
+- **Cucumber JSON (any layer):** the native scenario-level `tags` array. Unit and integration layers can be BDD-based too — a unit/integration-level Gherkin scenario tagged `@scenario:FC-42` (instead of a JUnit test carrying that tag) links to the e2e scenario the same way, as long as the scenario itself is made to pass. Only `@scenario:` matters on these results; `@id:` has no effect outside files listed under `features`, and the tool prints a warning if a non-e2e result carries one (usually a copy-paste leftover from an e2e-style feature file).
 
 ## Configuration File
 
@@ -177,8 +177,8 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | Key | Required | Description |
 |---|---|---|
 | `features` | Yes | Array of Gherkin `.feature` file or directory paths (directories are searched recursively). |
-| `unit` | No | Object keyed by module name. Each value is an array of JUnit XML file/directory paths. Use `""` as the key for results not tied to any module. Matched against `@require-unit` / `@require-unit:<module>` tags. |
-| `integration` | No | Same shape as `unit`, matched against `@require-integration` / `@require-integration:<module>` tags. |
+| `unit` | No | Object keyed by module name. Each value is an array of JUnit XML and/or Cucumber JSON file/directory paths — format is auto-detected per file (by extension, falling back to content sniffing for extensionless paths), so a module can mix both. Use `""` as the key for results not tied to any module. Matched against `@require-unit` / `@require-unit:<module>` tags. |
+| `integration` | No | Same shape as `unit` (JUnit XML and/or Cucumber JSON, auto-detected), matched against `@require-integration` / `@require-integration:<module>` tags. |
 | `e2e` | No | Same shape as `unit`, but for Cucumber JSON file/directory paths. Matched against `@require-e2e` / `@require-e2e:<module>` tags. |
 | `output` | Yes | Path for the generated HTML report. Created if the parent directory doesn't exist; overwritten if it already exists. |
 | `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |

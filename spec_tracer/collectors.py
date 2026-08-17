@@ -42,3 +42,23 @@ class FileCollector:
             elif path.is_dir():
                 files.extend(sorted(path.rglob("*.json")))
         return sorted({path.resolve() for path in files})
+
+    @staticmethod
+    def result_files(paths: List[str]) -> List[Path]:
+        """Collect unit/integration result files: JUnit XML or Cucumber JSON.
+
+        Directories are searched recursively for both ``*.xml`` and
+        ``*.json``. Individual file paths are included as given regardless
+        of extension; the caller is responsible for detecting their format.
+        """
+        files: List[Path] = []
+        for raw_path in paths:
+            path = Path(raw_path)
+            if not path.exists():
+                continue
+            if path.is_file():
+                files.append(path)
+            elif path.is_dir():
+                files.extend(sorted(path.rglob("*.xml")))
+                files.extend(sorted(path.rglob("*.json")))
+        return sorted({path.resolve() for path in files})

@@ -199,7 +199,7 @@
             </td>
           </tr>
           <tr>
-            <td><strong>Cucumber JSON</strong><br>(E2E)</td>
+            <td><strong>Cucumber JSON</strong><br>(any layer)</td>
             <td>The native scenario-level <code>tags</code> array</td>
           </tr>
         </tbody>
@@ -213,6 +213,19 @@
     <div class="code">
       <div class="code-head"><span>a real test name from SpecTracer's own report</span></div>
 <pre><code>test_render_dashboard_sections_present[@scenario:FC-006]</code></pre>
+    </div>
+
+    <div class="note">
+      <strong>Unit and integration layers can be BDD-based too</strong>
+      <p>Cucumber JSON isn't only for E2E. A unit- or integration-level Gherkin scenario tagged
+      <code>@scenario:FC-42</code> links back to the E2E-defined spec scenario exactly like a JUnit
+      test with the same tag would — as long as the scenario itself is made to pass. <code>unit</code>
+      and <code>integration</code> config entries accept JUnit XML and Cucumber JSON interchangeably;
+      format is auto-detected per file, so a module can mix both.</p>
+      <p>Only <code>@scenario:</code> matters on these results. <code>@id:</code> has no effect outside
+      files listed under <code>features</code> — SpecTracer prints a warning if a non-E2E result carries
+      one, since it's almost always a copy-paste leftover from an E2E-style feature file rather than a
+      deliberate identity tag.</p>
     </div>
 
     <h2 id="requirements">Layer requirements</h2>

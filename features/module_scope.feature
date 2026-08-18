@@ -1,6 +1,6 @@
 Feature: Module Scoped Layer Requirements
 
-  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers @require-integration:parsers
+  @id:FC-007 @require-unit:parsers @require-e2e:parsers @require-integration:parsers
   Scenario: Report marks the requirement satisfied when the module matches
     Given a feature file with scenario tagged "@FC-007"
     And a module-scoped unit JUnit XML result tagged "@FC-007" for module "parsers"
@@ -9,7 +9,7 @@ Feature: Module Scoped Layer Requirements
     And the report should contain "unit"
     And the report should contain "required-chip ok"
 
-  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers
+  @id:FC-007 @require-unit:parsers @require-e2e:parsers
   Scenario: Report flags the requirement unconfigured when the required module is never registered
     Given a feature file with scenario tagged "@FC-007"
     And a module-scoped unit JUnit XML result tagged "@FC-007" for module "other"
@@ -17,7 +17,7 @@ Feature: Module Scoped Layer Requirements
     Then the exit code should be 0
     And the report should contain "required-chip unconfigured"
 
-  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers
+  @id:FC-007 @require-unit:parsers @require-e2e:parsers
   Scenario: Report marks the e2e requirement satisfied when the module matches
     Given a feature file with scenario tagged "@FC-007"
     And a module-scoped E2E Cucumber JSON result tagged "@FC-007" for module "parsers"
@@ -26,7 +26,7 @@ Feature: Module Scoped Layer Requirements
     And the report should contain "e2e"
     And the report should contain "required-chip ok"
 
-  @id:FC-007 @scenario:FC-007 @require-unit:parsers @require-e2e:parsers
+  @id:FC-007 @require-unit:parsers @require-e2e:parsers
   Scenario: Report flags the e2e requirement unconfigured when the required module is never registered
     Given a feature file with scenario tagged "@FC-007"
     And a module-scoped E2E Cucumber JSON result tagged "@FC-007" for module "other"

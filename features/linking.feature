@@ -1,6 +1,6 @@
 Feature: Linking
 
-  @id:FC-001 @scenario:FC-001 @require-unit:linker @require-e2e:linker
+  @id:FC-001 @require-unit:linker @require-e2e:linker
   Scenario: Generate report with linked unit and E2E coverage
     Given a feature file with scenario tagged "@FC-001"
     And a unit JUnit XML result tagged "@FC-001"
@@ -13,7 +13,7 @@ Feature: Linking
     And the report should contain "<strong>e2e</strong>"
     And the report should contain "<strong>unit</strong>"
 
-  @id:FC-002 @scenario:FC-002 @require-unit:linker @require-e2e:linker @require-integration:linker
+  @id:FC-002 @require-unit:linker @require-e2e:linker @require-integration:linker
   Scenario: Report shows passed, failed, and skipped statuses
     Given a feature file with scenario tagged "@FC-002"
     And a unit JUnit XML result tagged "@FC-002"
@@ -25,7 +25,7 @@ Feature: Linking
     And the report should contain "badge failed"
     And the report should contain "badge skipped"
 
-  @id:FC-003 @scenario:FC-003 @require-integration:linker @require-e2e:linker
+  @id:FC-003 @require-integration:linker @require-e2e:linker
   Scenario: Generate report with linked integration coverage
     Given a feature file with scenario tagged "@FC-003"
     And an integration JUnit XML result tagged "@FC-003"
@@ -36,7 +36,7 @@ Feature: Linking
     And the report should contain "scenarios fully matched"
     And the report should contain "<strong>integration</strong>"
 
-  @id:FC-013 @scenario:FC-013 @require-unit:collectors
+  @id:FC-013 @require-unit:collectors
   Scenario: Generate report with a unit-layer result supplied as Cucumber JSON
     Given a feature file with scenario tagged "@FC-013"
     And a unit Cucumber JSON result tagged "@FC-013"
@@ -45,7 +45,7 @@ Feature: Linking
     And the report should contain "<strong>unit</strong>"
     And the report should contain "Login form accepts valid credentials"
 
-  @id:FC-004 @scenario:FC-004 @require-unit:collectors @require-integration:collectors @require-e2e:collectors
+  @id:FC-004 @require-unit:collectors @require-integration:collectors @require-e2e:collectors
   Scenario: Generate report when unit and integration flags are repeated
     Given a feature file with scenario tagged "@FC-004"
     And a unit JUnit XML result tagged "@FC-004"

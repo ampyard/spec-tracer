@@ -205,6 +205,15 @@ uv run python run_local.py</code></pre>
     </div>
 
     <div class="note">
+      <strong>E2E results don't need this step</strong>
+      <p>The <code>@scenario:</code> tag above is for a <em>separate</em> unit- or integration-level BDD
+      scenario claiming <code>FC-42</code>. If instead you're running the very feature file that declares
+      <code>@id:FC-42</code> as your E2E suite, its Cucumber JSON output already carries that
+      <code>@id:</code> tag — SpecTracer links E2E results by <code>@id:</code> automatically, so there's
+      nothing to add. See <a href="tagging.html#linking">the tagging model</a> for why.</p>
+    </div>
+
+    <div class="note">
       <strong>Where SpecTracer looks</strong>
       <p><strong>JUnit XML</strong> — the <code>name</code> attribute, the <code>classname</code>
       attribute, and <code>&lt;properties&gt;&lt;property&gt;</code> elements.</p>

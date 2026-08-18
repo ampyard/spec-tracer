@@ -122,7 +122,7 @@ Feature: User Login
 ```
 
 - **Scenario identity tags** (`@id:FC-42`) — placed on Gherkin scenarios. Declares the scenario's stable identity.
-- **Test reference tags** (`@scenario:FC-42`) — placed on test results (via pytest markers, test names, or annotations). A result with `@scenario:FC-42` links to any scenario carrying `@id:FC-42`.
+- **Test reference tags** (`@scenario:FC-42`) — placed on test results (via pytest markers, test names, or annotations). A result with `@scenario:FC-42` links to any scenario carrying `@id:FC-42`. For e2e results, this is optional: since the e2e runner executes the same feature file, its Cucumber JSON already carries the scenario's `@id:FC-42` tag verbatim, and that alone is enough to link — no duplicate `@scenario:` tag needed. Unit/integration results, which come from separate test files, still require an explicit `@scenario:` tag.
 - **Layer requirement tags** (`@require-unit`, `@require-integration`, `@require-e2e`) — declare which layers *must* have coverage for this scenario. These are never used for linking, and the tool flags any declared layer that ends up with zero linked results.
 
 ### Module-scoped requirements
@@ -141,7 +141,7 @@ Feature: User Login
 ### Where the tool looks for tags in test results
 
 - **JUnit XML (unit/integration):** the `name` attribute, `classname` attribute, or `<properties><property>` elements — whichever your framework populates.
-- **Cucumber JSON (any layer):** the native scenario-level `tags` array. Unit and integration layers can be BDD-based too — a unit/integration-level Gherkin scenario tagged `@scenario:FC-42` (instead of a JUnit test carrying that tag) links to the e2e scenario the same way, as long as the scenario itself is made to pass. Only `@scenario:` matters on these results; `@id:` has no effect outside files listed under `features`, and the tool prints a warning if a non-e2e result carries one (usually a copy-paste leftover from an e2e-style feature file).
+- **Cucumber JSON (any layer):** the native scenario-level `tags` array. Unit and integration layers can be BDD-based too — a unit/integration-level Gherkin scenario tagged `@scenario:FC-42` (instead of a JUnit test carrying that tag) links to the e2e scenario the same way, as long as the scenario itself is made to pass. For e2e results, both `@scenario:FC-42` and `@id:FC-42` link (the latter lets an e2e feature file's own identity tag double as the link, with no separate tag needed). For unit/integration results, only `@scenario:` matters; `@id:` has no effect outside files listed under `features`, and the tool prints a warning if a non-e2e result carries one (usually a copy-paste leftover from an e2e-style feature file).
 
 ## Configuration File
 

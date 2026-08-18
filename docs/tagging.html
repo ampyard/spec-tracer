@@ -87,7 +87,8 @@
       <div class="card">
         <span class="card-mark e2e">@scenario:</span>
         <h3>Reference</h3>
-        <p>Goes on a <strong>test result</strong>. Claims "I am one of the tests covering that scenario."</p>
+        <p>Goes on a <strong>test result</strong>. Claims "I am one of the tests covering that scenario." E2E
+        results get this for free from their own <code>@id:</code> tag — see <a href="#linking">below</a>.</p>
         <p><span class="tag tag-ref">@scenario:FC-42</span></p>
       </div>
       <div class="card">
@@ -125,7 +126,13 @@
     <h2 id="linking">How linking works</h2>
     <p>The linker is deliberately the dumbest part of the tool. For each scenario it collects the set
     of values after <code>@id:</code>, then keeps every test result carrying an
-    <code>@scenario:</code> tag whose value is in that set.</p>
+    <code>@scenario:</code> tag whose value is in that set. <strong>E2E results get one extra rule:</strong>
+    an <code>@id:</code> tag on an E2E result counts the same as a matching <code>@scenario:</code> tag.
+    This is not a new tagging convention — it's recognizing that an E2E result comes from running the
+    same feature file the scenario is declared in, so its Cucumber JSON already carries the scenario's
+    own <code>@id:</code> tag verbatim. You don't have to add a redundant <code>@scenario:</code> tag next
+    to it just to make linking happen. Unit and integration results aren't run from the feature file, so
+    they still need an explicit <code>@scenario:</code> tag.</p>
 
     <div class="code">
       <div class="code-head"><span>spec_tracer/linker.py — abridged</span></div>
@@ -136,6 +143,7 @@
         linked = [
             r <span class="c-key">for</span> r <span class="c-key">in</span> results
             <span class="c-key">if</span> <span class="c-fn">any</span>(t.<span class="c-fn">startswith</span>(<span class="c-str">"@scenario:"</span>) <span class="c-key">and</span> t[<span class="c-num">10</span>:] <span class="c-key">in</span> ids <span class="c-key">for</span> t <span class="c-key">in</span> r.tags)
+            <span class="c-key">or</span> (r.layer == <span class="c-str">"e2e"</span> <span class="c-key">and</span> <span class="c-fn">any</span>(t.<span class="c-fn">startswith</span>(<span class="c-str">"@id:"</span>) <span class="c-key">and</span> t[<span class="c-num">4</span>:] <span class="c-key">in</span> ids <span class="c-key">for</span> t <span class="c-key">in</span> r.tags))
         ]
         links[<span class="c-fn">id</span>(scenario)] = linked
     <span class="c-key">return</span> links</code></pre>
@@ -149,7 +157,7 @@
         <tbody>
           <tr>
             <td><strong>Prefix-filtered</strong></td>
-            <td>Only <code>@scenario:</code> on results and <code>@id:</code> on scenarios participate. <code>@regression</code>, <code>@smoke</code>, and everything else is ignored during linking.</td>
+            <td>Only <code>@scenario:</code> on results, <code>@id:</code> on scenarios, and (E2E results only) <code>@id:</code> on results participate. <code>@regression</code>, <code>@smoke</code>, and everything else is ignored during linking.</td>
           </tr>
           <tr>
             <td><strong>Exact value match</strong></td>
@@ -222,10 +230,11 @@
       test with the same tag would — as long as the scenario itself is made to pass. <code>unit</code>
       and <code>integration</code> config entries accept JUnit XML and Cucumber JSON interchangeably;
       format is auto-detected per file, so a module can mix both.</p>
-      <p>Only <code>@scenario:</code> matters on these results. <code>@id:</code> has no effect outside
-      files listed under <code>features</code> — SpecTracer prints a warning if a non-E2E result carries
-      one, since it's almost always a copy-paste leftover from an E2E-style feature file rather than a
-      deliberate identity tag.</p>
+      <p>Only <code>@scenario:</code> matters on these results. <code>@id:</code> has no linking effect on
+      unit or integration results — SpecTracer prints a warning if one carries it, since it's almost
+      always a copy-paste leftover from an E2E-style feature file rather than a deliberate identity tag.
+      (On E2E results, <code>@id:</code> <em>does</em> link — see <a href="#linking">How linking
+      works</a>.)</p>
     </div>
 
     <h2 id="requirements">Layer requirements</h2>

@@ -8,7 +8,10 @@ def _scenario_ids(scenario: Scenario) -> set:
 
 
 def _result_scenario_tags(result: TestResult) -> list:
-    return [tag[10:] for tag in result.tags if tag.startswith("@scenario:")]
+    tags = [tag[10:] for tag in result.tags if tag.startswith("@scenario:")]
+    if result.layer == "e2e":
+        tags.extend(tag[4:] for tag in result.tags if tag.startswith("@id:"))
+    return tags
 
 
 class ResultLinker:

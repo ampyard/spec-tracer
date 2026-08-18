@@ -196,6 +196,21 @@ def test_unlinked_results_surfaces_non_scenario_tags():
     assert result == [unlinked]
 
 
+def test_unlinked_results_excludes_e2e_results_linked_by_id_tag():
+    """E2E results carry @id: (no @scenario:) and must still count as linked.
+
+    Mirrors the linker's e2e auto-linking so the Unlinked Tests section
+    stays consistent with the Feature breakdown tab.
+    """
+    scenarios = [Scenario(feature="F", name="S1", tags=["@id:FC-001"])]
+    linked = TestResult(layer="e2e", name="t1", tags=["@id:FC-001"])
+    unlinked = TestResult(layer="e2e", name="t2", tags=["@id:FC-999"])
+
+    result = ReportAggregator.unlinked_results(scenarios, [linked, unlinked])
+
+    assert result == [unlinked]
+
+
 def test_unlinked_results_excludes_tagless_results():
     """Results carrying no tags are excluded — they can never link to a scenario.
 

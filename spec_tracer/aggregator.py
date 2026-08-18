@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List, Set
 
-from spec_tracer.linker import _scenario_ids
+from spec_tracer.linker import _result_scenario_tags, _scenario_ids
 from spec_tracer.models import Scenario, ScenarioView, TestResult
 from spec_tracer.models import completion_fraction, completion_ratio
 
@@ -246,15 +246,16 @@ class ReportAggregator:
 
     @staticmethod
     def unlinked_results(scenarios: List[Scenario], results: List[TestResult]) -> List[TestResult]:
-        """Return results whose ``@scenario:`` tags matched no scenario ``@id:`` tag.
+        """Return results whose linking tags matched no scenario ``@id:`` tag.
 
-        A result counts as unlinked when it carries at least one tag but no
-        ``@scenario:VALUE`` tag matches any scenario's ``@id:VALUE``. Results
-        tagged with only category tags like ``@smoke`` (no ``@scenario:`` prefix)
-        are therefore always unlinked, which is the desired behaviour: category
-        tags must not carry linking weight. Results with no tags at all are
-        excluded because they can never link and would otherwise flood the
-        "Unlinked Tests" section with noise from untagged test runners.
+        A result counts as unlinked when it carries at least one tag but none
+        of its linking tags (``@scenario:VALUE``, or ``@id:VALUE`` for e2e
+        results) match any scenario's ``@id:VALUE``. Results tagged with only
+        category tags like ``@smoke`` are therefore always unlinked, which is
+        the desired behaviour: category tags must not carry linking weight.
+        Results with no tags at all are excluded because they can never link
+        and would otherwise flood the "Unlinked Tests" section with noise
+        from untagged test runners.
         """
         all_scenario_ids = set()
         for scenario in scenarios:
@@ -263,8 +264,5 @@ class ReportAggregator:
             result
             for result in results
             if result.tags
-            and not any(
-                tag.startswith("@scenario:") and tag[10:] in all_scenario_ids
-                for tag in result.tags
-            )
+            and not any(rsid in all_scenario_ids for rsid in _result_scenario_tags(result))
         ]

@@ -62,3 +62,21 @@ def test_link_returns_empty_list_for_every_scenario_when_no_results():
     links = ResultLinker.link(scenarios, [])
 
     assert links[id(scenarios[0])] == []
+
+
+def test_link_matches_e2e_result_by_id_tag_alone():
+    scenario = Scenario(feature="F", name="S1", tags=["@id:FC-300"])
+    e2e_result = TestResult(layer="e2e", name="e1", tags=["@id:FC-300"])
+
+    links = ResultLinker.link([scenario], [e2e_result])
+
+    assert links[id(scenario)] == [e2e_result]
+
+
+def test_link_ignores_id_tag_on_non_e2e_results():
+    scenario = Scenario(feature="F", name="S1", tags=["@id:FC-301"])
+    unit_result = TestResult(layer="unit", name="u1", tags=["@id:FC-301"])
+
+    links = ResultLinker.link([scenario], [unit_result])
+
+    assert links[id(scenario)] == []

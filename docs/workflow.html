@@ -111,10 +111,11 @@
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L4 3v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l3.59-3.59a2 2 0 0 0 0-2.58z"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>
         </div>
         <h3>Tag</h3>
-        <p>Add <code>@scenario:FC-42</code> to the test that covers it, in name or tag form.</p>
+        <p>Add <code>@scenario:FC-42</code> to the unit/integration test that covers it, in name or tag
+        form. E2E is exempt — running the feature file already produces that <code>@id:</code>.</p>
         <div class="flow-tags">
           <span class="tag tag-ref">@scenario:FC-42</span>
-          <span class="tag tag-other">pytest / JUnit / behave</span>
+          <span class="tag tag-other">pytest / JUnit</span>
         </div>
       </div>
 
@@ -177,9 +178,11 @@
       </div>
       <div class="card">
         <span class="card-mark e2e">.feature</span>
-        <h3>A native Cucumber tag</h3>
-        <p>E2E scenarios that mirror the declaration can just carry the tag directly — Cucumber
-        already puts it in the JSON <code>tags</code> array.</p>
+        <h3>Nothing to add, for E2E</h3>
+        <p>An E2E result is produced by running the very feature file the scenario is declared in, so
+        its Cucumber JSON <code>tags</code> array already carries <code>@id:FC-42</code>. SpecTracer
+        links E2E results by that <code>@id:</code> directly — no separate <code>@scenario:</code> tag
+        needed.</p>
       </div>
     </div>
 

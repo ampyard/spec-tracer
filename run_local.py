@@ -100,6 +100,14 @@ PYTEST_STEPS = [
         "uv", "run", "pytest", "tests/integration/test_unit_linking.py",
         "--junitxml=reports/int-unit_linking.xml", "-q",
     ]),
+    ("Integration: client_render", [
+        "uv", "run", "pytest", "tests/integration/test_client_render.py",
+        "--junitxml=reports/int-client_render.xml", "-q",
+    ]),
+    ("Integration: client_browser", [
+        "uv", "run", "pytest", "tests/integration/test_client_browser.py",
+        "--junitxml=reports/int-client_browser.xml", "-q",
+    ]),
 ]
 
 BEHAVE_STEPS = [

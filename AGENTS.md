@@ -22,6 +22,8 @@ uv run python run_local.py                            # reproduce CI end-to-end,
 uv build                                              # build wheel into dist/
 ```
 
+`tests/integration/test_client_browser.py` executes the client renderer in a real headless browser and needs Playwright's chromium: `uv run playwright install chromium` (CI does `uv run playwright install --with-deps chromium`). The test skips — never fails — when playwright or the browser is missing.
+
 There is no test runner other than pytest/behave; no `make`, `nox`, or task-runner config.
 
 ## The `run_local.py` / CI pipeline

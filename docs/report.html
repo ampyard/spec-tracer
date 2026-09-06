@@ -77,17 +77,19 @@
     mockup.</p>
 
     <h2 id="live-preview">Live sample report</h2>
-    <p class="note"><strong>See the real thing — no setup required.</strong> Click below to open a fresh tab with SpecTracer's actual HTML output from this repo, showing all six pages. It's exactly what you'll get after running the tool on your own project.</p>
+    <p class="note"><strong>See the real thing — no setup required.</strong> Click below to open a fresh tab with SpecTracer's actual HTML output from this repo, showing all five pages. It's exactly what you'll get after running the tool on your own project.</p>
 
     <a href="https://artifact.ci/artifact/blob/ampyard/spec-tracer/branch/main/reports/spectracer-report.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary preview-btn" style="margin-top:14px;">
       Open live report in a new tab
     </a>
 
     <h2 id="shell">The file itself</h2>
-    <p>The report is a single self-contained HTML file. All CSS and JavaScript are inlined, and the data
-    is rendered into the markup server-side rather than shipped as a JSON payload. The one network
-    request is a monospace webfont from a CDN, which degrades to the system monospace if you're
-    offline.</p>
+    <p>The report is a single self-contained HTML file. All CSS and JavaScript are inlined. By
+    default the pages are rendered server-side into the markup; with
+    <a href="configuration.html#render"><code>render_mode: "client"</code></a> the report JSON is
+    embedded inline instead and the same pages are built from it in the browser. Either way, the only
+    network request is a monospace webfont from a CDN, which degrades to the system monospace if
+    you're offline.</p>
 
     <ul>
       <li><strong>Email it, archive it, attach it to a build.</strong> No server, no build step, no
@@ -259,7 +261,9 @@
     <h2 id="json">The JSON twin</h2>
     <p>Set <code>output_json</code> and the same data is written as schema-validated JSON alongside the
     HTML. It's built from the same internal model as the HTML renderer, so the two physically cannot
-    disagree.</p>
+    disagree. With <code>render_mode: "client"</code> the HTML embeds that exact JSON object itself, so
+    the machine-readable report ships inside the single HTML file even without a separate
+    <code>output_json</code>.</p>
 
     <div class="code">
       <div class="code-head"><span>reading the headline number in CI</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>

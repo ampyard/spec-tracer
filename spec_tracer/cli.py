@@ -58,6 +58,11 @@ def _load_config(path: Path) -> dict:
     duplicates = sorted({name for name in fail_on if fail_on.count(name) > 1})
     if duplicates:
         raise ValueError(f"Config key 'fail_on' has duplicate entries: {duplicates}")
+    render_mode = config.get("render_mode", "server")
+    if render_mode not in ("server", "client"):
+        raise ValueError(
+            f"Config key 'render_mode' must be 'server' or 'client', got: {render_mode!r}"
+        )
     return config
 
 
@@ -205,6 +210,25 @@ def main(argv: List[str] | None = None) -> int:
     )
     failure_breakdown = ReportAggregator.failure_breakdown(views)
 
+    render_mode = config.get("render_mode", "server")
+    needs_report_json = bool(config.get("output_json")) or render_mode == "client"
+    report = None
+    if needs_report_json:
+        report = build_report(
+            config,
+            views,
+            stats,
+            layer_stats,
+            health_checks,
+            unlinked_results,
+            feature_files=feature_files,
+            known_modules=known_modules,
+        )
+        if config.get("output_json"):
+            output_json_path = Path(config["output_json"])
+            output_json_path.parent.mkdir(parents=True, exist_ok=True)
+            output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
     renderer = HtmlRenderer()
     html = renderer.render(
         views,
@@ -217,26 +241,13 @@ def main(argv: List[str] | None = None) -> int:
         failure_breakdown=failure_breakdown,
         logo_data_uri=_load_logo(config_path.parent),
         known_modules=known_modules,
+        render_mode=render_mode,
+        json_report=report,
     )
 
     output_path = Path(config["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
-
-    if config.get("output_json"):
-        report = build_report(
-            config,
-            views,
-            stats,
-            layer_stats,
-            health_checks,
-            unlinked_results,
-            feature_files=feature_files,
-            known_modules=known_modules,
-        )
-        output_json_path = Path(config["output_json"])
-        output_json_path.parent.mkdir(parents=True, exist_ok=True)
-        output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print("Report generated:")
     print(f"  HTML: {output_path}")

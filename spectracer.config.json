@@ -20,7 +20,11 @@
     "json_report": ["./reports/int-json_report.xml"],
     "missing_required_layer": ["./reports/int-missing_required_layer.xml"],
     "status_badges": ["./reports/int-status_badges.xml"],
-    "unit_linking": ["./reports/int-unit_linking.xml"]
+    "unit_linking": ["./reports/int-unit_linking.xml"],
+    "renderers": [
+      "./reports/int-client_render.xml",
+      "./reports/int-client_browser.xml"
+    ]
   },
   "e2e": {
     "linker": [

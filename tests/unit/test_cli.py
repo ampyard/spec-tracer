@@ -196,3 +196,47 @@ def test_failing_gated_checks_flags_multiple_failing_listed_checks(tag):
         "pyramid",
         "e2e_runtime",
     ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_defaults_render_mode_to_server(tag, tmp_path):
+    path = _write_config(tmp_path)
+    config = _load_config(path)
+    assert config.get("render_mode", "server") == "server"
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_accepts_client_render_mode(tag, tmp_path):
+    path = _write_config(tmp_path, render_mode="client")
+    assert _load_config(path)["render_mode"] == "client"
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_rejects_unknown_render_mode(tag, tmp_path):
+    path = _write_config(tmp_path, render_mode="magic")
+    with pytest.raises(ValueError, match="render_mode"):
+        _load_config(path)
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_main_client_render_embeds_json_without_output_json(tag, tmp_path, capsys):
+    config_path = tmp_path / "spectracer.config.json"
+    output = tmp_path / "report.html"
+    config_path.write_text(
+        json.dumps(
+            {
+                "features": [str(ROOT / "features")],
+                "output": str(output),
+                "render_mode": "client",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main([str(config_path)]) == 0
+    out = capsys.readouterr().out
+    assert f"HTML: {output}" in out
+    assert "JSON:" not in out
+    html = output.read_text(encoding="utf-8")
+    assert '<script type="application/json" id="report-data">' in html
+    assert "JSON.parse(document.getElementById('report-data').textContent)" in html

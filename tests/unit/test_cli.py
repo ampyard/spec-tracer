@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from spec_tracer.cli import (
     _failing_gated_checks,
     _known_modules,
     _load_config,
+    _relative_feature_path,
     main,
 )
 
@@ -240,3 +242,24 @@ def test_main_client_render_embeds_json_without_output_json(tag, tmp_path, capsy
     html = output.read_text(encoding="utf-8")
     assert '<script type="application/json" id="report-data">' in html
     assert "JSON.parse(document.getElementById('report-data').textContent)" in html
+
+
+def test_relative_feature_path_uses_forward_slashes():
+    base = (ROOT / "tests").resolve()
+    path = ROOT / "features" / "dashboard.feature"
+    result = _relative_feature_path(path, base)
+    assert "\\" not in result
+    assert result == os.path.relpath(path, base).replace("\\", "/")
+
+
+def test_relative_feature_path_falls_back_when_relpath_raises(monkeypatch):
+    """Windows raises when config and feature are on different drives
+    (e.g. tmp_path on C:, repo on D:) — must fall back to the absolute path."""
+
+    def _raise(start, base):
+        raise ValueError("path is on mount 'C:', start on mount 'D:'")
+
+    monkeypatch.setattr(os.path, "relpath", _raise)
+    path = ROOT / "features" / "dashboard.feature"
+    result = _relative_feature_path(path, (ROOT / "tests").resolve())
+    assert result == str(path.resolve()).replace("\\", "/")

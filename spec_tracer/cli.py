@@ -94,11 +94,26 @@ def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
     resolved_base = base_dir.resolve()
     for f in files:
         parsed = parser.parse(f)
-        relative = os.path.relpath(f, resolved_base)
+        relative = _relative_feature_path(f, resolved_base)
         for scenario in parsed:
-            feature_files.setdefault(scenario.feature, relative.replace("\\", "/"))
+            feature_files.setdefault(scenario.feature, relative)
         scenarios.extend(parsed)
     return scenarios, feature_files
+
+
+def _relative_feature_path(path: Path, base: Path) -> str:
+    """Feature path for the report, relative to the config dir when possible.
+
+    ``os.path.relpath`` raises on Windows when config and feature live on
+    different drives (e.g. the config is in a temp dir on ``C:`` and the
+    repo is on ``D:``) — there simply is no relative path then, so fall back
+    to the resolved absolute path. Forward slashes keep the JSON portable.
+    """
+    try:
+        relative = os.path.relpath(path, base)
+    except ValueError:
+        return str(path.resolve()).replace("\\", "/")
+    return relative.replace("\\", "/")
 
 
 def _detect_result_format(path: Path) -> str:

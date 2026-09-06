@@ -361,7 +361,7 @@ def test_config_is_echoed_verbatim(tag):
 def test_schema_version_and_generated_at_present(tag):
     report = _build([])
 
-    assert report["schemaVersion"] == "3"
+    assert report["schemaVersion"] == "4"
     assert report["generatedAt"].endswith("Z")
 
 
@@ -454,3 +454,125 @@ def test_summary_health_checks_omit_layers_for_non_pyramid(tag):
     assert report["summary"]["healthChecks"] == [
         {"key": "Progress", "status": "warn", "message": "needs attention", "value": "1/2"}
     ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_empty_when_only_unscoped_keys(tag):
+    config = {"features": ["./features"], "output": "./out.html", "unit": {"": ["./unit.xml"]}}
+
+    report = _build([], config=config)
+
+    assert report["modules"] == []
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_lists_configured_unit_integration_keys_sorted(tag):
+    config = {
+        "features": ["./features"],
+        "output": "./out.html",
+        "unit": {"billing": ["./u.xml"], "auth": ["./u.xml"]},
+        "integration": {"auth": ["./i.xml"]},
+    }
+
+    report = _build([], config=config)
+
+    assert [m["key"] for m in report["modules"]] == ["auth", "billing"]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_summary_card_counts_for_module(tag):
+    config = {
+        "features": ["./features"],
+        "output": "./out.html",
+        "unit": {"auth": ["./u.xml"], "billing": ["./u.xml"]},
+    }
+    views = [
+        _view(
+            "F",
+            "S1",
+            required_layers=[RequiredLayer("unit", module="auth")],
+            results=[TestResult(layer="unit", name="a1", module="auth")],
+        ),
+        _view(
+            "F",
+            "S2",
+            required_layers=[RequiredLayer("unit", module="auth")],
+            results=[],
+        ),
+        _view(
+            "F",
+            "S3",
+            required_layers=[RequiredLayer("unit", module="billing")],
+            results=[TestResult(layer="unit", name="b1", module="billing")],
+        ),
+    ]
+
+    report = _build(views, config=config)
+
+    by_key = {m["key"]: m for m in report["modules"]}
+    assert by_key["auth"]["completion"] == {"tested": 1, "total": 2, "pct": 50}
+    assert by_key["auth"]["pyramid"]["unit"]["count"] == 1
+    assert by_key["auth"]["pyramid"]["integration"]["count"] == 0
+    assert by_key["auth"]["worst"] == "passed"
+    assert by_key["billing"]["completion"] == {"tested": 1, "total": 1, "pct": 100}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_worst_signal_from_failed_module_result(tag):
+    config = {"features": ["./features"], "output": "./out.html", "unit": {"auth": ["./u.xml"]}}
+    views = [
+        _view(
+            "F",
+            "S1",
+            required_layers=[RequiredLayer("unit", module="auth")],
+            results=[TestResult(layer="unit", name="a1", status="failed", module="auth")],
+        ),
+    ]
+
+    report = _build(views, config=config)
+
+    assert report["modules"][0]["worst"] == "failed"
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_pyramid_counts_only_module_results_not_e2e(tag):
+    config = {
+        "features": ["./features"],
+        "output": "./out.html",
+        "unit": {"auth": ["./u.xml"]},
+        "e2e": {"auth": ["./e.json"]},
+    }
+    views = [
+        _view(
+            "F",
+            "S1",
+            required_layers=[RequiredLayer("e2e", module="auth")],
+            results=[
+                TestResult(layer="e2e", name="e1", module="auth"),
+                TestResult(layer="unit", name="a1", module="auth"),
+            ],
+        ),
+    ]
+
+    report = _build(views, config=config)
+
+    # e2e is fleet-level — it never shows up on a module's unit/integration pyramid.
+    module = report["modules"][0]
+    assert module["pyramid"]["unit"]["count"] == 1
+    assert module["pyramid"]["integration"]["count"] == 0
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_modules_unlinked_count_scoped_to_module(tag):
+    config = {"features": ["./features"], "output": "./out.html", "unit": {"auth": ["./u.xml"], "billing": ["./u.xml"]}}
+    unlinked = [
+        TestResult(layer="unit", name="u1", module="auth"),
+        TestResult(layer="unit", name="u2", module="billing"),
+        TestResult(layer="unit", name="u3", module=""),
+    ]
+
+    report = _build([], config=config, unlinked_results=unlinked)
+
+    by_key = {m["key"]: m for m in report["modules"]}
+    assert by_key["auth"]["unlinked"] == 1
+    assert by_key["billing"]["unlinked"] == 1

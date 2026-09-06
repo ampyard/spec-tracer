@@ -459,6 +459,21 @@ _TEMPLATE_STR = """<html lang="en">
     .pyramid-mini-chip strong { color: var(--text); font-variant-numeric: tabular-nums; }
     .health-link { display: inline-block; margin-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--primary); text-decoration: none; }
     .health-link:hover { text-decoration: underline; }
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .module-card { display: block; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); text-decoration: none; color: inherit; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+    .module-card:hover { border-color: var(--primary); box-shadow: var(--shadow-1); transform: translateY(-1px); }
+    .module-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .module-card-title { font-weight: 700; font-size: 1rem; color: var(--text); font-family: ui-monospace, SFMono-Regular, monospace; }
+    .module-worst { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); }
+    .module-worst.passed { background: var(--success-soft); color: var(--success); }
+    .module-worst.skipped { background: var(--warning-soft); color: var(--warning); }
+    .module-worst.failed { background: var(--danger-soft); color: var(--danger); }
+    .module-worst.none { background: var(--surface); color: var(--text-soft); }
+    .module-card .stat-bar { margin: 6px 0 4px; }
+    .module-card .stat-sub { color: var(--text-soft); font-size: 0.78rem; margin-top: 2px; }
+    .module-pyramid { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .back-link { margin-left: auto; font-size: 0.84rem; font-weight: 600; text-decoration: none; color: var(--primary); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; background: var(--surface-alt); }
+    .back-link:hover { border-color: var(--primary); background: var(--primary-soft); }
     .pyramid-shell { display: flex; flex-direction: column; gap: 14px; }
     .tier {
       display: flex;
@@ -659,6 +674,7 @@ _TEMPLATE_STR = """<html lang="en">
       .page-shell { padding: 16px; }
       .panel { padding: 20px; margin: 10px;  }
       .health-grid { grid-template-columns: 1fr; }
+      .module-grid { grid-template-columns: 1fr; }
       .table-row { grid-template-columns: 1fr; }
       .col-status { flex-basis: 90px; width: 90px; }
       .col-expected, .col-actual { flex-basis: 60px; width: 60px; }
@@ -1402,6 +1418,21 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     .pyramid-mini-chip strong { color: var(--text); font-variant-numeric: tabular-nums; }
     .health-link { display: inline-block; margin-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--primary); text-decoration: none; }
     .health-link:hover { text-decoration: underline; }
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .module-card { display: block; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-alt); text-decoration: none; color: inherit; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+    .module-card:hover { border-color: var(--primary); box-shadow: var(--shadow-1); transform: translateY(-1px); }
+    .module-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .module-card-title { font-weight: 700; font-size: 1rem; color: var(--text); font-family: ui-monospace, SFMono-Regular, monospace; }
+    .module-worst { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); }
+    .module-worst.passed { background: var(--success-soft); color: var(--success); }
+    .module-worst.skipped { background: var(--warning-soft); color: var(--warning); }
+    .module-worst.failed { background: var(--danger-soft); color: var(--danger); }
+    .module-worst.none { background: var(--surface); color: var(--text-soft); }
+    .module-card .stat-bar { margin: 6px 0 4px; }
+    .module-card .stat-sub { color: var(--text-soft); font-size: 0.78rem; margin-top: 2px; }
+    .module-pyramid { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .back-link { margin-left: auto; font-size: 0.84rem; font-weight: 600; text-decoration: none; color: var(--primary); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; background: var(--surface-alt); }
+    .back-link:hover { border-color: var(--primary); background: var(--primary-soft); }
     .pyramid-shell { display: flex; flex-direction: column; gap: 14px; }
     .tier {
       display: flex;
@@ -1601,6 +1632,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       .page-shell { padding: 16px; }
       .panel { padding: 20px; margin: 10px;  }
       .health-grid { grid-template-columns: 1fr; }
+      .module-grid { grid-template-columns: 1fr; }
       .table-row { grid-template-columns: 1fr; }
       .col-status { flex-basis: 90px; width: 90px; }
       .col-expected, .col-actual { flex-basis: 60px; width: 60px; }
@@ -1618,6 +1650,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     <a class="nav-link" data-route="/" href="#/">Dashboard</a>
     <a class="nav-link" data-route="/pyramid" href="#/pyramid">Test Pyramid</a>
     <a class="nav-link" data-route="/features" href="#/features">Feature Breakdown</a>
+    <a class="nav-link" data-route="/modules" href="#/modules">Modules</a>
     <a class="nav-link" data-route="/failures" href="#/failures">Failure Breakdown</a>
     <a class="nav-link" data-route="/unlinked" href="#/unlinked">Unlinked Tests</a>
   </nav>
@@ -1663,6 +1696,31 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
           </div>
           <div class="tree-root" data-tree-group id="feature-tree-root"></div>
         </div>
+      </section>
+    </main>
+
+    <main id="page-modules" class="page-stack hidden">
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <h2>Modules</h2>
+            <div class="muted">Per-module coverage view &middot; one card per unit/integration config key</div>
+          </div>
+        </div>
+        <div id="module-list-root"></div>
+      </section>
+    </main>
+
+    <main id="page-module-detail" class="page-stack hidden">
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <h2 id="module-detail-title">Module</h2>
+            <div class="muted" id="module-detail-sub">Module-scoped feature breakdown</div>
+          </div>
+          <a class="nav-link back-link" data-route="/modules" href="#/modules">&larr; All modules</a>
+        </div>
+        <div id="module-detail-root"></div>
       </section>
     </main>
 
@@ -1893,6 +1951,96 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       return out;
     }
 
+    function scenarioInModule(sc, key) {
+      const k = String(key).toLowerCase();
+      const req = (sc.requirements || []).some(function (r) {
+        return (r.layer === 'unit' || r.layer === 'integration') && r.module && r.module.toLowerCase() === k;
+      });
+      const res = (sc.results || []).some(function (r) {
+        return (r.layer === 'unit' || r.layer === 'integration') && r.module && r.module.toLowerCase() === k;
+      });
+      return req || res;
+    }
+
+    // Slice a scenario down to the requirements/results attributable to one
+    // module, so a shared scenario doesn't show a wall of unrelated chips.
+    function moduleScenario(sc, key) {
+      const k = String(key).toLowerCase();
+      return {
+        name: sc.name,
+        tags: sc.tags,
+        steps: sc.steps,
+        requirements: (sc.requirements || []).filter(function (r) {
+          return (r.layer === 'unit' || r.layer === 'integration') && r.module && r.module.toLowerCase() === k;
+        }),
+        results: (sc.results || []).filter(function (r) {
+          return (r.layer === 'unit' || r.layer === 'integration') && r.module && r.module.toLowerCase() === k;
+        }),
+      };
+    }
+
+    function moduleFeatureSlice(features, key) {
+      const s = [];
+      (features || []).forEach(function (f) {
+        const scs = (f.scenarios || []).filter(function (sc) { return scenarioInModule(sc, key); });
+        if (scs.length) {
+          s.push({ name: f.name, file: f.file, scenarios: scs.map(function (sc) { return moduleScenario(sc, key); }) });
+        }
+      });
+      return s;
+    }
+
+    function moduleDetailHtml(key) {
+      const features = moduleFeatureSlice(REPORT.features, key);
+      let h = '<label class="search-bar">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>' +
+        '<input type="search" class="tree-filter-input" placeholder="Search by name" />' +
+        '<button type="button" class="search-clear" aria-label="Clear search">&#10005;</button>' +
+        '</label>';
+      if (!features.length) {
+        h += '<div class="empty-state">No features have scenarios declared for or covered by this module.</div>';
+        return h;
+      }
+      h += '<div class="tree-table" data-module-tree>' +
+        '<div class="tree-head" data-tree-head>' +
+        '<button type="button" class="sort-btn col-name" data-sort-key="name">Name <span class="sort-caret">&#9660;</span></button>' +
+        '<button type="button" class="sort-btn col-completion" data-sort-key="completion">Completion <span class="sort-caret">&#9660;</span></button>' +
+        '<button type="button" class="sort-btn col-result" data-sort-key="result">Result <span class="sort-caret">&#9660;</span></button>' +
+        '<div class="col-expected tree-head-label">Declared</div>' +
+        '<div class="col-actual tree-head-label">Actual</div>' +
+        '<button type="button" class="sort-btn col-duration" data-sort-key="duration">Duration <span class="sort-caret">&#9660;</span></button>' +
+        '</div>' +
+        '<div class="tree-root" data-tree-group>' + renderFeatureTree(features) + '</div>' +
+        '</div>';
+      return h;
+    }
+
+    function renderModules(modules) {
+      if (!modules || !modules.length) return '<div class="empty-state">No modules configured.</div>';
+      let h = '<div class="module-grid">';
+      modules.forEach(function (m) {
+        const c = m.completion || { tested: 0, total: 0, pct: 0 };
+        const py = m.pyramid || { unit: { count: 0 }, integration: { count: 0 } };
+        const worst = m.worst || 'none';
+        const worstWord = { passed: 'Passed', skipped: 'Skipped', failed: 'Failed', none: 'No results' }[worst];
+        h += '<a class="module-card" href="#/modules/' + encodeURIComponent(m.key) + '">';
+        h += '<div class="module-card-head">';
+        h += '<span class="module-card-title">' + esc(m.key) + '</span>';
+        h += '<span class="module-worst ' + worst + '">' + esc(worstWord) + '</span>';
+        h += '</div>';
+        h += '<div class="stat-sub">' + (c.tested || 0) + '/' + (c.total || 0) + ' declared tests matched</div>';
+        h += '<div class="stat-bar"><div class="bar-fill ' + progressBand(c.pct) + '" style="width: ' + c.pct + '%;"></div></div>';
+        h += '<div class="module-pyramid">';
+        h += '<span class="pyramid-mini-chip"><span class="tier-dot unit"></span><strong>' + (py.unit.count || 0) + '</strong> UNIT</span>';
+        h += '<span class="pyramid-mini-chip"><span class="tier-dot integration"></span><strong>' + (py.integration.count || 0) + '</strong> INTEGRATION</span>';
+        h += '<span class="pyramid-mini-chip"><strong>' + (m.unlinked || 0) + '</strong> UNLINKED</span>';
+        h += '</div>';
+        h += '</a>';
+      });
+      h += '</div>';
+      return h;
+    }
+
     function renderFailures(features) {
       const feats = [];
       (features || []).forEach(function (f) {
@@ -2060,14 +2208,24 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     document.getElementById('failures-root').innerHTML = renderFailures(REPORT.features || []);
     document.getElementById('unlinked-root').innerHTML = renderUnlinked(REPORT.unlinkedTests || []);
 
-    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked'];
+    const MODULES = REPORT.modules || [];
+    const HAS_MODULES = MODULES.length >= 2;
+    if (!HAS_MODULES) {
+      document.querySelector('.app-nav a[data-route="/modules"]').classList.add('hidden');
+      document.getElementById('page-modules').classList.add('hidden');
+      document.getElementById('page-module-detail').classList.add('hidden');
+    }
+
+    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked', '/modules'];
     const PAGE_BY_ROUTE = {
       '/': 'page-dashboard',
       '/pyramid': 'page-pyramid',
       '/features': 'page-features',
       '/failures': 'page-failures',
       '/unlinked': 'page-unlinked',
+      '/modules': 'page-modules',
     };
+    const ALL_PAGES = ['page-dashboard', 'page-pyramid', 'page-features', 'page-failures', 'page-unlinked', 'page-modules', 'page-module-detail'];
 
     (function initThemeToggle() {
       const btn = document.querySelector('.theme-toggle');
@@ -2094,19 +2252,48 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       });
     })();
 
+    function moduleKeyFromPath(path) {
+      if (path.indexOf('/modules/') !== 0) return null;
+      let key = path.slice('/modules/'.length);
+      try { key = decodeURIComponent(key); } catch (e) {}
+      return MODULES.some(function (m) { return m.key === key; }) ? key : null;
+    }
+
+    function pageForRoute(path) {
+      if (HAS_MODULES && path === '/modules') return 'page-modules';
+      if (HAS_MODULES && path.indexOf('/modules/') === 0 && moduleKeyFromPath(path)) return 'page-module-detail';
+      if (HAS_MODULES && path.indexOf('/modules/') === 0) return 'page-modules';
+      return PAGE_BY_ROUTE[path] || 'page-dashboard';
+    }
+
     function currentRoute() {
       const path = (window.location.hash || '#/').replace(/^#/, '');
-      return ROUTES.includes(path) ? path : '/';
+      if (HAS_MODULES && ROUTES.includes(path)) return path;
+      if (HAS_MODULES && moduleKeyFromPath(path)) return path;
+      return '/';
     }
 
     function route(pathOverride) {
       const path = pathOverride !== undefined ? pathOverride : currentRoute();
-      Object.values(PAGE_BY_ROUTE).forEach((id) => {
+      const pageId = pageForRoute(path);
+      ALL_PAGES.forEach((id) => {
         document.getElementById(id).classList.add('hidden');
       });
-      document.getElementById(PAGE_BY_ROUTE[path] || 'page-dashboard').classList.remove('hidden');
+      if (path === '/modules' || (path.indexOf('/modules/') === 0 && !moduleKeyFromPath(path))) {
+        document.getElementById('module-list-root').innerHTML = renderModules(MODULES);
+      }
+      if (path.indexOf('/modules/') === 0) {
+        const key = moduleKeyFromPath(path);
+        if (key) {
+          document.getElementById('module-detail-title').textContent = 'Module: ' + key;
+          document.getElementById('module-detail-root').innerHTML = moduleDetailHtml(key);
+          bindTree(document.getElementById('module-detail-root'));
+        }
+      }
+      document.getElementById(pageId).classList.remove('hidden');
       document.querySelectorAll('.app-nav a').forEach((link) => {
-        link.classList.toggle('active', link.getAttribute('data-route') === path);
+        const r = link.getAttribute('data-route');
+        link.classList.toggle('active', r === path || (path.indexOf('/modules/') === 0 && r === '/modules'));
       });
       window.scrollTo(0, 0);
     }
@@ -2142,22 +2329,42 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       });
     }
 
-    document.querySelectorAll('.tree-table').forEach((table) => {
-      const wrapper = table.closest('section');
-      const buttons = table.querySelectorAll('[data-sort-key]');
-      buttons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const key = btn.getAttribute('data-sort-key');
-          const currentKey = table.getAttribute('data-sort-key');
-          const currentDir = table.getAttribute('data-sort-dir') || 'asc';
-          const dir = currentKey === key && currentDir === 'asc' ? 'desc' : 'asc';
-          table.setAttribute('data-sort-key', key);
-          table.setAttribute('data-sort-dir', dir);
-          buttons.forEach((b) => b.classList.toggle('sort-active', b === btn));
-          sortTree(wrapper, key, dir);
+    function bindTree(container) {
+      container.querySelectorAll('.tree-table:not([data-tree-bound])').forEach((table) => {
+        table.setAttribute('data-tree-bound', '1');
+        const wrapper = table.closest('section');
+        const buttons = table.querySelectorAll('[data-sort-key]');
+        buttons.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-sort-key');
+            const currentKey = table.getAttribute('data-sort-key');
+            const currentDir = table.getAttribute('data-sort-dir') || 'asc';
+            const dir = currentKey === key && currentDir === 'asc' ? 'desc' : 'asc';
+            table.setAttribute('data-sort-key', key);
+            table.setAttribute('data-sort-dir', dir);
+            buttons.forEach((b) => b.classList.toggle('sort-active', b === btn));
+            sortTree(wrapper, key, dir);
+          });
         });
       });
-    });
+
+      container.querySelectorAll('.search-bar:not([data-tree-bound])').forEach((bar) => {
+        bar.setAttribute('data-tree-bound', '1');
+        const input = bar.querySelector('.tree-filter-input');
+        input.addEventListener('input', (event) => {
+          const wrapper = event.target.closest('section');
+          bar.classList.toggle('has-value', event.target.value.length > 0);
+          filterTree(wrapper, event.target.value);
+        });
+        const clear = bar.querySelector('.search-clear');
+        clear.addEventListener('click', () => {
+          input.value = '';
+          bar.classList.remove('has-value');
+          filterTree(bar.closest('section'), '');
+          input.focus();
+        });
+      });
+    }
 
     function filterTree(wrapper, query) {
       const q = query.trim().toLowerCase();
@@ -2192,25 +2399,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       }
     }
 
-    document.querySelectorAll('.tree-filter-input').forEach((input) => {
-      const bar = input.closest('.search-bar');
-      input.addEventListener('input', (event) => {
-        const wrapper = event.target.closest('section');
-        bar.classList.toggle('has-value', event.target.value.length > 0);
-        filterTree(wrapper, event.target.value);
-      });
-    });
-
-    document.querySelectorAll('.search-clear').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const bar = btn.closest('.search-bar');
-        const input = bar.querySelector('.tree-filter-input');
-        input.value = '';
-        bar.classList.remove('has-value');
-        filterTree(btn.closest('section'), '');
-        input.focus();
-      });
-    });
+    bindTree(document.body);
   </script>
 </body>
 </html>"""

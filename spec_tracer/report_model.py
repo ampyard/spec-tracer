@@ -1,9 +1,17 @@
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Set
 
-from spec_tracer.models import ScenarioView, TestResult, completion_fraction, requirement_state
+from spec_tracer.models import (
+    ScenarioView,
+    TestResult,
+    completion_fraction,
+    requirement_satisfied,
+    requirement_state,
+)
 
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
+
+_MODULE_LAYERS = ("unit", "integration")
 
 _HEALTH_STATUS_RANK = {"pass": 0, "warn": 1, "fail": 2}
 _HEALTH_STATUS_LABEL = {"pass": "green", "warn": "amber", "fail": "red"}
@@ -159,6 +167,137 @@ def _unlinked_tests(unlinked_results: List[TestResult]) -> List[dict]:
     return entries
 
 
+def _configured_modules(config: dict) -> List[str]:
+    """The service-attributable module keys in config, in display order.
+
+    A module is a key under ``unit``/``integration`` (e2e is fleet-only per
+    #36). The unscoped ``""`` key is not a service. Keys are de-duplicated
+    across the two layers and sorted case-insensitively.
+    """
+    seen: Set[str] = set()
+    keys: List[str] = []
+    for layer in _MODULE_LAYERS:
+        for key in config.get(layer, {}):
+            if not key:
+                continue
+            folded = key.lower()
+            if folded not in seen:
+                seen.add(folded)
+                keys.append(key)
+    keys.sort(key=str.lower)
+    return keys
+
+
+def _module_requirements_raw(view: ScenarioView, module: str) -> List:
+    return [
+        req
+        for req in view.scenario.required_layers
+        if req.layer in _MODULE_LAYERS and req.module and req.module.lower() == module
+    ]
+
+
+def _module_results(view: ScenarioView, module: str) -> List[TestResult]:
+    """The unit/integration results of a scenario registered under ``module``."""
+    return [
+        result
+        for result in view.linked_results
+        if result.layer in _MODULE_LAYERS
+        and result.module
+        and result.module.lower() == module
+    ]
+
+
+def _scenario_in_module(view: ScenarioView, module: str) -> bool:
+    """Whether a scenario belongs to module ``module``'s tree (#36).
+
+    Membership is **declared** (a unit/integration requirement scoped to the
+    module) *or* **actual* (≥1 linked unit/integration result registered under
+    it). Unscoped requirements/results never attribute a scenario.
+    """
+    return bool(_module_requirements_raw(view, module)) or bool(
+        _module_results(view, module)
+    )
+
+
+def _worst_status(results: List[TestResult]) -> str:
+    if not results:
+        return "none"
+    rank = {"failed": 0, "skipped": 1, "passed": 2}
+    return min((r.status for r in results), key=lambda s: rank.get(s, 0))
+
+
+def _modules(
+    config: dict,
+    views: List[ScenarioView],
+    unlinked_results: List[TestResult],
+) -> List[dict]:
+    """Per-module summary cards for the ``#/modules`` tab (#36, item 2).
+
+    A module is a registered unit/integration config key. Each entry carries
+    the declared-tests-matched progress, the unit-vs-integration result count,
+    the unlinked count, and the worst result status as the health signal.
+    """
+    entries = []
+    for key in _configured_modules(config):
+        module = key.lower()
+
+        declared = [
+            view for view in views if _module_requirements_raw(view, module)
+        ]
+        tested = sum(
+            1
+            for view in declared
+            if all(
+                requirement_satisfied(req, view.linked_results)
+                for req in _module_requirements_raw(view, module)
+            )
+        )
+        total = len(declared)
+
+        unit_count = sum(
+            1
+            for view in views
+            for r in _module_results(view, module)
+            if r.layer == "unit"
+        )
+        integration_count = sum(
+            1
+            for view in views
+            for r in _module_results(view, module)
+            if r.layer == "integration"
+        )
+
+        unlinked = sum(
+            1
+            for r in unlinked_results
+            if r.layer in _MODULE_LAYERS
+            and r.module
+            and r.module.lower() == module
+        )
+
+        worst = _worst_status(
+            [r for view in views for r in _module_results(view, module)]
+        )
+
+        entries.append(
+            {
+                "key": key,
+                "completion": {
+                    "tested": tested,
+                    "total": total,
+                    "pct": int(round(tested * 100 / total)) if total else 0,
+                },
+                "pyramid": {
+                    "unit": {"count": unit_count},
+                    "integration": {"count": integration_count},
+                },
+                "unlinked": unlinked,
+                "worst": worst,
+            }
+        )
+    return entries
+
+
 def build_report(
     config: dict,
     views: List[ScenarioView],
@@ -188,5 +327,6 @@ def build_report(
             "healthChecks": _health_checks(health_checks),
         },
         "features": _features(views, feature_files or {}, known_modules),
+        "modules": _modules(config, views, unlinked_results),
         "unlinkedTests": _unlinked_tests(unlinked_results),
     }

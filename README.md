@@ -201,8 +201,9 @@ You can see what SpecTracer produces without running anything yourself. **[Open 
 1. **Coverage Progress Summary** — headline stats for declared-tests matched and scenarios fully matched, plus the four health checks. Color-coded green/amber/red using the configurable thresholds.
 2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer with excessive runtime.
 3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status. (Failure stack traces live on the Failure Breakdown page.)
-4. **Detailed Failure Breakdown** — every failed test across all layers, with feature/scenario context and full stack trace on expand.
-5. **Unlinked Tests** — test results whose tags didn't match any scenario, to help catch orphaned or mis-tagged tests.
+4. **Modules** *(client mode only)* — when the config registers at least two *unit/integration* modules, a per-module page appears (one card per module: completion, unit/integration pyramid, unlinked count, worst status), each deep-linking to a `#/modules/<key>` Feature Breakdown scoped to that module. E2E is fleet-level and never appears on a module card.
+5. **Detailed Failure Breakdown** — every failed test across all layers, with feature/scenario context and full stack trace on expand.
+6. **Unlinked Tests** — test results whose tags didn't match any scenario, to help catch orphaned or mis-tagged tests.
 
 ## Machine-Readable JSON Report
 
@@ -212,6 +213,7 @@ Setting `output_json` in the config produces a JSON file alongside the HTML repo
 - `summary.layerStats` / `summary.healthChecks` — the full per-layer detail (counts, pass/fail/skip rates, duration) and the per-card health checks (status, message, value, and layer breakdown for the pyramid card) that the dashboard renders. `summary.health.health` still carries the legacy green/amber/red `reasons[]` summary.
 - `features[].scenarios[].results[]` — every linked test result per scenario, with `module`, `duration` (milliseconds), `steps[]` (Cucumber steps when the source was a `.json` result) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
 - `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page, now with each result's `status` and `duration` (milliseconds).
+- `modules[]` — one entry per configured *unit/integration* module key (unscoped `""` excluded, E2E never included), carrying that module's completion, its unit/integration-only pyramid, its unlinked count, and a rolled-up `worst` status (`passed` / `skipped` / `failed` / `none`). This powers the Modules page.
 - `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.
 
 With `render_mode: "client"`, this same report object is embedded inline in the output HTML (never a separate file unless `output_json` is also set), so a single self-contained file carries both the machine-readable report and its rendered pages.

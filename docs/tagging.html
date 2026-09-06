@@ -312,6 +312,13 @@
     microservice-per-team repos: tag scenarios <code>@require-unit:my-service</code> and only that
     team's results count.</p>
 
+    <p>Because E2E is fleet-level — a service's E2E suite still exercises the whole mesh — the
+    per-module report pages (the <code>#/modules</code> tab, client mode only) are built from the
+    <code>unit</code> / <code>integration</code> module keys only. E2E never appears on a module card,
+    and a scenario that belongs to a module only via an <code>@require-e2e:&lt;module&gt;</code> tag or an
+    E2E result keeps its full context once you're inside that module's scoped tree. See
+    <a href="report.html#modules">Report tour → Modules</a>.</p>
+
     <h2 id="defaults">Defaults &amp; edge cases</h2>
 
     <div class="table-scroll">

@@ -126,7 +126,10 @@
       baked into the markup; with <code>render_mode: "client"</code> it is first reshaped by
       <code>report_model.build_report()</code> and embedded as JSON that the browser renders. If
       <code>output_json</code> is set, the same <code>build_report()</code> output is also written as a
-      schema-conformant JSON file.</li>
+      schema-conformant JSON file. The client build additionally derives a per-module breakdown
+      (<code>report_model._modules</code>) and renders it as module-card list + per-module scoped trees
+      under <code>#/modules</code> and <code>#/modules/&lt;key&gt;</code>; the server build has no module
+      pages.</li>
     </ol>
 
     <h2 id="modules">Module layout</h2>
@@ -140,8 +143,8 @@
           <tr><td><code>parsers.py</code></td><td>211</td><td>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (stdlib <code>json</code>).</td></tr>
           <tr><td><code>linker.py</code></td><td>29</td><td>Identity-based pairing. The smallest module and the most important one.</td></tr>
           <tr><td><code>aggregator.py</code></td><td>268</td><td>Completion stats, layer breakdowns, feature trees, health checks, unlinked results. Pure logic, no I/O.</td></tr>
-          <tr><td><code>renderers.py</code></td><td>2330</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser.</td></tr>
-          <tr><td><code>report_model.py</code></td><td>192</td><td>Reshapes the aggregate into the JSON schema (<code>spectracer-report.schema.json</code>). Runs when <code>output_json</code> is set or <code>render_mode</code> is <code>"client"</code> — client mode embeds this exact object.</td></tr>
+          <tr><td><code>renderers.py</code></td><td>2523</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser (plus the per-module pages, client mode only).</td></tr>
+          <tr><td><code>report_model.py</code></td><td>332</td><td>Reshapes the aggregate into the JSON schema (<code>spectracer-report.schema.json</code>), including the per-module cards. Runs when <code>output_json</code> is set or <code>render_mode</code> is <code>"client"</code> — client mode embeds this exact object.</td></tr>
           <tr><td><code>cli.py</code></td><td>277</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
         </tbody>
       </table>

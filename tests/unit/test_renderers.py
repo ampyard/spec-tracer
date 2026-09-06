@@ -573,12 +573,13 @@ def test_client_render_embeds_hostile_failure_message_safely(tag):
 def test_client_render_produces_shell_and_nav(tag):
     html = _render_client({"schemaVersion": "3"})
     assert '<span class="app-title">SpecTracer</span>' in html
-    for page_id in ["page-dashboard", "page-pyramid", "page-features", "page-failures", "page-unlinked"]:
+    for page_id in ["page-dashboard", "page-pyramid", "page-features", "page-failures", "page-unlinked", "page-modules", "page-module-detail"]:
         assert f'id="{page_id}"' in html
     for route, label in [
         ("/", "Dashboard"),
         ("/pyramid", "Test Pyramid"),
         ("/features", "Feature Breakdown"),
+        ("/modules", "Modules"),
         ("/failures", "Failure Breakdown"),
         ("/unlinked", "Unlinked Tests"),
     ]:
@@ -586,6 +587,28 @@ def test_client_render_produces_shell_and_nav(tag):
         assert label in html
     assert 'class="theme-toggle"' in html
     assert "JSON.parse(document.getElementById('report-data').textContent)" in html
+    # Module pages are gate-guarded client-side: at least two configured
+    # modules are required for the tab to show (#36 item 2).
+    assert "const MODULES = REPORT.modules || [];" in html
+    assert "const HAS_MODULES = MODULES.length >= 2;" in html
+    assert "function moduleDetailHtml" in html
+    assert "function renderModules" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_module_pages_scoped_to_module_js(tag):
+    """The client JS carries the module-scoped Feature Breakdown helpers.
+
+    The scoped tree keeps only the selected module's unit/integration
+    requirements and results; e2e stays fleet-level (#36 item 2).
+    """
+    html = _render_client({"schemaVersion": "4", "modules": []})
+    assert "function scenarioInModule(sc, key)" in html
+    assert "function moduleScenario(sc, key)" in html
+    assert "function moduleFeatureSlice(features, key)" in html
+    assert "r.layer === 'unit' || r.layer === 'integration'" in html
+    assert "data-route=\"/modules\"" in html
+    assert 'id="module-detail-root"' in html
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-009"])

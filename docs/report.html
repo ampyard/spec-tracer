@@ -54,6 +54,7 @@
           <a href="#overview">1 · Overview</a>
           <a href="#pyramid">2 · Test Pyramid</a>
           <a href="#features">3 · Feature Breakdown</a>
+          <a href="#modules">3½ · Modules</a>
           <a href="#failures">4 · Failure Breakdown</a>
           <a href="#unlinked">5 · Unlinked Tests</a>
           <a href="#json">The JSON twin</a>
@@ -72,12 +73,12 @@
   <main class="doc" id="main">
     <span class="eyebrow">Using the output</span>
     <h1>Report tour</h1>
-    <p class="lede">Five pages, one file. This is what each one is for, what the numbers mean, and what
+    <p class="lede">Six pages, one file. This is what each one is for, what the numbers mean, and what
     to do when they're bad. Every screenshot here is SpecTracer's own self-report — real numbers, not a
     mockup.</p>
 
     <h2 id="live-preview">Live sample report</h2>
-    <p class="note"><strong>See the real thing — no setup required.</strong> Click below to open a fresh tab with SpecTracer's actual HTML output from this repo, showing all five pages. It's exactly what you'll get after running the tool on your own project.</p>
+    <p class="note"><strong>See the real thing — no setup required.</strong> Click below to open a fresh tab with SpecTracer's actual HTML output from this repo, showing all of its pages. It's exactly what you'll get after running the tool on your own project.</p>
 
     <a href="https://artifact.ci/artifact/blob/ampyard/spec-tracer/branch/main/reports/spectracer-report.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary preview-btn" style="margin-top:14px;">
       Open live report in a new tab
@@ -235,6 +236,24 @@
     <p>Search filters the tree by name. Failure stack traces are deliberately <em>not</em> here — they
     live on the Failure Breakdown page so this view stays scannable.</p>
 
+    <h2 id="modules">3½ · Modules <span class="pill new">client mode</span></h2>
+    <p>When your config registers two or more <em>unit/integration</em> modules, a <strong>Modules</strong>
+    page appears next to Feature Breakdown. It splits the same tree one level down: one card per module,
+    showing that module's completion, a unit/integration-only pyramid, and its unlinked count; the worst
+    status (passed / skipped / failed) is shown as a colour stamp on the card.</p>
+
+    <p>Clicking a card deep-links to <code>#/modules/&lt;key&gt;</code> and shows the Feature Breakdown tree
+    <em>scoped to that module</em>: only the selected module's <code>@require-unit</code> /
+    <code>@require-integration</code> chips and unit/integration results survive, so a service team can
+    bookmark their own slice.</p>
+
+    <div class="note">
+      <strong>What doesn't make the cut</strong>
+      Modules are derived from the <code>unit</code> / <code>integration</code> keys in the config — E2E is
+      fleet-level, not service-level, so it never appears on a module card. The unscoped key <code>""</code>
+      isn't a module either. A report with fewer than two modules simply hides the page entirely.
+    </div>
+
     <h2 id="failures">4 · Failure Breakdown</h2>
     <p>Every failed test across all three layers, in one list, with feature and scenario context and the
     full stack trace on expand.</p>
@@ -263,7 +282,8 @@
     HTML. It's built from the same internal model as the HTML renderer, so the two physically cannot
     disagree. With <code>render_mode: "client"</code> the HTML embeds that exact JSON object itself, so
     the machine-readable report ships inside the single HTML file even without a separate
-    <code>output_json</code>.</p>
+    <code>output_json</code>. The <code>modules</code> key holds the same per-module cards (completion,
+    unit/integration pyramid, unlinked, worst status) that the Modules page renders.</p>
 
     <div class="code">
       <div class="code-head"><span>reading the headline number in CI</span><button class="copy-btn" aria-label="Copy to clipboard"><svg class="clip" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><svg class="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button></div>

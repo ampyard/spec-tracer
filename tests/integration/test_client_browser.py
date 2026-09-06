@@ -8,6 +8,8 @@ FC002_FEATURES = ROOT / "tests" / "fixtures" / "fc002" / "features"
 FC002_UNIT = ROOT / "tests" / "fixtures" / "fc002" / "unit.xml"
 FC002_E2E = ROOT / "tests" / "fixtures" / "fc002" / "e2e.json"
 MODULE_FEATURES = ROOT / "tests" / "fixtures" / "module_scope" / "features"
+MODULE_UNIT_PARSERS = ROOT / "tests" / "fixtures" / "module_scope" / "parsers_unit.xml"
+MODULE_UNIT_OTHER = ROOT / "tests" / "fixtures" / "module_scope" / "other_unit.xml"
 PARSERS_E2E = ROOT / "tests" / "fixtures" / "module_scope" / "parsers_e2e.json"
 
 CONFIGS = [
@@ -21,6 +23,11 @@ CONFIGS = [
         "id": "module_scope",
         "features": MODULE_FEATURES,
         "e2e": {"parsers": [PARSERS_E2E]},
+    },
+    {
+        "id": "modules_multi",
+        "features": MODULE_FEATURES,
+        "unit": {"parsers": [MODULE_UNIT_PARSERS], "other": [MODULE_UNIT_OTHER]},
     },
 ]
 
@@ -123,3 +130,57 @@ def test_client_browser_render_matches_server_render(config, tmp_path, browser):
     assert client["moduleChips"] == server["moduleChips"]
     assert client["unlinkedRows"] == server["unlinkedRows"]
     assert len(client["rows"]) > 0, "client renderer built no tree rows"
+
+
+def test_client_browser_module_pages_navigation(tmp_path, browser):
+    """Module list (#/modules) and detail pages (#/modules/<key>) render and
+    scope the Feature Breakdown tree to the selected module (#36)."""
+    client_html = tmp_path / "report-client.html"
+    result = run_tool(
+        MODULE_FEATURES,
+        client_html,
+        unit={"parsers": [MODULE_UNIT_PARSERS], "other": [MODULE_UNIT_OTHER]},
+        render_mode="client",
+    )
+    assert result.returncode == 0, result.stderr
+
+    context = browser.new_context()
+    context.route(
+        "**/*",
+        lambda route: route.continue_() if route.request.url.startswith("file:") else route.abort(),
+    )
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.goto(client_html.as_uri())
+    page.wait_for_selector(".stat-card")
+
+    modules_tab = page.locator(".app-nav a[data-route='/modules']")
+    assert modules_tab.is_visible(), "Modules tab should be visible for a multi-module report"
+
+    modules_tab.click()
+    page.wait_for_selector(".module-card")
+    card_titles = page.eval_on_selector_all(
+        ".module-card-title", "els => els.map(e => e.textContent.trim())"
+    )
+    assert card_titles == ["other", "parsers"]
+
+    page.click("a[href='#/modules/parsers']")
+    page.wait_for_selector("#module-detail-root .tree-row")
+    detail = page.evaluate(
+        """() => {
+      const root = document.getElementById('module-detail-root');
+      const chips = [...root.querySelectorAll('.module-chip')].map(e => e.textContent);
+      const reqs = [...root.querySelectorAll('.required-chip')].map(e => e.textContent);
+      return { chips, reqs };
+    }"""
+    )
+    assert set(detail["chips"]) == {"parsers"}
+    assert any("No required layers" in r or "unit (parsers)" in r for r in detail["reqs"])
+
+    page.go_back()
+    page.wait_for_selector(".module-card")
+    assert page.eval_on_selector_all("#module-list-root .module-card", "els => els.length") == 2
+
+    context.close()
+    assert not errors, f"page JS errors: {errors}"

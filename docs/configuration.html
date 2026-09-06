@@ -179,7 +179,7 @@ spec-tracer path/to/other-config.json</code></pre>
           </tr>
           <tr>
             <td><code>render_mode</code></td><td>No</td>
-            <td>How the HTML report is rendered. <code>"server"</code> (default) — pages are fully rendered by Python at build time. <code>"client"</code> — the report JSON is embedded inline and a small script builds the same five pages in the browser. Any other value is a config error. See <a href="#render">Client-side rendering</a>.</td>
+            <td>How the HTML report is rendered. <code>"server"</code> (default) — pages are fully rendered by Python at build time. <code>"client"</code> — the report JSON is embedded inline and a small script builds the same pages in the browser (including the per-module <code>#/modules</code> pages when the config registers two or more unit/integration modules). Any other value is a config error. See <a href="#render">Client-side rendering</a>.</td>
           </tr>
           <tr>
             <td><code>error_on_failure</code></td><td>No</td>
@@ -328,7 +328,10 @@ spec-tracer path/to/other-config.json</code></pre>
     <p>By default the HTML is a static, server-rendered document — Python writes the finished pages
     into the file, so it displays even with JavaScript disabled. With <code>"render_mode": "client"</code>
     the output file instead embeds the report JSON in a <code>&lt;script type="application/json"&gt;</code>
-    block and a small script builds the identical five pages from it in the browser.</p>
+    block and a small script builds the same pages from it in the browser. Client mode is also where the
+    per-module pages appear: with two or more <code>unit</code>/<code>integration</code> module keys, a
+    <strong>Modules</strong> page (one card per module) and scoped <code>#/modules/&lt;key&gt;</code>
+    trees are rendered. See the <a href="report.html#modules">report tour</a>.</p>
 
     <div class="grid-2">
       <div class="card">
@@ -378,6 +381,7 @@ spec-tracer path/to/other-config.json</code></pre>
           <tr><td><code>summary.health</code></td><td>A single worst-of rollup: <code>green</code> / <code>amber</code> / <code>red</code>, plus a <code>reasons[]</code> array carrying each non-passing check's message.</td></tr>
           <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, <code>duration</code> (milliseconds), <code>steps[]</code> (Cucumber steps when the source result was JSON), and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>.</td></tr>
           <tr><td><code>unlinkedTests[]</code></td><td>The same orphaned results the HTML report lists, now with each result's <code>status</code> and <code>duration</code> (milliseconds).</td></tr>
+          <tr><td><code>modules[]</code></td><td>One entry per configured <em>unit/integration</em> module key (unscoped <code>""</code> excluded, E2E never included), carrying that module's completion, a unit/integration-only pyramid, its unlinked count, and a rolled-up <code>worst</code> status (<code>passed</code> / <code>skipped</code> / <code>failed</code> / <code>none</code>). Powers the Modules page (#36).</td></tr>
           <tr><td><code>config</code></td><td>A verbatim echo of the resolved config, for provenance if the JSON is archived away from the repo.</td></tr>
         </tbody>
       </table>

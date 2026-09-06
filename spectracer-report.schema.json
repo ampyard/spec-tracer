@@ -206,6 +206,52 @@
                     }
                 }
             }
+        },
+        "modules": {
+            "type": "array",
+            "title": "PerModuleSummary",
+            "description": "Per-module summary cards for the #/modules tab. A module is a service-attributable unit/integration config key (e2e is fleet-only). Each entry carries the declared-tests-matched progress, the unit-vs-integration result counts, the unlinked count, and the worst result status as the health signal.",
+            "items": {
+                "type": "object",
+                "required": ["key", "completion", "pyramid", "unlinked", "worst"],
+                "properties": {
+                    "key": { "type": "string" },
+                    "completion": {
+                        "type": "object",
+                        "required": ["tested", "total", "pct"],
+                        "properties": {
+                            "tested": { "type": "integer", "minimum": 0 },
+                            "total": { "type": "integer", "minimum": 0 },
+                            "pct": { "type": "number", "minimum": 0, "maximum": 100 }
+                        }
+                    },
+                    "pyramid": {
+                        "type": "object",
+                        "required": ["unit", "integration"],
+                        "properties": {
+                            "unit": {
+                                "type": "object",
+                                "required": ["count"],
+                                "properties": {
+                                    "count": { "type": "integer", "minimum": 0 }
+                                }
+                            },
+                            "integration": {
+                                "type": "object",
+                                "required": ["count"],
+                                "properties": {
+                                    "count": { "type": "integer", "minimum": 0 }
+                                }
+                            }
+                        }
+                    },
+                    "unlinked": { "type": "integer", "minimum": 0 },
+                    "worst": {
+                        "type": "string",
+                        "enum": ["passed", "skipped", "failed", "none"]
+                    }
+                }
+            }
         }
     },
     "definitions": {

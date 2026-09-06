@@ -47,7 +47,7 @@ def test_client_render_embeds_valid_report_json(tag, tmp_path):
     report = _extract_report_data(html)
     Draft7Validator(SCHEMA).validate(report)
 
-    assert report["schemaVersion"] == "3"
+    assert report["schemaVersion"] == "4"
     assert report["summary"]["completion"]["total"] == 1
     feature = report["features"][0]
     assert feature["name"] == "User Login"
@@ -78,7 +78,7 @@ def test_client_render_escapes_script_closers_in_results(tag, tmp_path):
     assert match is not None
     assert "</script>" not in match.group(1)
     report = json.loads(match.group(1))
-    assert report["schemaVersion"] == "3"
+    assert report["schemaVersion"] == "4"
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])
@@ -140,3 +140,49 @@ def test_client_render_builds_dashboard_sections(tag, tmp_path):
     assert "Failure Breakdown" in html
     assert "Unlinked Tests" in html
     assert "JSON.parse(document.getElementById('report-data').textContent)" in html
+
+
+MODULE_SCOPE_FEATURES = ROOT / "tests" / "fixtures" / "module_scope" / "features"
+MODULE_SCOPE_UNIT_PARSERS = ROOT / "tests" / "fixtures" / "module_scope" / "parsers_unit.xml"
+MODULE_SCOPE_UNIT_OTHER = ROOT / "tests" / "fixtures" / "module_scope" / "other_unit.xml"
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-007"])
+def test_client_render_module_pages_embedded_json(tag, tmp_path):
+    """Client mode carries per-module cards in the embedded JSON (#36 item 2)."""
+    output = tmp_path / "report.html"
+
+    result = run_tool(
+        MODULE_SCOPE_FEATURES,
+        output,
+        unit={"parsers": [MODULE_SCOPE_UNIT_PARSERS], "other": [MODULE_SCOPE_UNIT_OTHER]},
+        render_mode="client",
+    )
+
+    assert result.returncode == 0, result.stderr
+    html = output.read_text(encoding="utf-8")
+    report = _extract_report_data(html)
+    Draft7Validator(SCHEMA).validate(report)
+
+    keys = [m["key"] for m in report["modules"]]
+    assert keys == ["other", "parsers"]
+    assert report["modules"][1]["completion"]["total"] >= 1
+
+    # Multi-module config => the Modules tab is active client-side.
+    assert "const HAS_MODULES = MODULES.length >= 2;" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-007"])
+def test_client_render_single_module_hides_modules_tab(tag, tmp_path):
+    """Guardrail: a single-module report must not gain module navigation (#36)."""
+    output = tmp_path / "report.html"
+
+    result = run_tool(
+        MODULE_SCOPE_FEATURES,
+        output,
+        unit={"parsers": [MODULE_SCOPE_UNIT_PARSERS]},
+        render_mode="client",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output.exists()

@@ -300,10 +300,11 @@ def test_health_status_red_when_any_check_fails(tag):
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-010"])
 def test_pyramid_summary_converts_duration_to_milliseconds(tag):
-    report = _build(
-        [],
-        layer_stats=[{"name": "unit", "count": 3, "duration": 0.25, "pass_pct": 100}],
-    )
+    metric = {
+        "name": "unit", "label": "UNIT", "count": 3, "passed": 3, "failed": 0, "skipped": 0,
+        "duration": 0.25, "pass_pct": 100, "fail_pct": 0, "skip_pct": 0, "width_pct": 100.0,
+    }
+    report = _build([], layer_stats=[metric])
 
     assert report["summary"]["pyramid"]["unit"] == {"testCount": 3, "duration": 250.0, "passRate": 100}
 
@@ -317,8 +318,34 @@ def test_unlinked_tests_included_with_tags_and_optional_module(tag):
     report = _build([], unlinked_results=unlinked)
 
     assert report["unlinkedTests"] == [
-        {"layer": "unit", "testId": "orphan", "name": "orphan", "tags": ["@scenario:FC-999"], "module": "billing"}
+        {"layer": "unit", "testId": "orphan", "name": "orphan", "status": "passed", "tags": ["@scenario:FC-999"], "module": "billing"}
     ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
+def test_unlinked_tests_include_status_and_duration_ms(tag):
+    unlinked = [
+        TestResult(layer="e2e", name="orphan", status="failed", duration=2.5, tags=["@scenario:FC-999"]),
+    ]
+
+    report = _build([], unlinked_results=unlinked)
+
+    assert report["unlinkedTests"] == [
+        {"layer": "e2e", "testId": "orphan", "name": "orphan", "status": "failed", "duration": 2500.0, "tags": ["@scenario:FC-999"]}
+    ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-010"])
+def test_unlinked_tests_omit_duration_when_zero(tag):
+    unlinked = [
+        TestResult(layer="unit", name="orphan", status="skipped", tags=["@scenario:FC-999"]),
+    ]
+
+    report = _build([], unlinked_results=unlinked)
+
+    entry = report["unlinkedTests"][0]
+    assert entry["status"] == "skipped"
+    assert "duration" not in entry
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-010"])
@@ -334,5 +361,96 @@ def test_config_is_echoed_verbatim(tag):
 def test_schema_version_and_generated_at_present(tag):
     report = _build([])
 
-    assert report["schemaVersion"] == "2"
+    assert report["schemaVersion"] == "3"
     assert report["generatedAt"].endswith("Z")
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_scenario_result_carries_steps_in_order(tag):
+    view = _view("F", "S1")
+    view.scenario.steps = ["Given a user", "When they log in", "Then they land on home"]
+
+    report = _build([view])
+
+    scenario = report["features"][0]["scenarios"][0]
+    assert scenario["steps"] == ["Given a user", "When they log in", "Then they land on home"]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_scenario_result_steps_default_to_empty_list(tag):
+    report = _build([_view("F", "S1")])
+
+    assert report["features"][0]["scenarios"][0]["steps"] == []
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_summary_layer_stats_carry_render_detail_in_order(tag):
+    layer_stats = [
+        {
+            "name": "e2e", "label": "E2E", "count": 2, "passed": 1, "failed": 1, "skipped": 0,
+            "duration": 10.0, "pass_pct": 50, "fail_pct": 50, "skip_pct": 0, "width_pct": 100.0,
+        },
+        {
+            "name": "integration", "label": "INTEGRATION", "count": 3, "passed": 3, "failed": 0, "skipped": 0,
+            "duration": 5.0, "pass_pct": 100, "fail_pct": 0, "skip_pct": 0, "width_pct": 90.0,
+        },
+    ]
+
+    report = _build([], layer_stats=layer_stats)
+
+    assert report["summary"]["layerStats"] == [
+        {
+            "name": "e2e", "count": 2, "passed": 1, "failed": 1, "skipped": 0,
+            "duration": 10000.0, "passRate": 50, "failRate": 50, "skipRate": 0, "widthPct": 100.0,
+        },
+        {
+            "name": "integration", "count": 3, "passed": 3, "failed": 0, "skipped": 0,
+            "duration": 5000.0, "passRate": 100, "failRate": 0, "skipRate": 0, "widthPct": 90.0,
+        },
+    ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_summary_health_checks_reflect_individual_cards_in_order(tag):
+    health_checks = {
+        "Progress": {"status": "pass", "message": "All declared tests are matched.", "value": "2/3"},
+        "pyramid": {
+            "status": "fail",
+            "message": "The pyramid is inverted and needs more unit tests.",
+            "value": "e2e 2 \u00b7 integration 0 \u00b7 unit 1",
+            "layers": [
+                {"name": "e2e", "count": 2},
+                {"name": "integration", "count": 0},
+                {"name": "unit", "count": 1},
+            ],
+        },
+    }
+
+    report = _build([], health_checks=health_checks)
+
+    assert report["summary"]["healthChecks"] == [
+        {"key": "Progress", "status": "pass", "message": "All declared tests are matched.", "value": "2/3"},
+        {
+            "key": "pyramid",
+            "status": "fail",
+            "message": "The pyramid is inverted and needs more unit tests.",
+            "value": "e2e 2 \u00b7 integration 0 \u00b7 unit 1",
+            "layers": [
+                {"name": "e2e", "count": 2},
+                {"name": "integration", "count": 0},
+                {"name": "unit", "count": 1},
+            ],
+        },
+    ]
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-018"])
+def test_summary_health_checks_omit_layers_for_non_pyramid(tag):
+    report = _build(
+        [],
+        health_checks={"Progress": {"status": "warn", "message": "needs attention", "value": "1/2"}},
+    )
+
+    assert report["summary"]["healthChecks"] == [
+        {"key": "Progress", "status": "warn", "message": "needs attention", "value": "1/2"}
+    ]

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Set
 
 from spec_tracer.models import ScenarioView, TestResult, completion_fraction, requirement_state
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 _HEALTH_STATUS_RANK = {"pass": 0, "warn": 1, "fail": 2}
 _HEALTH_STATUS_LABEL = {"pass": "green", "warn": "amber", "fail": "red"}
@@ -51,6 +51,7 @@ def _scenario_result(view: ScenarioView, known_modules: Optional[Dict[str, Set[s
         "tags": list(view.scenario.tags),
         "requirements": _requirements(view, known_modules),
         "results": [_result_dict(result) for result in view.linked_results],
+        "steps": list(view.scenario.steps),
     }
 
 
@@ -84,6 +85,51 @@ def _layer_stats(layer_stats: List[dict]) -> dict:
     }
 
 
+def _layer_stats_detail(layer_stats: List[dict]) -> List[dict]:
+    """Full per-layer stats in presentation order (``LAYER_ORDER``).
+
+    The render contract for the Test Pyramid page and the pyramid health card.
+    ``summary.pyramid`` stays a lean CI-facing rollup; this carries everything
+    the tree tier needs (pass/fail/skip split, width, duration) (#36).
+    """
+    return [
+        {
+            "name": metric["name"],
+            "count": metric["count"],
+            "passed": metric["passed"],
+            "failed": metric["failed"],
+            "skipped": metric["skipped"],
+            "duration": metric["duration"] * 1000,
+            "passRate": metric["pass_pct"],
+            "failRate": metric["fail_pct"],
+            "skipRate": metric["skip_pct"],
+            "widthPct": metric["width_pct"],
+        }
+        for metric in layer_stats
+    ]
+
+
+def _health_checks(health_checks: dict) -> List[dict]:
+    """Individual health-check cards in display order.
+
+    The render contract for the dashboard Health Check grid (#36). Keeps the
+    same order as ``ReportAggregator.health_checks`` so the client renderer can
+    reproduce the server-side card sequence without re-deriving statuses.
+    """
+    checks = []
+    for key, item in health_checks.items():
+        entry = {
+            "key": key,
+            "status": item["status"],
+            "message": item["message"],
+            "value": item["value"],
+        }
+        if item.get("layers"):
+            entry["layers"] = item["layers"]
+        checks.append(entry)
+    return checks
+
+
 def _health_summary(health_checks: dict) -> dict:
     worst_status = "pass"
     reasons: List[str] = []
@@ -102,10 +148,13 @@ def _unlinked_tests(unlinked_results: List[TestResult]) -> List[dict]:
             "layer": result.layer,
             "testId": result.name,
             "name": result.name,
+            "status": result.status,
             "tags": list(result.tags),
         }
         if result.module:
             entry["module"] = result.module
+        if result.duration:
+            entry["duration"] = _duration_ms(result)
         entries.append(entry)
     return entries
 
@@ -134,7 +183,9 @@ def build_report(
                 "required": stats["required"],
             },
             "pyramid": _layer_stats(layer_stats),
+            "layerStats": _layer_stats_detail(layer_stats),
             "health": _health_summary(health_checks),
+            "healthChecks": _health_checks(health_checks),
         },
         "features": _features(views, feature_files or {}, known_modules),
         "unlinkedTests": _unlinked_tests(unlinked_results),

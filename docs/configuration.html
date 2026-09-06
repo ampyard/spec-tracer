@@ -135,6 +135,7 @@ spec-tracer path/to/other-config.json</code></pre>
 
   <span class="c-fn">"output"</span>:      <span class="c-str">"./report.html"</span>,
   <span class="c-fn">"output_json"</span>: <span class="c-str">"./report.json"</span>,
+  <span class="c-fn">"render_mode"</span>:  <span class="c-str">"server"</span>,
 
   <span class="c-fn">"error_on_failure"</span>: <span class="c-num">false</span>,
   <span class="c-fn">"fail_on"</span>: [<span class="c-str">"pyramid"</span>, <span class="c-str">"e2e_runtime"</span>],
@@ -175,6 +176,10 @@ spec-tracer path/to/other-config.json</code></pre>
           <tr>
             <td><code>output_json</code></td><td>No</td>
             <td>Path for the machine-readable JSON report. Omit to skip JSON output entirely (the default). Same create/overwrite semantics as <code>output</code>.</td>
+          </tr>
+          <tr>
+            <td><code>render_mode</code></td><td>No</td>
+            <td>How the HTML report is rendered. <code>"server"</code> (default) — pages are fully rendered by Python at build time. <code>"client"</code> — the report JSON is embedded inline and a small script builds the same five pages in the browser. Any other value is a config error. See <a href="#render">Client-side rendering</a>.</td>
           </tr>
           <tr>
             <td><code>error_on_failure</code></td><td>No</td>
@@ -319,6 +324,39 @@ spec-tracer path/to/other-config.json</code></pre>
     week's" — script it against <code>output_json</code> rather than parsing HTML. See
     <a href="ci-cd.html#gating">CI/CD recipes</a>.</p>
 
+    <h2 id="render">Client-side rendering</h2>
+    <p>By default the HTML is a static, server-rendered document — Python writes the finished pages
+    into the file, so it displays even with JavaScript disabled. With <code>"render_mode": "client"</code>
+    the output file instead embeds the report JSON in a <code>&lt;script type="application/json"&gt;</code>
+    block and a small script builds the identical five pages from it in the browser.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <span class="card-mark good">✓</span>
+        <h3>Server rendering (<code>"server"</code>, default)</h3>
+        <ul>
+          <li>Finished HTML — works everywhere, survives archiving and emailing.</li>
+          <li>Larger file; every route, filter, and sort is baked into the markup.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-mark good">✓</span>
+        <h3>Client rendering (<code>"client"</code>)</h3>
+        <ul>
+          <li>Smaller single file that still carries the full machine-readable report.</li>
+          <li>Embedded JSON is byte-for-byte the same object <code>output_json</code> would write — no
+          separate file needed.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>The file stays self-contained</strong>
+      Client mode inlines the report data as <code>\uXXXX</code>-escaped JSON, so a failure message that
+      contains <code>&lt;/script&gt;</code> cannot break out of the data block — open the file from
+      disk, email it, or ship it through CI exactly like the server-rendered version.
+    </div>
+
     <h2 id="json">The JSON report</h2>
     <p>Setting <code>output_json</code> writes a second file alongside the HTML, built from the exact
     same internal data model — so the two outputs cannot drift apart. It conforms to
@@ -335,9 +373,11 @@ spec-tracer path/to/other-config.json</code></pre>
             <td>The headline stats. Note <code>percent</code> is the <em>declared tests matched</em> percentage (satisfied / required) — <code>tested</code> and <code>total</code> are scenario counts, so <code>percent</code> is <strong>not</strong> <code>tested / total</code>.</td>
           </tr>
           <tr><td><code>summary.pyramid</code></td><td>Per-layer test counts, durations, and pass rates.</td></tr>
+          <tr><td><code>summary.layerStats</code></td><td>The full per-layer detail the dashboard's pyramid section renders: counts, pass/fail/skip rates, duration, and layout widths.</td></tr>
+          <tr><td><code>summary.healthChecks</code></td><td>Per-card health checks with <code>status</code>, <code>message</code>, <code>value</code>, and the layer breakdown for the pyramid card — exactly what the Health Check dashboard section shows.</td></tr>
           <tr><td><code>summary.health</code></td><td>A single worst-of rollup: <code>green</code> / <code>amber</code> / <code>red</code>, plus a <code>reasons[]</code> array carrying each non-passing check's message.</td></tr>
-          <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, and <code>duration</code> (milliseconds) and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>.</td></tr>
-          <tr><td><code>unlinkedTests[]</code></td><td>The same orphaned results the HTML report lists.</td></tr>
+          <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, <code>duration</code> (milliseconds), <code>steps[]</code> (Cucumber steps when the source result was JSON), and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>.</td></tr>
+          <tr><td><code>unlinkedTests[]</code></td><td>The same orphaned results the HTML report lists, now with each result's <code>status</code> and <code>duration</code> (milliseconds).</td></tr>
           <tr><td><code>config</code></td><td>A verbatim echo of the resolved config, for provenance if the JSON is archived away from the repo.</td></tr>
         </tbody>
       </table>

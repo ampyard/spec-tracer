@@ -163,6 +163,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
   },
   "output": "./report.html",
   "output_json": "./report.json",
+  "render_mode": "server",
   "error_on_failure": false,
   "fail_on": ["pyramid", "e2e_runtime"],
   "health_checks": {
@@ -182,6 +183,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `e2e` | No | Same shape as `unit`, but for Cucumber JSON file/directory paths. Matched against `@require-e2e` / `@require-e2e:<module>` tags. |
 | `output` | Yes | Path for the generated HTML report. Created if the parent directory doesn't exist; overwritten if it already exists. |
 | `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |
+| `render_mode` | No | How the HTML report is rendered. `server` (default) — the pages are fully rendered by Python. `client` — the HTML embeds the report JSON inline and a small script builds the same five pages in the browser; the JSON is then built even when `output_json` is omitted. Any other value is a config error. |
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
 | `fail_on` | No | Array of health checks that gate CI. If any listed check reports a failing (red) status, the tool exits `1`. Accepted values: `progress`, `pyramid`, `e2e_runtime`. Amber (warn) never gates — only red does. Independent of and additive to `error_on_failure`; either one exiting non-zero fails the build. Any other value is a config error. Default: none (health checks stay visual-only). |
 | `health_checks` | No | Overrides for the default thresholds shown above. |
@@ -189,6 +191,8 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 ## The Report
 
 The generated HTML is a single self-contained file (all CSS/JS inlined — a monospace font loads from a CDN with a system fallback — safe to email or archive) with five sections:
+
+By default (or with `render_mode: "server"`), Python renders the pages at build time, so the HTML works even if JavaScript is disabled. With `render_mode: "client"`, the report is instead embedded in the HTML as a `<script type="application/json">` block and the pages are built by a small script in the browser — the file is smaller, navigation is instant (no re-generation per filter/route), and the embedded JSON is byte-for-byte the same report `output_json` writes, so the two stay in lockstep.
 
 You can see what SpecTracer produces without running anything yourself. **[Open the live sample report](https://artifact.ci/artifact/blob/ampyard/spec-tracer/branch/main/reports/spectracer-report.html)** — it's exactly the same HTML your own output will look like, showing all five pages including coverage progress, pyramid dashboard, feature traceability matrix, failure breakdown, and unlinked tests.
 
@@ -205,9 +209,12 @@ You can see what SpecTracer produces without running anything yourself. **[Open 
 Setting `output_json` in the config produces a JSON file alongside the HTML report, built from the exact same internal data — the two outputs can never drift apart. It conforms to [`spectracer-report.schema.json`](spectracer-report.schema.json) (Draft 7), which is the authoritative contract; the highlights:
 
 - `summary.completion` / `summary.pyramid` / `summary.health` — the headline stats, per-layer stats, and health status (`green`/`amber`/`red` with `reasons[]`) shown on the HTML dashboard. Note that `summary.completion.percent` is the *declared tests matched* percentage (satisfied/required); `tested`/`total` are scenario counts and `percent` is not `tested / total`.
-- `features[].scenarios[].results[]` — every linked test result per scenario, with `module`, `duration` (milliseconds) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
-- `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page.
+- `summary.layerStats` / `summary.healthChecks` — the full per-layer detail (counts, pass/fail/skip rates, duration) and the per-card health checks (status, message, value, and layer breakdown for the pyramid card) that the dashboard renders. `summary.health.health` still carries the legacy green/amber/red `reasons[]` summary.
+- `features[].scenarios[].results[]` — every linked test result per scenario, with `module`, `duration` (milliseconds), `steps[]` (Cucumber steps when the source was a `.json` result) and `failureMessage` **omitted** rather than `null` when not available, and layer requirement satisfaction under `requirements[]`.
+- `unlinkedTests[]` — the same orphaned results shown in the HTML report's "Unlinked Tests" page, now with each result's `status` and `duration` (milliseconds).
 - `config` — a verbatim echo of the resolved config used to produce the report, for provenance if the JSON is archived independently of the repo.
+
+With `render_mode: "client"`, this same report object is embedded inline in the output HTML (never a separate file unless `output_json` is also set), so a single self-contained file carries both the machine-readable report and its rendered pages.
 
 ```json
 {

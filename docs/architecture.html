@@ -122,8 +122,11 @@
       <li><strong>Aggregation</strong> — <code>ReportAggregator</code> computes every stat, view,
       breakdown, and health check from the linked data.</li>
       <li><strong>Rendering</strong> — <code>HtmlRenderer</code> feeds the aggregate into a Jinja2
-      template and writes the HTML. If <code>output_json</code> is set,
-      <code>report_model.build_report()</code> reshapes the same aggregate into schema-conformant JSON.</li>
+      template and writes the HTML. With <code>render_mode: "server"</code> (default) the aggregate is
+      baked into the markup; with <code>render_mode: "client"</code> it is first reshaped by
+      <code>report_model.build_report()</code> and embedded as JSON that the browser renders. If
+      <code>output_json</code> is set, the same <code>build_report()</code> output is also written as a
+      schema-conformant JSON file.</li>
     </ol>
 
     <h2 id="modules">Module layout</h2>
@@ -132,14 +135,14 @@
       <table>
         <thead><tr><th>Module</th><th>Lines</th><th>Responsibility</th></tr></thead>
         <tbody>
-          <tr><td><code>models.py</code></td><td>90</td><td>The whole type system: <code>Scenario</code>, <code>TestResult</code>, <code>RequiredLayer</code>, <code>ScenarioView</code>, plus helpers.</td></tr>
-          <tr><td><code>collectors.py</code></td><td>44</td><td>File discovery. Resolves configured paths, scanning directories recursively.</td></tr>
-          <tr><td><code>parsers.py</code></td><td>193</td><td>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (stdlib <code>json</code>).</td></tr>
-          <tr><td><code>linker.py</code></td><td>26</td><td>Identity-based pairing. The smallest module and the most important one.</td></tr>
-          <tr><td><code>aggregator.py</code></td><td>229</td><td>Completion stats, layer breakdowns, feature trees, health checks, unlinked results. Pure logic, no I/O.</td></tr>
-          <tr><td><code>renderers.py</code></td><td>1208</td><td>The Jinja2 template — embedded HTML, CSS, and JS — plus render helpers. Produces the self-contained file.</td></tr>
-          <tr><td><code>report_model.py</code></td><td>138</td><td>Reshapes the aggregate into the JSON schema. Only runs when <code>output_json</code> is set.</td></tr>
-          <tr><td><code>cli.py</code></td><td>200</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
+          <tr><td><code>models.py</code></td><td>109</td><td>The whole type system: <code>Scenario</code>, <code>TestResult</code>, <code>RequiredLayer</code>, <code>ScenarioView</code>, plus helpers.</td></tr>
+          <tr><td><code>collectors.py</code></td><td>64</td><td>File discovery. Resolves configured paths, scanning directories recursively.</td></tr>
+          <tr><td><code>parsers.py</code></td><td>211</td><td>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (stdlib <code>json</code>).</td></tr>
+          <tr><td><code>linker.py</code></td><td>29</td><td>Identity-based pairing. The smallest module and the most important one.</td></tr>
+          <tr><td><code>aggregator.py</code></td><td>268</td><td>Completion stats, layer breakdowns, feature trees, health checks, unlinked results. Pure logic, no I/O.</td></tr>
+          <tr><td><code>renderers.py</code></td><td>2330</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser.</td></tr>
+          <tr><td><code>report_model.py</code></td><td>192</td><td>Reshapes the aggregate into the JSON schema (<code>spectracer-report.schema.json</code>). Runs when <code>output_json</code> is set or <code>render_mode</code> is <code>"client"</code> — client mode embeds this exact object.</td></tr>
+          <tr><td><code>cli.py</code></td><td>277</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
         </tbody>
       </table>
     </div>
@@ -227,11 +230,19 @@
     </ul>
 
     <h3>The HTML side</h3>
-    <p><code>HtmlRenderer</code> uses Jinja2 to produce one self-contained file. Inlined: the full
-    stylesheet with light/dark themes driven by <code>data-theme</code> and falling back to
+    <p><code>HtmlRenderer</code> produces one self-contained file. Inlined: the full stylesheet with
+    light/dark themes driven by <code>data-theme</code> and falling back to
     <code>prefers-color-scheme</code>; the JavaScript for hash routing, the theme toggle, sortable
-    tables, and search; and the logo as a base64 PNG. Report data is rendered into the markup
-    server-side by Jinja2 rather than shipped as an embedded JSON payload.</p>
+    tables, and search; and the logo as a base64 PNG. It has two page builders over the same data:</p>
+    <ul>
+      <li><strong>Server rendering</strong> (default) — Jinja2 bakes the aggregate into the markup, so
+      the file is readable with or without JavaScript.</li>
+      <li><strong>Client rendering</strong> (<code>render_mode: "client"</code>) — the report object is
+      embedded as <code>\uXXXX</code>-escaped JSON in a <code>&lt;script type="application/json"&gt;</code>
+      block and a small renderer builds the exact same DOM in the browser, reusing the shared routing,
+      theme, sort, and search JavaScript unchanged. The embedded JSON is the same object
+      <code>build_report()</code> writes, so the two cannot drift.</li>
+    </ul>
     <p>The only external request is the Cascadia Mono webfont from jsDelivr, which degrades to system
     <code>ui-monospace</code> when offline.</p>
 

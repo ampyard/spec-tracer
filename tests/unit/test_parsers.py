@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from spec_tracer.parsers import CucumberParser, FeatureParser, JunitParser
@@ -8,7 +10,11 @@ def test_junit_parser_rejects_malformed_xml_with_clear_error(tag, tmp_path):
     bad_xml = tmp_path / "unit.xml"
     bad_xml.write_text("<testsuite><testcase name=\"t\"", encoding="utf-8")
 
-    with pytest.raises(ValueError, match=f"Malformed JUnit XML in {bad_xml}"):
+    # re.escape: pytest compiles `match` as a regex, and a Windows temp path
+    # (e.g. C:\Users\...) would otherwise trigger "incomplete escape \U".
+    with pytest.raises(
+        ValueError, match=re.escape(f"Malformed JUnit XML in {bad_xml}")
+    ):
         JunitParser().parse([bad_xml], layer="unit")
 
 

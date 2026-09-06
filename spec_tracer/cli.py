@@ -58,6 +58,11 @@ def _load_config(path: Path) -> dict:
     duplicates = sorted({name for name in fail_on if fail_on.count(name) > 1})
     if duplicates:
         raise ValueError(f"Config key 'fail_on' has duplicate entries: {duplicates}")
+    render_mode = config.get("render_mode", "server")
+    if render_mode not in ("server", "client"):
+        raise ValueError(
+            f"Config key 'render_mode' must be 'server' or 'client', got: {render_mode!r}"
+        )
     return config
 
 
@@ -89,11 +94,26 @@ def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
     resolved_base = base_dir.resolve()
     for f in files:
         parsed = parser.parse(f)
-        relative = os.path.relpath(f, resolved_base)
+        relative = _relative_feature_path(f, resolved_base)
         for scenario in parsed:
-            feature_files.setdefault(scenario.feature, relative.replace("\\", "/"))
+            feature_files.setdefault(scenario.feature, relative)
         scenarios.extend(parsed)
     return scenarios, feature_files
+
+
+def _relative_feature_path(path: Path, base: Path) -> str:
+    """Feature path for the report, relative to the config dir when possible.
+
+    ``os.path.relpath`` raises on Windows when config and feature live on
+    different drives (e.g. the config is in a temp dir on ``C:`` and the
+    repo is on ``D:``) — there simply is no relative path then, so fall back
+    to the resolved absolute path. Forward slashes keep the JSON portable.
+    """
+    try:
+        relative = os.path.relpath(path, base)
+    except ValueError:
+        return str(path.resolve()).replace("\\", "/")
+    return relative.replace("\\", "/")
 
 
 def _detect_result_format(path: Path) -> str:
@@ -205,6 +225,25 @@ def main(argv: List[str] | None = None) -> int:
     )
     failure_breakdown = ReportAggregator.failure_breakdown(views)
 
+    render_mode = config.get("render_mode", "server")
+    needs_report_json = bool(config.get("output_json")) or render_mode == "client"
+    report = None
+    if needs_report_json:
+        report = build_report(
+            config,
+            views,
+            stats,
+            layer_stats,
+            health_checks,
+            unlinked_results,
+            feature_files=feature_files,
+            known_modules=known_modules,
+        )
+        if config.get("output_json"):
+            output_json_path = Path(config["output_json"])
+            output_json_path.parent.mkdir(parents=True, exist_ok=True)
+            output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
     renderer = HtmlRenderer()
     html = renderer.render(
         views,
@@ -217,26 +256,13 @@ def main(argv: List[str] | None = None) -> int:
         failure_breakdown=failure_breakdown,
         logo_data_uri=_load_logo(config_path.parent),
         known_modules=known_modules,
+        render_mode=render_mode,
+        json_report=report,
     )
 
     output_path = Path(config["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
-
-    if config.get("output_json"):
-        report = build_report(
-            config,
-            views,
-            stats,
-            layer_stats,
-            health_checks,
-            unlinked_results,
-            feature_files=feature_files,
-            known_modules=known_modules,
-        )
-        output_json_path = Path(config["output_json"])
-        output_json_path.parent.mkdir(parents=True, exist_ok=True)
-        output_json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print("Report generated:")
     print(f"  HTML: {output_path}")

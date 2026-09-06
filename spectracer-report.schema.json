@@ -50,6 +50,11 @@
                 },
                 "output": { "type": "string" },
                 "output_json": { "type": "string" },
+                "render_mode": {
+                    "type": "string",
+                    "enum": ["server", "client"],
+                    "description": "How the HTML report is rendered: 'server' (default, Jinja-rendered pages) or 'client' (embedded JSON rendered in the browser). UI-agnostic report data is identical either way."
+                },
                 "error_on_failure": { "type": "boolean" },
                 "fail_on": {
                     "type": "array",
@@ -97,6 +102,12 @@
                         "e2e": { "$ref": "#/definitions/layerStats" }
                     }
                 },
+                "layerStats": {
+                    "type": "array",
+                    "title": "LayerStatsDetail",
+                    "description": "Full per-layer stats in presentation order (e2e, integration, unit). Used by the client renderer to draw the Test Pyramid tiers; carries the pass/fail/skip split and tier width that pyramid.summary omits.",
+                    "items": { "$ref": "#/definitions/layerStatsDetail" }
+                },
                 "health": {
                     "type": "object",
                     "title": "HealthStatus",
@@ -110,6 +121,39 @@
                             "type": "array",
                             "description": "Human-readable explanations for the current status, e.g. 'inverted pyramid' or 'E2E duration exceeds red threshold'.",
                             "items": { "type": "string" }
+                        }
+                    }
+                },
+                "healthChecks": {
+                    "type": "array",
+                    "title": "HealthChecks",
+                    "description": "The individual health-check cards in display order (Progress, pyramid, E2E runtime, unlinked, unconfigured modules). Used by the client renderer to draw the dashboard Health Check grid.",
+                    "items": {
+                        "type": "object",
+                        "required": ["key", "status", "message", "value"],
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "enum": ["Progress", "pyramid", "end_to_end_runtime", "unlinked", "unconfigured_modules"]
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": ["pass", "warn", "fail"]
+                            },
+                            "message": { "type": "string" },
+                            "value": { "type": "string" },
+                            "layers": {
+                                "type": "array",
+                                "description": "Present only on the pyramid check: per-layer counts for the mini chips.",
+                                "items": {
+                                    "type": "object",
+                                    "required": ["name", "count"],
+                                    "properties": {
+                                        "name": { "$ref": "#/definitions/layer" },
+                                        "count": { "type": "integer", "minimum": 0 }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -139,7 +183,7 @@
             "description": "Test results whose tags didn't match any scenario.",
             "items": {
                 "type": "object",
-                "required": ["layer", "testId", "name", "tags"],
+                "required": ["layer", "testId", "name", "status", "tags"],
                 "properties": {
                     "layer": { "$ref": "#/definitions/layer" },
                     "module": {
@@ -148,6 +192,14 @@
                     },
                     "testId": { "type": "string" },
                     "name": { "type": "string" },
+                    "status": {
+                        "type": "string",
+                        "enum": ["passed", "failed", "skipped"]
+                    },
+                    "duration": {
+                        "type": "number",
+                        "description": "Duration in milliseconds, if reported by the underlying test result."
+                    },
                     "tags": {
                         "type": "array",
                         "items": { "type": "string" }
@@ -177,12 +229,38 @@
                 }
             }
         },
+        "layerStatsDetail": {
+            "type": "object",
+            "title": "LayerStatsDetailEntry",
+            "description": "Full per-layer stats used by the client renderer to draw a Test Pyramid tier.",
+            "required": ["name", "count", "passed", "failed", "skipped", "duration", "passRate", "failRate", "skipRate", "widthPct"],
+            "properties": {
+                "name": { "$ref": "#/definitions/layer" },
+                "count": { "type": "integer", "minimum": 0 },
+                "passed": { "type": "integer", "minimum": 0 },
+                "failed": { "type": "integer", "minimum": 0 },
+                "skipped": { "type": "integer", "minimum": 0 },
+                "duration": { "type": "number", "minimum": 0 },
+                "passRate": { "type": "number", "minimum": 0, "maximum": 100 },
+                "failRate": { "type": "number", "minimum": 0, "maximum": 100 },
+                "skipRate": { "type": "number", "minimum": 0, "maximum": 100 },
+                "widthPct": {
+                    "type": "number",
+                    "description": "Tier bar width as a percentage of the largest layer's count, clamped to MIN_TIER_WIDTH_PCT."
+                }
+            }
+        },
         "scenarioResult": {
             "type": "object",
             "title": "ScenarioResult",
             "required": ["name", "tags", "requirements", "results"],
             "properties": {
                 "name": { "type": "string" },
+                "steps": {
+                    "type": "array",
+                    "description": "The Gherkin steps of this scenario, in order. Used by the client renderer to expand the step list under the scenario row.",
+                    "items": { "type": "string" }
+                },
                 "tags": {
                     "type": "array",
                     "description": "Linking tags on this scenario (e.g. @id:FC-42, @regression). Excludes @require-* tags.",

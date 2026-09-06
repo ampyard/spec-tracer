@@ -299,7 +299,9 @@ behave features/ --format json -o reports/e2e.json</code></pre>
     </div>
 
     <p>Open <code>reports/spectracer-report.html</code> in any browser. It's a single self-contained
-    file — no server, no build step, safe to email or archive.</p>
+    file — no server, no build step, safe to email or archive. By default the pages are rendered
+    server-side; set <code>render_mode: "client"</code> to have the report built from embedded JSON in
+    the browser instead (see <a href="configuration.html#render">Configuration</a>).</p>
 
     <h2 id="read">Read the report</h2>
     <p>The first thing to look at is the two headline numbers on the Overview page.</p>

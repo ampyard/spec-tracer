@@ -23,6 +23,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
+      - name: Install Playwright chromium browser
+        # Required by tests/integration/test_client_browser.py (client/server
+        # render parity check). Installed but not the pip packages — those come
+        # with --group dev above.
+        run: uv run playwright install --with-deps chromium
+
       - name: Create reports directory
         run: mkdir -p reports
 
@@ -53,6 +59,8 @@ jobs:
           uv run pytest tests/integration/test_missing_required_layer.py --junitxml=reports/int-missing_required_layer.xml -q
           uv run pytest tests/integration/test_status_badges.py --junitxml=reports/int-status_badges.xml -q
           uv run pytest tests/integration/test_unit_linking.py --junitxml=reports/int-unit_linking.xml -q
+          uv run pytest tests/integration/test_client_render.py --junitxml=reports/int-client_render.xml -q
+          uv run pytest tests/integration/test_client_browser.py --junitxml=reports/int-client_browser.xml -q
 
       - name: Run BDD tests (JSON output)
         run: |

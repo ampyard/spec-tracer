@@ -1,3 +1,6 @@
+import json
+import re
+
 import pytest
 
 from spec_tracer.models import RequiredLayer, Scenario, ScenarioView, TestResult
@@ -8,6 +11,7 @@ from spec_tracer.renderers import (
     _feature_completion,
     _feature_outcome,
     _format_duration,
+    _json_for_script,
     _outcome,
     _result_satisfies_requirement,
     _status_class,
@@ -504,3 +508,133 @@ def test_render_without_known_modules_falls_back_to_missing(tag):
 
     assert "required-chip missing" in html
     assert "required-chip unconfigured" not in html
+
+
+def _empty_stats():
+    return {"complete": 0, "total": 0, "percentage": 0, "pct": 0, "satisfied": 0, "required": 0}
+
+
+def _render_client(report, **overrides):
+    return HtmlRenderer().render(
+        [], _empty_stats(), [],
+        render_mode="client", json_report=report, **overrides,
+    )
+
+
+def _extract_report_data(html):
+    match = re.search(
+        r'<script type="application/json" id="report-data">(.*?)</script>',
+        html, re.S,
+    )
+    assert match is not None
+    return json.loads(match.group(1))
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_json_for_script_round_trips(tag):
+    report = {"summary": {"message": 'failed with </script><script>alert(1)</script> & \u2028\u2029text'}}
+    assert json.loads(_json_for_script(report)) == report
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_json_for_script_escapes_script_closer(tag):
+    text = _json_for_script({"message": "</script>"})
+    assert "</script>" not in text
+    assert "\\u003c/script\\u003e" in text
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_embeds_parseable_report_json(tag):
+    report = {
+        "schemaVersion": "3",
+        "summary": {"completion": {"complete": 0, "total": 0, "pct": 0}},
+        "features": [{"name": "Alpha Feature", "scenarios": []}],
+    }
+    html = _render_client(report)
+    assert _extract_report_data(html) == report
+    assert html.count('<script type="application/json" id="report-data">') == 1
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_embeds_hostile_failure_message_safely(tag):
+    report = {"summary": {"message": "</script><script>alert(1)</script>"}}
+    html = _render_client(report)
+    match = re.search(
+        r'<script type="application/json" id="report-data">(.*?)</script>',
+        html, re.S,
+    )
+    assert match is not None
+    # The raw payload is escaped so it cannot terminate the data block early.
+    assert "</script>" not in match.group(1)
+    assert json.loads(match.group(1)) == report
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_produces_shell_and_nav(tag):
+    html = _render_client({"schemaVersion": "3"})
+    assert '<span class="app-title">SpecTracer</span>' in html
+    for page_id in ["page-dashboard", "page-pyramid", "page-features", "page-failures", "page-unlinked"]:
+        assert f'id="{page_id}"' in html
+    for route, label in [
+        ("/", "Dashboard"),
+        ("/pyramid", "Test Pyramid"),
+        ("/features", "Feature Breakdown"),
+        ("/failures", "Failure Breakdown"),
+        ("/unlinked", "Unlinked Tests"),
+    ]:
+        assert f'data-route="{route}"' in html
+        assert label in html
+    assert 'class="theme-toggle"' in html
+    assert "JSON.parse(document.getElementById('report-data').textContent)" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_logo_rendered_when_provided(tag):
+    html = _render_client({"schemaVersion": "3"}, logo_data_uri="data:image/png;base64,abc")
+    assert '<img class="logo" src="data:image/png;base64,abc"' in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_no_logo_by_default(tag):
+    html = _render_client({"schemaVersion": "3"})
+    assert '<img class="logo"' not in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_requires_json_report(tag):
+    renderer = HtmlRenderer()
+    with pytest.raises(ValueError):
+        renderer.render([], _empty_stats(), [], render_mode="client", json_report=None)
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_fallback_without_jinja_has_no_template_tags(tag, monkeypatch):
+    import spec_tracer.renderers as renderers_mod
+
+    monkeypatch.setattr(renderers_mod, "Environment", None)
+    monkeypatch.setattr(renderers_mod, "Markup", None)
+
+    report = {"schemaVersion": "3", "summary": {"message": "</script>"}}
+    html = renderers_mod.HtmlRenderer().render(
+        [], _empty_stats(), [], render_mode="client", json_report=report,
+    )
+
+    assert "{%" not in html
+    assert "{{" not in html
+    assert _extract_report_data(html) == report
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-009"])
+def test_client_render_fallback_without_jinja_omits_logo_block(tag, monkeypatch):
+    import spec_tracer.renderers as renderers_mod
+
+    monkeypatch.setattr(renderers_mod, "Environment", None)
+    monkeypatch.setattr(renderers_mod, "Markup", None)
+
+    html = renderers_mod.HtmlRenderer().render(
+        [], _empty_stats(), [], render_mode="client", json_report={"schemaVersion": "3"},
+    )
+
+    assert '{% if logo_data_uri %}' not in html
+    assert '<img class="logo"' not in html
+    assert '<link rel="icon"' not in html or 'data:' not in html

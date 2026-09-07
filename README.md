@@ -185,7 +185,7 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `output_json` | No | Path for a machine-readable JSON report, conforming to [`spectracer-report.schema.json`](spectracer-report.schema.json). Omit to skip JSON output entirely (default). Same directory-creation/overwrite semantics as `output`. |
 | `render_mode` | No | How the HTML report is rendered. `server` (default) — the pages are fully rendered by Python. `client` — the HTML embeds the report JSON inline and a small script builds the same five pages in the browser; the JSON is then built even when `output_json` is omitted. Any other value is a config error. |
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
-| `fail_on` | No | Array of health checks that gate CI. If any listed check reports a failing (red) status, the tool exits `1`. Accepted values: `progress`, `pyramid`, `e2e_runtime`. Amber (warn) never gates — only red does. Independent of and additive to `error_on_failure`; either one exiting non-zero fails the build. Any other value is a config error. Default: none (health checks stay visual-only). |
+| `fail_on` | No | Array of health checks that gate CI. If any listed check reports a failing (red) status, the tool exits `1`. Accepted values: `progress`, `pyramid`, `e2e_runtime`, `unconfigured_modules`. Amber (warn) never gates — only red does. Independent of and additive to `error_on_failure`; either one exiting non-zero fails the build. Any other value is a config error. Default: none (health checks stay visual-only). |
 | `health_checks` | No | Overrides for the default thresholds shown above. |
 
 ## The Report
@@ -198,7 +198,7 @@ You can see what SpecTracer produces without running anything yourself. **[Open 
 
 <img src="docs/report-features.png" alt="SpecTracer report Feature Traceability view" style="max-width:100%;border-radius:12px;margin:1rem 0;">
 
-1. **Coverage Progress Summary** — headline stats for declared-tests matched and scenarios fully matched, plus the four health checks. Color-coded green/amber/red using the configurable thresholds.
+1. **Coverage Progress Summary** — headline stats for declared-tests matched and scenarios fully matched, plus the five health checks. Color-coded green/amber/red using the configurable thresholds.
 2. **Global Pyramid Dashboard** — a 3-tier visualization (E2E / Integration / Unit) with test counts, duration, and pass rate per layer, plus health indicators for an inverted pyramid or an E2E layer with excessive runtime.
 3. **Feature Traceability & Scenario Matrix** — a searchable, expandable tree: Feature → Scenario → Layer results, with full Gherkin text, declared layer requirements (✓/✗), and per-test pass/fail/skip status. (Failure stack traces live on the Failure Breakdown page.)
 4. **Modules** *(client mode only)* — when the config registers at least two *unit/integration* modules, a per-module page appears (one card per module: completion, unit/integration pyramid, unlinked count, worst status), each deep-linking to a `#/modules/<key>` Feature Breakdown scoped to that module. E2E is fleet-level and never appears on a module card.
@@ -259,6 +259,7 @@ That's the whole integration — one `curl` (or your metrics SDK's equivalent) r
 | Test matches no scenario | Listed in "Unlinked Tests". |
 | Scenario matches no test | Shown as "incomplete". |
 | Scenario has `@require-*` but no matching test | That layer is flagged as missing. |
+| Module-scoped `@require-*:module` names a module that isn't a registered config key | Flagged as **unconfigured**, distinct from missing — almost always a config typo, not a coverage gap. Counted by the "Unconfigured modules" health check. |
 | Feature-level tags | Not inherited by scenarios — only scenario-level tags are used for matching. |
 | Scenario Outline / Examples | Parsed as a single scenario named from the `Scenario Outline:` line; expanded Examples rows are not individually parsed. |
 | `Rule:`, `Background:`, non-English dialects | Deferred to whatever your Gherkin/E2E framework does with them — the tool only understands `Feature:`, tags, `Scenario:` / `Scenario Outline:`, and steps. |

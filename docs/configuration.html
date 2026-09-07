@@ -187,7 +187,7 @@ spec-tracer path/to/other-config.json</code></pre>
           </tr>
           <tr>
             <td><code>fail_on</code></td><td>No</td>
-            <td>Array of health checks that gate CI. Accepted values: <code>"progress"</code>, <code>"pyramid"</code>, <code>"e2e_runtime"</code>. Any other value is a config error. Default: none.</td>
+            <td>Array of health checks that gate CI. Accepted values: <code>"progress"</code>, <code>"pyramid"</code>, <code>"e2e_runtime"</code>, <code>"unconfigured_modules"</code>. Any other value is a config error. Default: none.</td>
           </tr>
           <tr>
             <td><code>health_checks</code></td><td>No</td>
@@ -235,7 +235,7 @@ spec-tracer path/to/other-config.json</code></pre>
     </div>
 
     <h2 id="health">Health checks</h2>
-    <p>Four checks run on every report. By default they're purely visual — they colour the dashboard and
+    <p>Five checks run on every report. By default they're purely visual — they colour the dashboard and
     nothing else. Listing a check under <code>fail_on</code> promotes it to a CI gate.</p>
 
     <div class="table-scroll">
@@ -270,8 +270,24 @@ spec-tracer path/to/other-config.json</code></pre>
             <td>1–3</td>
             <td>4+</td>
           </tr>
+          <tr>
+            <td><strong>Unconfigured modules</strong><br><code>unconfigured_modules</code></td>
+            <td>Number of declared <code>@require-*:module</code> requirements whose module isn't a
+            registered config key for that layer at all — distinct from a module that's configured but
+            has zero linked results, which is a <em>missing</em> requirement, not an unconfigured one</td>
+            <td>0</td>
+            <td colspan="1" style="text-align:center">—</td>
+            <td>1+</td>
+          </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="note">
+      <strong><code>unconfigured_modules</code> has no amber band</strong>
+      Unlike the other four checks, this one is binary: green at zero, red otherwise. A module-scoped
+      requirement naming an unconfigured module is treated as a likely config typo, not a matter of
+      degree.
     </div>
 
     <h3>Default thresholds</h3>
@@ -303,8 +319,8 @@ spec-tracer path/to/other-config.json</code></pre>
         <span class="card-mark warn">⚑</span>
         <h3><code>fail_on</code></h3>
         <p>Answers a different question: <em>are we living up to our own standards?</em> List
-        <code>progress</code>, <code>pyramid</code>, and/or <code>e2e_runtime</code>; a red status on any
-        listed check exits <code>1</code>.</p>
+        <code>progress</code>, <code>pyramid</code>, <code>e2e_runtime</code>, and/or
+        <code>unconfigured_modules</code>; a red status on any listed check exits <code>1</code>.</p>
       </div>
     </div>
 
@@ -379,7 +395,7 @@ spec-tracer path/to/other-config.json</code></pre>
           <tr><td><code>summary.layerStats</code></td><td>The full per-layer detail the dashboard's pyramid section renders: counts, pass/fail/skip rates, duration, and layout widths.</td></tr>
           <tr><td><code>summary.healthChecks</code></td><td>Per-card health checks with <code>status</code>, <code>message</code>, <code>value</code>, and the layer breakdown for the pyramid card — exactly what the Health Check dashboard section shows.</td></tr>
           <tr><td><code>summary.health</code></td><td>A single worst-of rollup: <code>green</code> / <code>amber</code> / <code>red</code>, plus a <code>reasons[]</code> array carrying each non-passing check's message.</td></tr>
-          <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, <code>duration</code> (milliseconds), <code>steps[]</code> (Cucumber steps when the source result was JSON), and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>.</td></tr>
+          <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, <code>duration</code> (milliseconds), <code>steps[]</code> (Cucumber steps when the source result was JSON), and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>, whose entries carry <code>unconfigured: true</code> when a module-scoped requirement names a module that isn't a registered config key — omitted entirely otherwise, so existing consumers checking only <code>satisfied</code> keep working unchanged.</td></tr>
           <tr><td><code>unlinkedTests[]</code></td><td>The same orphaned results the HTML report lists, now with each result's <code>status</code> and <code>duration</code> (milliseconds).</td></tr>
           <tr><td><code>modules[]</code></td><td>One entry per configured <em>unit/integration</em> module key (unscoped <code>""</code> excluded, E2E never included), carrying that module's completion, a unit/integration-only pyramid, its unlinked count, and a rolled-up <code>worst</code> status (<code>passed</code> / <code>skipped</code> / <code>failed</code> / <code>none</code>). Powers the Modules page (#36).</td></tr>
           <tr><td><code>config</code></td><td>A verbatim echo of the resolved config, for provenance if the JSON is archived away from the repo.</td></tr>

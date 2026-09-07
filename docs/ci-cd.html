@@ -264,6 +264,7 @@
           <tr><td>Coverage floor</td><td><code>"fail_on": ["progress"]</code></td><td>Declared-tests-matched drops below <code>progress_threshold_amber</code>.</td></tr>
           <tr><td>Inverted pyramid</td><td><code>"fail_on": ["pyramid"]</code></td><td>Unit count is below integration + E2E combined.</td></tr>
           <tr><td>Slow E2E suite</td><td><code>"fail_on": ["e2e_runtime"]</code></td><td>Total E2E time exceeds <code>e2e_duration_red_seconds</code>.</td></tr>
+          <tr><td>Typo'd module config</td><td><code>"fail_on": ["unconfigured_modules"]</code></td><td>Any module-scoped <code>@require-*:module</code> names a module that isn't a registered config key. No amber band — any count above zero fails.</td></tr>
         </tbody>
       </table>
     </div>

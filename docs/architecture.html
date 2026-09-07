@@ -71,7 +71,7 @@
   <main class="doc" id="main">
     <span class="eyebrow">Reference</span>
     <h1>How it works</h1>
-    <p class="lede">SpecTracer is about 2,100 lines of Python with one runtime dependency of
+    <p class="lede">SpecTracer is about 3,800 lines of Python with one runtime dependency of
     consequence. This page is for people evaluating it, debugging it, or contributing to it — it's not
     needed to use the tool.</p>
 
@@ -145,7 +145,7 @@
           <tr><td><code>aggregator.py</code></td><td>268</td><td>Completion stats, layer breakdowns, feature trees, health checks, unlinked results. Pure logic, no I/O.</td></tr>
           <tr><td><code>renderers.py</code></td><td>2523</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser (plus the per-module pages, client mode only).</td></tr>
           <tr><td><code>report_model.py</code></td><td>332</td><td>Reshapes the aggregate into the JSON schema (<code>spectracer-report.schema.json</code>), including the per-module cards. Runs when <code>output_json</code> is set or <code>render_mode</code> is <code>"client"</code> — client mode embeds this exact object.</td></tr>
-          <tr><td><code>cli.py</code></td><td>277</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
+          <tr><td><code>cli.py</code></td><td>292</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
         </tbody>
       </table>
     </div>
@@ -203,8 +203,9 @@
           <tr><td><code>feature_breakdown()</code></td><td>Per-feature completion stats</td></tr>
           <tr><td><code>layer_stats()</code></td><td>Per-layer counts, durations, percentages, and bar widths</td></tr>
           <tr><td><code>failure_breakdown()</code></td><td>Failures grouped by feature and scenario, with stack traces</td></tr>
-          <tr><td><code>health_checks()</code></td><td>All four health statuses — progress, pyramid, E2E runtime, unlinked</td></tr>
+          <tr><td><code>health_checks()</code></td><td>All five health statuses — progress, pyramid, E2E runtime, unlinked, unconfigured modules</td></tr>
           <tr><td><code>unlinked_results()</code></td><td>Results that matched no scenario</td></tr>
+          <tr><td><code>unconfigured_requirements()</code></td><td>Module-scoped requirements whose module isn't a registered config key — a likely typo, distinct from a genuine "missing" gap</td></tr>
         </tbody>
       </table>
     </div>

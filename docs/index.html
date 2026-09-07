@@ -85,17 +85,17 @@
         </div>
         <div class="tiles">
           <div class="tile">
-            <div class="val">25/44</div>
-            <div class="lbl">declared tests matched · 57%</div>
-            <div class="bar"><span class="amber" style="width:57%"></span></div>
+            <div class="val">50/55</div>
+            <div class="lbl">declared tests matched · 91%</div>
+            <div class="bar"><span class="green" style="width:91%"></span></div>
           </div>
           <div class="tile">
-            <div class="val">7/25</div>
-            <div class="lbl">scenarios fully matched · 28%</div>
-            <div class="bar"><span class="red" style="width:28%"></span></div>
+            <div class="val">23/28</div>
+            <div class="lbl">scenarios fully matched · 82%</div>
+            <div class="bar"><span class="amber" style="width:82%"></span></div>
           </div>
           <div class="tile">
-            <div class="val">220/220</div>
+            <div class="val">319/319</div>
             <div class="lbl">tests passed · 100%</div>
             <div class="bar"><span class="green" style="width:100%"></span></div>
           </div>
@@ -106,16 +106,16 @@
         </div>
         <div class="layers">
           <div class="layer e">
-            <div class="track"><span style="width:24%"></span></div>
-            <div class="meta"><span class="dot"></span><span class="nm">E2E</span><span class="det">53 tests · 4.9s</span></div>
+            <div class="track"><span style="width:28%"></span></div>
+            <div class="meta"><span class="dot"></span><span class="nm">E2E</span><span class="det">56 tests · 5.0s</span></div>
           </div>
           <div class="layer i">
-            <div class="track"><span style="width:19%"></span></div>
-            <div class="meta"><span class="dot"></span><span class="nm">INTEGRATION</span><span class="det">42 tests · 4.4s</span></div>
+            <div class="track"><span style="width:33%"></span></div>
+            <div class="meta"><span class="dot"></span><span class="nm">INTEGRATION</span><span class="det">65 tests · 5.9s</span></div>
           </div>
           <div class="layer u">
             <div class="track"><span style="width:100%"></span></div>
-            <div class="meta"><span class="dot"></span><span class="nm">UNIT</span><span class="det">125 tests · 556ms</span></div>
+            <div class="meta"><span class="dot"></span><span class="nm">UNIT</span><span class="det">198 tests · 1.0s</span></div>
           </div>
         </div>
       </div>
@@ -252,11 +252,12 @@
       <span class="eyebrow">The output</span>
       <h2>One HTML file you can email, archive, or attach to a build</h2>
       <p>All CSS and JS inlined — the only network request is a monospace font that degrades to a
-      system fallback. Five sections, all searchable, all offline.</p>
+      system fallback. Five sections, all searchable, all offline — six with client mode's per-module
+      Modules page.</p>
     </div>
 
     <figure class="shot">
-      <img src="report-features.png" alt="The Feature Breakdown page of a SpecTracer report: an expandable tree of features and scenarios with completion bars, required-layer status chips, full Gherkin text, and per-test result rows." loading="lazy">
+      <img src="report-features.png" alt="The Feature Breakdown page of a SpecTracer report: an expandable tree of features and scenarios with completion bars, required-layer status chips including an INTEGRATION MISSING chip, full Gherkin text, and per-test result rows." loading="lazy">
       <figcaption>Feature Breakdown — feature → scenario → layer result, with required-layer status per scenario.</figcaption>
     </figure>
 
@@ -290,6 +291,12 @@
         <span class="card-mark integration">{ }</span>
         <h3>JSON twin</h3>
         <p>Set <code>output_json</code> and get the same data as schema-validated JSON, built from the same model so the two can't drift — or let <code>render_mode: "client"</code> embed it directly inside the single HTML file.</p>
+      </div>
+      <div class="card">
+        <span class="card-mark">▦</span>
+        <h3>Modules <span class="pill new" style="margin-left:6px">client mode</span></h3>
+        <p>With two or more configured unit/integration modules, a per-module card and a scoped
+        <code>#/modules/&lt;key&gt;</code> tree let a service team bookmark just their own slice.</p>
       </div>
     </div>
 
@@ -386,7 +393,7 @@
 <section class="section">
   <div class="wrap split">
     <figure class="shot" style="margin:0">
-      <img src="report-hero.png" alt="The Overview page of SpecTracer's own report, showing headline coverage tiles and four health-check cards." loading="lazy">
+      <img src="report-hero.png" alt="The Overview page of SpecTracer's own report, showing headline coverage tiles and five health-check cards." loading="lazy">
       <figcaption>SpecTracer's own self-report, regenerated on every CI run.</figcaption>
     </figure>
     <div>

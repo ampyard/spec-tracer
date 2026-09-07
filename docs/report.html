@@ -105,8 +105,8 @@
     <p>The page that answers "how are we doing" in about three seconds.</p>
 
     <figure class="shot">
-      <img src="report-hero.png" alt="The Overview page: three headline tiles reading 25/44 declared tests matched, 7/25 scenarios fully matched, 220/220 tests passed; below them four health-check cards for Progress, Test pyramid, E2E runtime, and Unlinked." loading="lazy">
-      <figcaption>Overview — headline coverage plus the four health signals.</figcaption>
+      <img src="report-hero.png" alt="The Overview page: three headline tiles reading 50/55 declared tests matched, 23/28 scenarios fully matched, 319/319 tests passed; below them five health-check cards for Progress, Test pyramid, E2E runtime, Unlinked, and Unconfigured modules." loading="lazy">
+      <figcaption>Overview — headline coverage plus the five health signals.</figcaption>
     </figure>
 
     <h3>The three headline tiles</h3>
@@ -135,20 +135,20 @@
 
     <div class="note">
       <strong>Why the two coverage numbers differ so much</strong>
-      In the screenshot above, 57% of declared tests are matched but only 28% of scenarios are fully
+      In the screenshot above, 91% of declared tests are matched but only 82% of scenarios are fully
       matched. That gap is the normal shape of a partially-tagged codebase: coverage is spread thinly
       across many scenarios rather than completed on a few. Watch the gap close as you finish scenarios
       rather than start them.
     </div>
 
-    <h3>The four health cards</h3>
+    <h3>The five health cards</h3>
     <p>Each card is green, amber, or red, and links through to the page that explains it. Thresholds
     come from <code>health_checks</code> in your config — see
     <a href="configuration.html#health">Health checks</a>.</p>
 
     <div class="grid-2">
       <div class="card">
-        <h3>Progress <span class="pill warnp">amber</span></h3>
+        <h3>Progress <span class="pill pass">green</span></h3>
         <p>Declared-tests-matched percentage against your green/amber thresholds. Amber means "below
         target but not alarming"; red means below the amber floor.</p>
       </div>
@@ -167,13 +167,21 @@
         <p>Orphaned results. Green at zero, amber at 1–3, red at 4 or more. Visual only — this one
         cannot gate CI.</p>
       </div>
+      <div class="card">
+        <h3>Unconfigured modules <span class="pill fail">red</span></h3>
+        <p>Count of declared <code>@require-*:module</code> requirements whose module isn't a
+        registered config key for that layer at all. Binary — green at zero, red otherwise, no amber
+        band. This flags a likely config typo, distinct from a genuine coverage gap; see
+        <a href="#expanding">Expanding a scenario</a> below and
+        <a href="troubleshooting.html#module-missing">Troubleshooting</a>.</p>
+      </div>
     </div>
 
     <h2 id="pyramid">2 · Test Pyramid</h2>
     <p>Test count, duration, and pass rate for each layer, drawn as proportional bars.</p>
 
     <figure class="shot">
-      <img src="report-pyramid.png" alt="The Test Pyramid page: three horizontal bars for E2E (53 tests, 4.9s), Integration (42 tests, 4.4s), and Unit (125 tests, 556ms), each with pass, fail, and skip percentages." loading="lazy">
+      <img src="report-pyramid.png" alt="The Test Pyramid page: three horizontal bars for E2E (56 tests, 5.0s), Integration (65 tests, 5.9s), and Unit (198 tests, 1.0s), each with pass, fail, and skip percentages." loading="lazy">
       <figcaption>Test Pyramid — execution mix across unit, integration, and E2E.</figcaption>
     </figure>
 
@@ -183,8 +191,8 @@
     <ul>
       <li><strong>Bar length</strong> — relative test counts. If the E2E bar approaches the unit bar,
       the pyramid is inverting and CI is about to get slow.</li>
-      <li><strong>Duration</strong> — in the screenshot, 125 unit tests take 556ms while 53 E2E tests
-      take 4.9s. That ~20× per-test cost difference is exactly why the shape matters.</li>
+      <li><strong>Duration</strong> — in the screenshot, 198 unit tests take 1.0s while 56 E2E tests
+      take 5.0s. That per-test cost difference is exactly why the shape matters.</li>
       <li><strong>Pass / fail / skip pills</strong> — a layer with a high skip rate is quietly not
       testing anything, and no coverage metric will tell you that.</li>
     </ul>
@@ -201,8 +209,8 @@
     <strong>feature → scenario → individual test result</strong>.</p>
 
     <figure class="shot">
-      <img src="report-features.png" alt="The Feature Breakdown page: an expandable tree of features with completion bars and result pills; one scenario expanded to show required-layer chips, the full Gherkin steps, and the individual E2E and unit results that linked to it." loading="lazy">
-      <figcaption>Feature Breakdown — one scenario expanded to show requirements, Gherkin text, and linked results.</figcaption>
+      <img src="report-features.png" alt="The Feature Breakdown page: an expandable tree of features with completion bars and result pills; a partially-completed scenario expanded to show required-layer chips — UNIT OK, E2E OK, INTEGRATION MISSING — the full Gherkin steps, and the individual results that linked to it." loading="lazy">
+      <figcaption>Feature Breakdown — a partially-completed scenario expanded, its <code>INTEGRATION (linker) MISSING</code> chip showing exactly what's left to write.</figcaption>
     </figure>
 
     <h3>Row by row</h3>
@@ -210,7 +218,7 @@
       <table>
         <thead><tr><th>Column</th><th>What it shows</th></tr></thead>
         <tbody>
-          <tr><td><strong>Name</strong></td><td>Feature or scenario name. Scenario rows also carry the scenario id pill (e.g. <code>FC-006</code>) and, on result rows, the discovery module.</td></tr>
+          <tr><td><strong>Name</strong></td><td>Feature or scenario name. Scenario rows also carry the scenario id pill (e.g. <code>FC-002</code>) and, on result rows, the discovery module.</td></tr>
           <tr><td><strong>Completion</strong></td><td>A bar and a satisfied/declared fraction — green at 100%, amber below.</td></tr>
           <tr><td><strong>Result</strong></td><td>Rolled-up pass/fail/skip status.</td></tr>
           <tr><td><strong>Declared</strong></td><td>How many <code>@require-*</code> pairs this row declares.</td></tr>
@@ -220,13 +228,23 @@
       </table>
     </div>
 
-    <h3>Expanding a scenario</h3>
+    <h3 id="expanding">Expanding a scenario</h3>
     <p>Expanding a scenario row reveals three things:</p>
     <ol>
       <li><strong>Required-layer chips</strong> — one per declared requirement, showing the layer, the
-      module in parentheses, and <code>OK</code> or <code>MISSING</code>. This is the single most
-      actionable thing in the report: <code>INTEGRATION (renderers) MISSING</code> tells you precisely
-      what to go write.</li>
+      module in parentheses, and one of three states: <code>OK</code>, <code>MISSING</code>, or
+      <code>UNCONFIGURED</code>. This is the single most actionable thing in the report:
+      <code>INTEGRATION (linker) MISSING</code> tells you precisely what to go write. <code>UNCONFIGURED</code>
+      (shown orange, distinct from red <code>MISSING</code>) means the requirement names a module that
+      isn't even a registered config key for that layer — almost always a typo, not a coverage gap:</li>
+    </ol>
+
+    <figure class="shot">
+      <img src="report-unconfigured.png" alt="A scenario expanded showing three required-layer chips: UNIT (parsers) OK, E2E (parsers) OK, and an orange INTEGRATION (parsers) UNCONFIGURED chip, distinct from the red MISSING state." loading="lazy">
+      <figcaption>An <code>UNCONFIGURED</code> chip — the <code>integration</code> config has no <code>parsers</code> key at all, so this can't be a genuine coverage gap.</figcaption>
+    </figure>
+
+    <ol start="2">
       <li><strong>The full Gherkin text</strong> — the Given/When/Then as written, so a reader who isn't
       in the code can still judge whether the scenario is worth the coverage it's demanding.</li>
       <li><strong>The linked results</strong> — every test that claimed this scenario, with its layer,
@@ -241,6 +259,11 @@
     page appears next to Feature Breakdown. It splits the same tree one level down: one card per module,
     showing that module's completion, a unit/integration-only pyramid, and its unlinked count; the worst
     status (passed / skipped / failed) is shown as a colour stamp on the card.</p>
+
+    <figure class="shot">
+      <img src="report-modules.png" alt="The Modules page: a grid of per-module cards, each showing declared tests matched, a unit/integration pyramid, unlinked count, and a passed/no-results status pill." loading="lazy">
+      <figcaption>Modules — one card per configured unit/integration module key, this repo's own dogfood config.</figcaption>
+    </figure>
 
     <p>Clicking a card deep-links to <code>#/modules/&lt;key&gt;</code> and shows the Feature Breakdown tree
     <em>scoped to that module</em>: only the selected module's <code>@require-unit</code> /

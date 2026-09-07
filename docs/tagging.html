@@ -308,6 +308,25 @@
       the config, or drop the <code>:auth</code> suffix.
     </div>
 
+    <p>A module-scoped requirement actually has three possible outcomes, not two — the report
+    distinguishes them so you don't have to guess which one you're looking at:</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>State</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><strong>OK</strong></td><td>A linked result exists for that layer and module.</td></tr>
+          <tr><td><strong>MISSING</strong></td><td>The module <em>is</em> a registered config key for that layer, but no result linked to it — a genuine coverage gap.</td></tr>
+          <tr><td><strong>UNCONFIGURED</strong></td><td>The module named in the tag isn't a registered config key for that layer at all — no amount of testing will ever satisfy it. Almost always a typo in the tag or the config key.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The report's Feature Breakdown shows <code>UNCONFIGURED</code> as a distinct orange chip next to
+    the red <code>MISSING</code> one, and the Overview page's <strong>Unconfigured modules</strong> health
+    check counts them fleet-wide — see <a href="report.html#expanding">Report tour → Expanding a
+    scenario</a>.</p>
+
     <p>Module scope works identically for all three layers, which makes it a good fit for
     microservice-per-team repos: tag scenarios <code>@require-unit:my-service</code> and only that
     team's results count.</p>

@@ -56,7 +56,7 @@ This is the core logic and easy to get subtly wrong:
 - `collectors.py` — file discovery (`.feature`/`.xml`/`.json`).
 - `parsers.py` — Feature/JUnit/Cucumber parsing.
 - `linker.py` — the `@id`/`@scenario` tag matching (`_scenario_ids`, `_result_scenario_tags`).
-- `aggregator.py` — views, completion stats, layer stats, health checks, unlinked results. Health check keys are `Progress` (note the capital P), `pyramid`, `end_to_end_runtime`, `unlinked`; `cli.py` maps config aliases (`progress`/`e2e_runtime`) via `FAIL_ON_ALIASES`.
+- `aggregator.py` — views, completion stats, layer stats, health checks, unlinked results. Health check keys are `Progress` (note the capital P), `pyramid`, `end_to_end_runtime`, `unlinked`, `unconfigured_modules`; `cli.py` maps config aliases (`progress`/`e2e_runtime`/`unconfigured_modules`) via `FAIL_ON_ALIASES`. `unconfigured_modules` is binary (pass/fail, no amber) and flags a module-scoped `@require-*:module` naming a module that isn't a registered config key — distinct from `missing` (module configured, zero linked results); see `models.requirement_state` and `aggregator.unconfigured_requirements`.
 - `models.py` — `Scenario`, `TestResult`, `ScenarioView`, requirement/completion helpers.
 - `renderers.py` — HTML output (by far the largest file, ~58K).
 - `report_model.py` — JSON report builder (mirrors `spectracer-report.schema.json`).

@@ -37,6 +37,23 @@ def test_junit_parser_extracts_tags_status_and_module(tmp_path):
     assert result.duration == 0.5
 
 
+def test_junit_parser_extracts_tag_with_suffix_glued_on_without_whitespace(tmp_path):
+    """A parametrization id or similar can be glued directly onto the tag
+    with no separating whitespace; the full glued token is still extracted
+    (linking then matches it by containment, not exact equality)."""
+    xml = tmp_path / "unit.xml"
+    xml.write_text(
+        '<testsuite><testcase classname="c" name="t @scenario:FC-100-retry" time="0.5">'
+        "</testcase></testsuite>",
+        encoding="utf-8",
+    )
+
+    results = JunitParser().parse([xml], layer="unit", module="parsers")
+
+    assert len(results) == 1
+    assert "@scenario:FC-100-retry" in results[0].tags
+
+
 def test_feature_parser_reads_scenario_tags_and_required_layers():
     feature_file_content = (
         "Feature: Sample\n\n"

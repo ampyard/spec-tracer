@@ -7,11 +7,22 @@ def _scenario_ids(scenario: Scenario) -> set:
     return {tag[4:] for tag in scenario.tags if tag.startswith("@id:")}
 
 
-def _result_scenario_tags(result: TestResult) -> list:
-    tags = [tag[10:] for tag in result.tags if tag.startswith("@scenario:")]
+def result_matches_any_id(result: TestResult, scenario_ids: set) -> bool:
+    return any(_result_carries_id(result, sid) for sid in scenario_ids)
+
+
+def _result_carries_id(result: TestResult, scenario_id: str) -> bool:
+    """Whether a result carries a ``@scenario:<id>`` (or ``@id:<id>`` for e2e).
+
+    Matching is by containment rather than exact tag equality: a JUnit test
+    name/classname can glue extra characters onto the tag with no whitespace
+    (e.g. a parametrization suffix), so the id need not appear as its own
+    separate word — it only needs to be present.
+    """
+    needles = [f"@scenario:{scenario_id}"]
     if result.layer == "e2e":
-        tags.extend(tag[4:] for tag in result.tags if tag.startswith("@id:"))
-    return tags
+        needles.append(f"@id:{scenario_id}")
+    return any(needle in tag for tag in result.tags for needle in needles)
 
 
 class ResultLinker:
@@ -24,6 +35,6 @@ class ResultLinker:
             links[id(scenario)] = [
                 result
                 for result in results
-                if any(rsid in ids for rsid in _result_scenario_tags(result))
+                if result_matches_any_id(result, ids)
             ]
         return links

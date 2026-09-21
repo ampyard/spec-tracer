@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Dict, List, Set
 
-from spec_tracer.linker import _result_scenario_tags, _scenario_ids
+from spec_tracer.linker import _scenario_ids, result_matches_any_id
 from spec_tracer.models import Scenario, ScenarioView, TestResult
 from spec_tracer.models import completion_fraction, completion_ratio
 
@@ -264,5 +264,5 @@ class ReportAggregator:
             result
             for result in results
             if result.tags
-            and not any(rsid in all_scenario_ids for rsid in _result_scenario_tags(result))
+            and not result_matches_any_id(result, all_scenario_ids)
         ]

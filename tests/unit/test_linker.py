@@ -80,3 +80,24 @@ def test_link_ignores_id_tag_on_non_e2e_results():
     links = ResultLinker.link([scenario], [unit_result])
 
     assert links[id(scenario)] == []
+
+
+def test_link_matches_scenario_tag_with_suffix_glued_on_without_whitespace():
+    """JUnit test names can glue extra text onto the tag with no separator
+    (e.g. a parametrization id), so the tag need not stand alone as a
+    separate word to count as present."""
+    scenario = Scenario(feature="F", name="S1", tags=["@id:FC-042"])
+    result = TestResult(layer="unit", name="u1", tags=["@scenario:FC-042-retry"])
+
+    links = ResultLinker.link([scenario], [result])
+
+    assert links[id(scenario)] == [result]
+
+
+def test_link_matches_scenario_tag_with_prefix_glued_on_without_whitespace():
+    scenario = Scenario(feature="F", name="S1", tags=["@id:FC-042"])
+    result = TestResult(layer="unit", name="u1", tags=["prefix@scenario:FC-042"])
+
+    links = ResultLinker.link([scenario], [result])
+
+    assert links[id(scenario)] == [result]

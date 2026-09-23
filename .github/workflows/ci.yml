@@ -61,6 +61,7 @@ jobs:
           uv run pytest tests/integration/test_unit_linking.py --junitxml=reports/int-unit_linking.xml -q
           uv run pytest tests/integration/test_client_render.py --junitxml=reports/int-client_render.xml -q
           uv run pytest tests/integration/test_client_browser.py --junitxml=reports/int-client_browser.xml -q
+          uv run pytest tests/integration/test_ui_tabs.py --junitxml=reports/int-ui_tabs.xml -q
 
       - name: Run BDD tests (JSON output)
         run: |

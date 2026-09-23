@@ -63,7 +63,30 @@ def _load_config(path: Path) -> dict:
         raise ValueError(
             f"Config key 'render_mode' must be 'server' or 'client', got: {render_mode!r}"
         )
+    ui = config.get("ui", {})
+    if not isinstance(ui, dict):
+        raise ValueError(f"Config key 'ui' must be an object, got: {ui!r}")
+    tabs = ui.get("tabs", {})
+    if not isinstance(tabs, dict):
+        raise ValueError(f"Config key 'ui.tabs' must be an object, got: {tabs!r}")
+    unknown_tabs = [name for name in tabs if name not in ("dashboard", "pyramid")]
+    if unknown_tabs:
+        raise ValueError(
+            f"Config key 'ui.tabs' has unknown tab names: {sorted(unknown_tabs)}. Accepted values: dashboard, pyramid"
+        )
+    not_bools = {name: value for name, value in tabs.items() if not isinstance(value, bool)}
+    if not_bools:
+        raise ValueError(f"Config key 'ui.tabs' entries must be booleans, got: {not_bools}")
     return config
+
+
+def _resolved_ui_tabs(config: dict) -> dict:
+    """Resolve the ``ui.tabs`` visibility config to its full defaulted form (#dashboard-pyramid-visibility)."""
+    tabs = config.get("ui", {}).get("tabs", {})
+    return {
+        "dashboard": tabs.get("dashboard", True),
+        "pyramid": tabs.get("pyramid", True),
+    }
 
 
 def _failing_gated_checks(health_checks: dict, fail_on: List[str]) -> List[str]:
@@ -258,6 +281,7 @@ def main(argv: List[str] | None = None) -> int:
         known_modules=known_modules,
         render_mode=render_mode,
         json_report=report,
+        ui_tabs=_resolved_ui_tabs(config),
     )
 
     output_path = Path(config["output"])

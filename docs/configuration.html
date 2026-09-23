@@ -145,6 +145,13 @@ spec-tracer path/to/other-config.json</code></pre>
     <span class="c-fn">"progress_threshold_amber"</span>:   <span class="c-num">50</span>,
     <span class="c-fn">"e2e_duration_amber_seconds"</span>: <span class="c-num">600</span>,
     <span class="c-fn">"e2e_duration_red_seconds"</span>:   <span class="c-num">1800</span>
+  },
+
+  <span class="c-fn">"ui"</span>: {
+    <span class="c-fn">"tabs"</span>: {
+      <span class="c-fn">"dashboard"</span>: <span class="c-num">true</span>,
+      <span class="c-fn">"pyramid"</span>:   <span class="c-num">true</span>
+    }
   }
 }</code></pre>
     </div>
@@ -192,6 +199,14 @@ spec-tracer path/to/other-config.json</code></pre>
           <tr>
             <td><code>health_checks</code></td><td>No</td>
             <td>Threshold overrides. See <a href="#health">Health checks</a>.</td>
+          </tr>
+          <tr>
+            <td><code>ui.tabs</code></td><td>No</td>
+            <td>Object with <code>dashboard</code> and <code>pyramid</code> boolean keys controlling whether
+            those tabs appear in the report navigation. Both default to <code>true</code>. Hiding the
+            Dashboard tab makes Test Pyramid the landing page; hiding the Test Pyramid tab also suppresses
+            the Dashboard's "Open test pyramid" Health Check links; hiding both makes Feature Breakdown the
+            landing page.</td>
           </tr>
         </tbody>
       </table>

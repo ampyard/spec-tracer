@@ -10,6 +10,7 @@ from spec_tracer.cli import (
     _known_modules,
     _load_config,
     _relative_feature_path,
+    _resolved_ui_tabs,
     main,
 )
 
@@ -242,6 +243,62 @@ def test_main_client_render_embeds_json_without_output_json(tag, tmp_path, capsy
     html = output.read_text(encoding="utf-8")
     assert '<script type="application/json" id="report-data">' in html
     assert "JSON.parse(document.getElementById('report-data').textContent)" in html
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_defaults_ui_tabs_to_visible(tag, tmp_path):
+    path = _write_config(tmp_path)
+    config = _load_config(path)
+    assert _resolved_ui_tabs(config) == {"dashboard": True, "pyramid": True}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_accepts_hiding_pyramid_tab(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"pyramid": False}})
+    config = _load_config(path)
+    assert _resolved_ui_tabs(config) == {"dashboard": True, "pyramid": False}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_accepts_hiding_dashboard_tab(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"dashboard": False}})
+    config = _load_config(path)
+    assert _resolved_ui_tabs(config) == {"dashboard": False, "pyramid": True}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_accepts_hiding_both_tabs(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"dashboard": False, "pyramid": False}})
+    config = _load_config(path)
+    assert _resolved_ui_tabs(config) == {"dashboard": False, "pyramid": False}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_rejects_non_object_ui(tag, tmp_path):
+    path = _write_config(tmp_path, ui=["nope"])
+    with pytest.raises(ValueError, match="'ui' must be an object"):
+        _load_config(path)
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_rejects_non_object_ui_tabs(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": "nope"})
+    with pytest.raises(ValueError, match="'ui.tabs' must be an object"):
+        _load_config(path)
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_rejects_unknown_ui_tab_name(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"sidebar": False}})
+    with pytest.raises(ValueError, match="unknown tab names"):
+        _load_config(path)
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_load_config_rejects_non_boolean_ui_tab_value(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"pyramid": "false"}})
+    with pytest.raises(ValueError, match="must be booleans"):
+        _load_config(path)
 
 
 def test_relative_feature_path_uses_forward_slashes():

@@ -171,6 +171,12 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
     "progress_threshold_amber": 50,
     "e2e_duration_amber_seconds": 600,
     "e2e_duration_red_seconds": 1800
+  },
+  "ui": {
+    "tabs": {
+      "dashboard": true,
+      "pyramid": true
+    }
   }
 }
 ```
@@ -187,10 +193,11 @@ The tool is configured entirely through a JSON file — there are no CLI flags. 
 | `error_on_failure` | No | If `true`, exit non-zero when any test result is a failure. Default: `false`. |
 | `fail_on` | No | Array of health checks that gate CI. If any listed check reports a failing (red) status, the tool exits `1`. Accepted values: `progress`, `pyramid`, `e2e_runtime`, `unconfigured_modules`. Amber (warn) never gates — only red does. Independent of and additive to `error_on_failure`; either one exiting non-zero fails the build. Any other value is a config error. Default: none (health checks stay visual-only). |
 | `health_checks` | No | Overrides for the default thresholds shown above. |
+| `ui.tabs` | No | Object with `dashboard` and `pyramid` boolean keys controlling whether those tabs appear in the report navigation. Both default to `true`. Hiding the Dashboard tab makes Test Pyramid the landing page; hiding the Test Pyramid tab also suppresses the Dashboard's "Open test pyramid" Health Check links; hiding both makes Feature Breakdown the landing page. |
 
 ## The Report
 
-The generated HTML is a single self-contained file (all CSS/JS inlined — a monospace font loads from a CDN with a system fallback — safe to email or archive) with five sections:
+The generated HTML is a single self-contained file (all CSS/JS inlined — a monospace font loads from a CDN with a system fallback — safe to email or archive) with five sections. The Coverage Progress Summary (Dashboard) and Global Pyramid Dashboard (Test Pyramid) tabs can each be hidden via [`ui.tabs`](#configuration-file) if a team doesn't want them in the nav.
 
 By default (or with `render_mode: "server"`), Python renders the pages at build time, so the HTML works even if JavaScript is disabled. With `render_mode: "client"`, the report is instead embedded in the HTML as a `<script type="application/json">` block and the pages are built by a small script in the browser — the file is smaller, navigation is instant (no re-generation per filter/route), and the embedded JSON is byte-for-byte the same report `output_json` writes, so the two stay in lockstep.
 

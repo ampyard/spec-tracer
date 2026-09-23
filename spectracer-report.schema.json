@@ -73,6 +73,20 @@
                         "e2e_duration_amber_seconds": { "type": "number" },
                         "e2e_duration_red_seconds": { "type": "number" }
                     }
+                },
+                "ui": {
+                    "type": "object",
+                    "description": "UI presentation options for the generated report.",
+                    "properties": {
+                        "tabs": {
+                            "type": "object",
+                            "description": "Controls which top-level tabs are visible in the report UI. Both default to true; at least one of dashboard/pyramid must remain visible.",
+                            "properties": {
+                                "dashboard": { "type": "boolean" },
+                                "pyramid": { "type": "boolean" }
+                            }
+                        }
+                    }
                 }
             }
         },

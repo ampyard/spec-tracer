@@ -143,9 +143,9 @@
           <tr><td><code>parsers.py</code></td><td>211</td><td>Three parsers: Gherkin (line-by-line), JUnit XML (ElementTree), Cucumber JSON (stdlib <code>json</code>).</td></tr>
           <tr><td><code>linker.py</code></td><td>29</td><td>Identity-based pairing. The smallest module and the most important one.</td></tr>
           <tr><td><code>aggregator.py</code></td><td>268</td><td>Completion stats, layer breakdowns, feature trees, health checks, unlinked results. Pure logic, no I/O.</td></tr>
-          <tr><td><code>renderers.py</code></td><td>2523</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser (plus the per-module pages, client mode only).</td></tr>
+          <tr><td><code>renderers.py</code></td><td>2556</td><td>The Jinja2 templates — embedded HTML, CSS, and JS — plus render helpers. Two page builders live here: the server-rendered default and the client-rendered shell that builds the same pages from embedded JSON in the browser (plus the per-module pages, client mode only). Both templates read <code>ui.tabs</code> (via the resolved <code>show_dashboard</code>/<code>show_pyramid</code> render args server-side, or <code>REPORT.config.ui.tabs</code> client-side) to control Dashboard/Test Pyramid tab visibility.</td></tr>
           <tr><td><code>report_model.py</code></td><td>332</td><td>Reshapes the aggregate into the JSON schema (<code>spectracer-report.schema.json</code>), including the per-module cards. Runs when <code>output_json</code> is set or <code>render_mode</code> is <code>"client"</code> — client mode embeds this exact object.</td></tr>
-          <tr><td><code>cli.py</code></td><td>292</td><td>Orchestration: load config, collect, parse, link, aggregate, write.</td></tr>
+          <tr><td><code>cli.py</code></td><td>318</td><td>Orchestration: load config, collect, parse, link, aggregate, write. Also validates and resolves <code>ui.tabs</code> via <code>_resolved_ui_tabs()</code>.</td></tr>
         </tbody>
       </table>
     </div>

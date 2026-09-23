@@ -23,7 +23,8 @@
     "unit_linking": ["./reports/int-unit_linking.xml"],
     "renderers": [
       "./reports/int-client_render.xml",
-      "./reports/int-client_browser.xml"
+      "./reports/int-client_browser.xml",
+      "./reports/int-ui_tabs.xml"
     ]
   },
   "e2e": {

@@ -108,6 +108,10 @@ PYTEST_STEPS = [
         "uv", "run", "pytest", "tests/integration/test_client_browser.py",
         "--junitxml=reports/int-client_browser.xml", "-q",
     ]),
+    ("Integration: ui_tabs", [
+        "uv", "run", "pytest", "tests/integration/test_ui_tabs.py",
+        "--junitxml=reports/int-ui_tabs.xml", "-q",
+    ]),
 ]
 
 BEHAVE_STEPS = [

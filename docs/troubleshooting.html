@@ -242,6 +242,7 @@
           <tr><td>No config file found, none specified</td><td>Errors out. A config file is mandatory.</td></tr>
           <tr><td>Config missing <code>features</code> or <code>output</code></td><td>Errors out — both keys are required.</td></tr>
           <tr><td>Invalid value in <code>fail_on</code></td><td>Config error. Only <code>progress</code>, <code>pyramid</code>, <code>e2e_runtime</code>, and <code>unconfigured_modules</code> are accepted.</td></tr>
+          <tr><td><code>ui.tabs.dashboard</code> and <code>ui.tabs.pyramid</code> both <code>false</code></td><td>Not an error. Both tabs are hidden and Feature Breakdown becomes the report's landing page.</td></tr>
           <tr><td>Malformed JUnit XML</td><td>Aborts with a clear message naming the offending file.</td></tr>
           <tr><td>Malformed Cucumber JSON</td><td>Aborts on the JSON decode error. <strong>The message is not contextualised with the file path</strong> — with several E2E files you may have to bisect to find the bad one.</td></tr>
           <tr><td>Empty or missing test-result path</td><td>Silently ignored; zero tests for that layer.</td></tr>

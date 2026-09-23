@@ -2,6 +2,10 @@ version = 1
 revision = 3
 requires-python = ">=3.12"
 
+[options]
+exclude-newer = "2026-09-13T05:52:01.5181067Z"
+exclude-newer-span = "P10D"
+
 [[package]]
 name = "attrs"
 version = "26.1.0"
@@ -30,15 +34,15 @@ wheels = [
 
 [[package]]
 name = "behave-modern-html-report"
-version = "2.2.2"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "behave" },
     { name = "jinja2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/27/388d9c5f6b5d5b793692c7f60818553b8ef036175d1cbf8cc13b01fa5277/behave_modern_html_report-2.2.2.tar.gz", hash = "sha256:bf64e644a3b56e99ddb9329a13cad73bf6834021208778b3638f5e882309ba55", size = 1627014, upload-time = "2026-07-01T04:18:03.662Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/b6/e1d86a6b89358ae1e19a9cfb70a5351dd3a1180f3fffd5b12f18b88119d8/behave_modern_html_report-2.3.0.tar.gz", hash = "sha256:2d0ddc3edefa59a1f2cdf581e68c118f9ab7ebf13591ed74449d894d4cf899e7", size = 153861, upload-time = "2026-08-10T16:52:33.172Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/75/87e7e88850e178c64336e3e4107debfe69f325f4b6aea3bfe50ea89cb8ad/behave_modern_html_report-2.2.2-py3-none-any.whl", hash = "sha256:0caf915ffbe85fa254f8d2aaec79d61531ad282344c32d89256a52c47186eb59", size = 61635, upload-time = "2026-07-01T04:18:02.3Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/7a/4e595c6264b576b44e7d8cb698b14ad88a0bf35e990dc5966b3257b119bb/behave_modern_html_report-2.3.0-py3-none-any.whl", hash = "sha256:c98d66bde91941b8444e405f1d7a6c6646c26c68e20cf2abac9cbccfd38ef94c", size = 62708, upload-time = "2026-08-10T16:52:31.814Z" },
 ]
 
 [[package]]
@@ -52,20 +56,20 @@ wheels = [
 
 [[package]]
 name = "cucumber-expressions"
-version = "20.0.0"
+version = "20.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/a6/eaac4ff3afdc776a4d3e0ef29c79db1c9faf11c423175771e225bcef9c84/cucumber_expressions-20.0.0.tar.gz", hash = "sha256:5cbd4012c66584aa82ada990a6e7cb131274796e132e905d27d95ae9a2ca0f48", size = 13738, upload-time = "2026-06-11T07:13:43.691Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/a3/001d7725688d5f8ae7d73d746457c9d11b851a4bad3a315dc7762144ec96/cucumber_expressions-20.1.0.tar.gz", hash = "sha256:0d216ec26e36c71b3e5643f2e72c41f9b266ef04eaa0c7e47a6e3b2caf523b1a", size = 13826, upload-time = "2026-08-05T20:16:52.542Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/24/e403585f201d30ab561d8a971a1adc4de28123fb9bf2f9813650fda8ddb0/cucumber_expressions-20.0.0-py3-none-any.whl", hash = "sha256:8a0434529efd7ca6e2052934ec8d677c7e24edc0fad3b1d1b1bc4bbca5e521f3", size = 20236, upload-time = "2026-06-11T07:13:42.667Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/b1/fba2393968001b2307facb76e0bc47be5c67185df752a8f5b61926d26760/cucumber_expressions-20.1.0-py3-none-any.whl", hash = "sha256:640782ebaef82313dc64e4684d0e5c5efbab0611b23f0cfad64f90c7041cf73d", size = 20230, upload-time = "2026-08-05T20:16:51.565Z" },
 ]
 
 [[package]]
 name = "cucumber-tag-expressions"
-version = "11.0.0"
+version = "11.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/01/98/69e82d5bfaebde03b205c6722e4ebe52940aad26a3768f3c3d28b1e391f3/cucumber_tag_expressions-11.0.0.tar.gz", hash = "sha256:9739a7b3e04b3ee9f77748d2b48dc9e7ff41b041ed6b651283cfec022f0e6d0b", size = 8442, upload-time = "2026-07-23T10:56:49.869Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/e0/c2741558040293465d615a4f2555e9180c54a559119b96ff0251dda5fa90/cucumber_tag_expressions-11.0.1.tar.gz", hash = "sha256:f8304dd16e546517816e62ace6c486575023812f42e8a60526fcec1694016146", size = 8635, upload-time = "2026-08-05T20:33:20.775Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ed/34/fbd46adb089ec277e9b7da3db479976c228c28407dce15e34554478c8ba9/cucumber_tag_expressions-11.0.0-py3-none-any.whl", hash = "sha256:86ce0647bed1e52d6a634649c31758faa22821531541848f221b1f6c4f75c9f7", size = 9723, upload-time = "2026-07-23T10:56:49.023Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/2a/894aded5804c76cf148965721cb57fed0d923ddb2747a77c9147f20d58a9/cucumber_tag_expressions-11.0.1-py3-none-any.whl", hash = "sha256:8ee5433a3b1ad16ca607c905fa3bb6d85d57f087ba119b14ea5e82cd35ea98c5", size = 9757, upload-time = "2026-08-05T20:33:19.95Z" },
 ]
 
 [[package]]
@@ -248,11 +252,11 @@ wheels = [
 
 [[package]]
 name = "packaging"
-version = "26.2"
+version = "26.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d7/f1/e7a6dd94a8d4a5626c03e4e99c87f241ba9e350cd9e6d75123f992427270/packaging-26.2.tar.gz", hash = "sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661", size = 228134, upload-time = "2026-04-24T20:15:23.917Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/fa/3944b40b07da9ce895c0e6303a5ab7d53da063554f534556b134a54d6093/packaging-26.3.tar.gz", hash = "sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79", size = 313412, upload-time = "2026-08-04T18:15:28.737Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl", hash = "sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e", size = 100195, upload-time = "2026-04-24T20:15:22.081Z" },
+    { url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl", hash = "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c", size = 129956, upload-time = "2026-08-04T18:15:27.159Z" },
 ]
 
 [[package]]
@@ -319,11 +323,11 @@ wheels = [
 
 [[package]]
 name = "pygments"
-version = "2.20.0"
+version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz", hash = "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c", size = 5005329, upload-time = "2026-08-17T08:02:48.824Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+    { url = "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl", hash = "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9", size = 1250147, upload-time = "2026-08-17T08:02:44.912Z" },
 ]
 
 [[package]]
@@ -489,7 +493,7 @@ wheels = [
 
 [[package]]
 name = "spec-tracer"
-version = "0.4.0"
+version = "1.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "behave-modern-html-report" },

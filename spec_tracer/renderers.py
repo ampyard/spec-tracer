@@ -689,15 +689,15 @@ _TEMPLATE_STR = """<html lang="en">
     <button type="button" class="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark theme">&#9788;</button>
   </header>
   <nav class="app-nav">
-    <a class="nav-link" data-route="/" href="#/">Dashboard</a>
-    <a class="nav-link" data-route="/pyramid" href="#/pyramid">Test Pyramid</a>
+    {% if show_dashboard %}<a class="nav-link" data-route="/" href="#/">Dashboard</a>{% endif %}
+    {% if show_pyramid %}<a class="nav-link" data-route="/pyramid" href="#/pyramid">Test Pyramid</a>{% endif %}
     <a class="nav-link" data-route="/features" href="#/features">Feature Breakdown</a>
     <a class="nav-link" data-route="/failures" href="#/failures">Failure Breakdown</a>
     <a class="nav-link" data-route="/unlinked" href="#/unlinked">Unlinked Tests</a>
   </nav>
   <div class="page-shell">
 
-    <main id="page-dashboard" class="page-stack">
+    <main id="page-dashboard" class="page-stack{{ ' hidden' if not show_dashboard else '' }}">
       <section class="panel">
         <h1>Overview</h1>
         <div class="hero-stats">
@@ -745,9 +745,9 @@ _TEMPLATE_STR = """<html lang="en">
             <div class="health-value">{{ item.value }}</div>
             {% endif %}
             <div class="health-message">{{ item.message }}</div>
-            {% if key == 'pyramid' %}
+            {% if key == 'pyramid' and show_pyramid %}
             <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
-            {% elif key == 'end_to_end_runtime' %}
+            {% elif key == 'end_to_end_runtime' and show_pyramid %}
             <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
             {% elif key == 'unlinked' %}
             <a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>
@@ -990,7 +990,14 @@ _TEMPLATE_STR = """<html lang="en">
 
   </div>
   <script>
-    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked'];
+    const SHOW_DASHBOARD = {{ 'true' if show_dashboard else 'false' }};
+    const SHOW_PYRAMID = {{ 'true' if show_pyramid else 'false' }};
+    const DEFAULT_ROUTE = {{ default_route | tojson }};
+    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked'].filter((r) => {
+      if (r === '/') return SHOW_DASHBOARD;
+      if (r === '/pyramid') return SHOW_PYRAMID;
+      return true;
+    });
     const PAGE_BY_ROUTE = {
       '/': 'page-dashboard',
       '/pyramid': 'page-pyramid',
@@ -1025,8 +1032,8 @@ _TEMPLATE_STR = """<html lang="en">
     })();
 
     function currentRoute() {
-      const path = (window.location.hash || '#/').replace(/^#/, '');
-      return ROUTES.includes(path) ? path : '/';
+      const path = (window.location.hash || '#' + DEFAULT_ROUTE).replace(/^#/, '');
+      return ROUTES.includes(path) ? path : DEFAULT_ROUTE;
     }
 
     function route(pathOverride) {
@@ -1034,7 +1041,7 @@ _TEMPLATE_STR = """<html lang="en">
       Object.values(PAGE_BY_ROUTE).forEach((id) => {
         document.getElementById(id).classList.add('hidden');
       });
-      document.getElementById(PAGE_BY_ROUTE[path] || 'page-dashboard').classList.remove('hidden');
+      document.getElementById(PAGE_BY_ROUTE[path] || PAGE_BY_ROUTE[DEFAULT_ROUTE]).classList.remove('hidden');
       document.querySelectorAll('.app-nav a').forEach((link) => {
         link.classList.toggle('active', link.getAttribute('data-route') === path);
       });
@@ -2158,7 +2165,9 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
           h += '<div class="health-value">' + esc(item.value) + '</div>';
         }
         h += '<div class="health-message">' + esc(item.message) + '</div>';
-        if (item.key === 'pyramid' || item.key === 'end_to_end_runtime') {
+        const uiTabs = (REPORT.config && REPORT.config.ui && REPORT.config.ui.tabs) || {};
+        const showPyramid = uiTabs.pyramid !== false;
+        if (showPyramid && (item.key === 'pyramid' || item.key === 'end_to_end_runtime')) {
           h += '<a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>';
         } else if (item.key === 'unlinked') {
           h += '<a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>';
@@ -2216,7 +2225,24 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       document.getElementById('page-module-detail').classList.add('hidden');
     }
 
-    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked', '/modules'];
+    const UI_TABS = (REPORT.config && REPORT.config.ui && REPORT.config.ui.tabs) || {};
+    const SHOW_DASHBOARD = UI_TABS.dashboard !== false;
+    const SHOW_PYRAMID = UI_TABS.pyramid !== false;
+    if (!SHOW_DASHBOARD) {
+      document.querySelector('.app-nav a[data-route="/"]').classList.add('hidden');
+      document.getElementById('page-dashboard').classList.add('hidden');
+    }
+    if (!SHOW_PYRAMID) {
+      document.querySelector('.app-nav a[data-route="/pyramid"]').classList.add('hidden');
+      document.getElementById('page-pyramid').classList.add('hidden');
+    }
+    const DEFAULT_ROUTE = SHOW_DASHBOARD ? '/' : SHOW_PYRAMID ? '/pyramid' : '/features';
+
+    const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked', '/modules'].filter((r) => {
+      if (r === '/') return SHOW_DASHBOARD;
+      if (r === '/pyramid') return SHOW_PYRAMID;
+      return true;
+    });
     const PAGE_BY_ROUTE = {
       '/': 'page-dashboard',
       '/pyramid': 'page-pyramid',
@@ -2263,14 +2289,14 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       if (HAS_MODULES && path === '/modules') return 'page-modules';
       if (HAS_MODULES && path.indexOf('/modules/') === 0 && moduleKeyFromPath(path)) return 'page-module-detail';
       if (HAS_MODULES && path.indexOf('/modules/') === 0) return 'page-modules';
-      return PAGE_BY_ROUTE[path] || 'page-dashboard';
+      return PAGE_BY_ROUTE[path] || PAGE_BY_ROUTE[DEFAULT_ROUTE];
     }
 
     function currentRoute() {
-      const path = (window.location.hash || '#/').replace(/^#/, '');
-      if (HAS_MODULES && ROUTES.includes(path)) return path;
+      const path = (window.location.hash || '#' + DEFAULT_ROUTE).replace(/^#/, '');
+      if (ROUTES.includes(path)) return path;
       if (HAS_MODULES && moduleKeyFromPath(path)) return path;
-      return '/';
+      return DEFAULT_ROUTE;
     }
 
     function route(pathOverride) {
@@ -2421,6 +2447,7 @@ class HtmlRenderer:
         known_modules: dict | None = None,
         render_mode: str = "server",
         json_report: dict | None = None,
+        ui_tabs: dict | None = None,
     ) -> str:
         layer_stats = layer_stats or []
         health_checks = health_checks or {}
@@ -2428,6 +2455,9 @@ class HtmlRenderer:
         unlinked_results = unlinked_results or []
         failure_breakdown = failure_breakdown or []
         logo_data_uri = logo_data_uri if logo_data_uri is not None else LOGO_DATA_URI
+        ui_tabs = ui_tabs if ui_tabs is not None else {"dashboard": True, "pyramid": True}
+        show_dashboard = ui_tabs.get("dashboard", True)
+        show_pyramid = ui_tabs.get("pyramid", True)
 
         if render_mode == "client":
             if json_report is None:
@@ -2482,6 +2512,11 @@ class HtmlRenderer:
                 unlinked_results=unlinked_results,
                 failure_breakdown=failure_breakdown,
                 logo_data_uri=logo_data_uri,
+                show_dashboard=show_dashboard,
+                show_pyramid=show_pyramid,
+                default_route=(
+                    "/" if show_dashboard else "/pyramid" if show_pyramid else "/features"
+                ),
             )
 
         lines = [

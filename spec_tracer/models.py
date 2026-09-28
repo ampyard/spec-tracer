@@ -84,6 +84,8 @@ class Scenario:
     tags: List[str] = field(default_factory=list)
     required_layers: List[RequiredLayer] = field(default_factory=list)
     steps: List[str] = field(default_factory=list)
+    # Every @tag verbatim, in file order, including @require-* — tags is linking-only.
+    raw_tags: List[str] = field(default_factory=list)
 
 
 @dataclass

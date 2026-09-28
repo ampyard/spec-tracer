@@ -1,3 +1,4 @@
+import html
 import json
 import re
 from typing import List
@@ -15,6 +16,26 @@ LOGO_DATA_URI = ""
 
 _REQUIRED_STATUS_TAG = {"ok": "[OK]", "missing": "[MISSING]", "unconfigured": "[UNCONFIGURED]"}
 _REQUIRED_CHIP_LABEL = {"ok": "OK", "missing": "Missing", "unconfigured": "Unconfigured"}
+_GHERKIN_KEYWORDS = ("Given", "When", "Then", "And", "But", "*")
+
+
+def _gherkin_step_html(step: str):
+    """Lightweight Gherkin syntax highlighting: leading keyword + quoted strings."""
+    text = step or ""
+    keyword = ""
+    rest = text
+    for kw in _GHERKIN_KEYWORDS:
+        if text == kw or text.startswith(kw + " "):
+            keyword = kw
+            rest = text[len(kw):]
+            break
+    rest_html = html.escape(rest, quote=False)
+    rest_html = re.sub(r'"([^"]*)"', r'<span class="gherkin-string">"\1"</span>', rest_html)
+    result = ""
+    if keyword:
+        result += f'<span class="gherkin-keyword">{html.escape(keyword, quote=False)}</span>'
+    result += rest_html
+    return Markup(result) if Markup is not None else result
 
 
 def _layer_satisfied(req, linked_results) -> bool:
@@ -510,6 +531,10 @@ _TEMPLATE_STR = """<html lang="en">
     .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 6px; background: var(--surface-alt); }
     .scenario-id-pill { text-transform: none; letter-spacing: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, monospace; border-radius: 6px; white-space: normal; flex: 0 1 auto; }
     .steps { margin: 8px 0 0; padding-left: 52px; color: var(--text-soft); line-height: 1.65; font-size: 0.88rem; }
+    .scenario-tags { margin: 6px 0 0; padding-left: 32px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .gherkin-tag { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 0.74rem; font-weight: 600; font-family: ui-monospace, SFMono-Regular, monospace; background: var(--primary-soft); color: var(--primary); }
+    .gherkin-keyword { color: var(--primary); font-weight: 700; }
+    .gherkin-string { color: var(--success); }
     .empty-state { padding: 14px 0 14px 32px; color: var(--text-soft); font-size: 0.88rem; }
     .table-list { display: grid; gap: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .table-row { display: grid; grid-template-columns: 100px 1fr 1.4fr 1.5fr 80px 90px; gap: 12px; align-items: start; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 0.86rem; }
@@ -864,10 +889,17 @@ _TEMPLATE_STR = """<html lang="en">
                       <span class="required-chip none">No required layers</span>
                       {% endif %}
                     </div>
+                    {% if view.scenario.raw_tags %}
+                    <div class="scenario-tags">
+                      {% for tag in view.scenario.raw_tags %}
+                      <span class="gherkin-tag">{{ tag }}</span>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
                     {% if view.scenario.steps %}
                     <ul class="steps" type="none">
                       {% for step in view.scenario.steps %}
-                      <li>{{ step }}</li>
+                      <li>{{ gherkin_step(step) }}</li>
                       {% endfor %}
                     </ul>
                     {% endif %}
@@ -1475,6 +1507,10 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     .pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 6px; background: var(--surface-alt); }
     .scenario-id-pill { text-transform: none; letter-spacing: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, monospace; border-radius: 6px; white-space: normal; flex: 0 1 auto; }
     .steps { margin: 8px 0 0; padding-left: 52px; color: var(--text-soft); line-height: 1.65; font-size: 0.88rem; }
+    .scenario-tags { margin: 6px 0 0; padding-left: 32px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .gherkin-tag { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 0.74rem; font-weight: 600; font-family: ui-monospace, SFMono-Regular, monospace; background: var(--primary-soft); color: var(--primary); }
+    .gherkin-keyword { color: var(--primary); font-weight: 700; }
+    .gherkin-string { color: var(--success); }
     .empty-state { padding: 14px 0 14px 32px; color: var(--text-soft); font-size: 0.88rem; }
     .table-list { display: grid; gap: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .table-row { display: grid; grid-template-columns: 100px 1fr 1.4fr 1.5fr 80px 90px; gap: 12px; align-items: start; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 0.86rem; }
@@ -1766,6 +1802,27 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       });
     }
 
+    var GHERKIN_KEYWORDS = ['Given', 'When', 'Then', 'And', 'But', '*'];
+
+    function gherkinStep(step) {
+      step = step == null ? '' : String(step);
+      var keyword = '', rest = step;
+      for (var i = 0; i < GHERKIN_KEYWORDS.length; i++) {
+        var kw = GHERKIN_KEYWORDS[i];
+        if (step === kw || step.indexOf(kw + ' ') === 0) { keyword = kw; rest = step.slice(kw.length); break; }
+      }
+      var h = keyword ? '<span class="gherkin-keyword">' + esc(keyword) + '</span>' : '';
+      var re = /"([^"]*)"/g;
+      var lastIndex = 0, m;
+      while ((m = re.exec(rest)) !== null) {
+        h += esc(rest.slice(lastIndex, m.index));
+        h += '<span class="gherkin-string">"' + esc(m[1]) + '"</span>';
+        lastIndex = m.index + m[0].length;
+      }
+      h += esc(rest.slice(lastIndex));
+      return h;
+    }
+
     function formatDuration(ms) {
       ms = ms || 0;
       if (ms >= 1000) return (ms / 1000).toFixed(1) + 's';
@@ -1915,9 +1972,14 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       h += '</summary>';
       h += '<div class="tree-children" data-tree-group>';
       h += requiredRow(sc.requirements);
+      if (sc.raw_tags && sc.raw_tags.length) {
+        h += '<div class="scenario-tags">';
+        sc.raw_tags.forEach(function (t) { h += '<span class="gherkin-tag">' + esc(t) + '</span>'; });
+        h += '</div>';
+      }
       if (sc.steps && sc.steps.length) {
         h += '<ul class="steps" type="none">';
-        sc.steps.forEach(function (s) { h += '<li>' + esc(s) + '</li>'; });
+        sc.steps.forEach(function (s) { h += '<li>' + gherkinStep(s) + '</li>'; });
         h += '</ul>';
       }
       if (sc.results && sc.results.length) {
@@ -1976,6 +2038,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       return {
         name: sc.name,
         tags: sc.tags,
+        raw_tags: sc.raw_tags,
         steps: sc.steps,
         requirements: (sc.requirements || []).filter(function (r) {
           return (r.layer === 'unit' || r.layer === 'integration') && r.module && r.module.toLowerCase() === k;
@@ -2487,6 +2550,7 @@ class HtmlRenderer:
             template.globals["status_rank"] = _status_rank
             template.globals["progress_band"] = _progress_band
             template.globals["pass_band"] = _pass_band
+            template.globals["gherkin_step"] = _gherkin_step_html
             failed_total = sum(metric["failed"] for metric in layer_stats)
             result_total = sum(metric["count"] for metric in layer_stats)
             passed_total = result_total - failed_total

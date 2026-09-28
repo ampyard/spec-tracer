@@ -326,6 +326,11 @@
                     "description": "Linking tags on this scenario (e.g. @id:FC-42, @regression). Excludes @require-* tags.",
                     "items": { "type": "string" }
                 },
+                "raw_tags": {
+                    "type": "array",
+                    "description": "Every @tag on this scenario verbatim, in feature-file order, including @require-* tags. Used by the report to display the scenario's tags as-is, unlike `tags` which is linking-only.",
+                    "items": { "type": "string" }
+                },
                 "requirements": {
                     "type": "array",
                     "description": "Declared @require-* layer requirements for this scenario and whether each is satisfied.",

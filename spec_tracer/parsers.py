@@ -62,6 +62,7 @@ class FeatureParser:
                     tags=linking_tags,
                     required_layers=required_layers,
                     steps=[],
+                    raw_tags=current_tags,
                 )
                 current_tags = []
                 continue

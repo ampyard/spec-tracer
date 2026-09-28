@@ -57,6 +57,7 @@ def _scenario_result(view: ScenarioView, known_modules: Optional[Dict[str, Set[s
     return {
         "name": view.scenario.name,
         "tags": list(view.scenario.tags),
+        "raw_tags": list(view.scenario.raw_tags),
         "requirements": _requirements(view, known_modules),
         "results": [_result_dict(result) for result in view.linked_results],
         "steps": list(view.scenario.steps),

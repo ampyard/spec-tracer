@@ -213,7 +213,7 @@
     <strong>feature → scenario → individual test result</strong>.</p>
 
     <figure class="shot">
-      <img src="report-features.png" alt="The Feature Breakdown page: an expandable tree of features with completion bars and result pills; a partially-completed scenario expanded to show required-layer chips — UNIT OK, E2E OK, INTEGRATION MISSING — the full Gherkin steps, and the individual results that linked to it." loading="lazy">
+      <img src="report-features.png" alt="The Feature Breakdown page: an expandable tree of features with completion bars and result pills; a partially-completed scenario expanded to show its raw @tags, required-layer chips — UNIT OK, E2E OK, INTEGRATION MISSING — the full syntax-highlighted Gherkin steps, and the individual results that linked to it." loading="lazy">
       <figcaption>Feature Breakdown — a partially-completed scenario expanded, its <code>INTEGRATION (linker) MISSING</code> chip showing exactly what's left to write.</figcaption>
     </figure>
 
@@ -249,8 +249,12 @@
     </figure>
 
     <ol start="2">
-      <li><strong>The full Gherkin text</strong> — the Given/When/Then as written, so a reader who isn't
-      in the code can still judge whether the scenario is worth the coverage it's demanding.</li>
+      <li><strong>The scenario's tags, verbatim</strong> — every <code>@tag</code> from the feature file
+      (including <code>@require-*</code> tags), shown below the required-layer chips exactly as they
+      appear on the line above <code>Scenario:</code> in the source file.</li>
+      <li><strong>The full Gherkin text</strong> — the Given/When/Then as written, with keywords and
+      quoted strings syntax-highlighted, so a reader who isn't in the code can still judge whether the
+      scenario is worth the coverage it's demanding.</li>
       <li><strong>The linked results</strong> — every test that claimed this scenario, with its layer,
       module, status, and duration.</li>
     </ol>

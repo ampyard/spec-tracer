@@ -429,6 +429,9 @@ _TEMPLATE_STR = """<html lang="en">
     .app-nav a:hover { color: var(--primary); }
     .app-nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
     .page-shell { max-width: 1800px; width: 96%; margin: 0 auto; padding: 32px 0; display: grid; gap: var(--gap); }
+    .run-meta { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 12px 24px; }
+    .run-meta-item { font-size: 0.85rem; color: var(--text-soft); }
+    .run-meta-item strong { color: var(--text); font-weight: 600; margin-right: 6px; }
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -717,10 +720,15 @@ _TEMPLATE_STR = """<html lang="en">
     {% if show_dashboard %}<a class="nav-link" data-route="/" href="#/">Dashboard</a>{% endif %}
     {% if show_pyramid %}<a class="nav-link" data-route="/pyramid" href="#/pyramid">Test Pyramid</a>{% endif %}
     <a class="nav-link" data-route="/features" href="#/features">Feature Breakdown</a>
-    <a class="nav-link" data-route="/failures" href="#/failures">Failure Breakdown</a>
-    <a class="nav-link" data-route="/unlinked" href="#/unlinked">Unlinked Tests</a>
+    {% if show_failures %}<a class="nav-link" data-route="/failures" href="#/failures">Failure Breakdown</a>{% endif %}
+    {% if show_unlinked %}<a class="nav-link" data-route="/unlinked" href="#/unlinked">Unlinked Tests</a>{% endif %}
   </nav>
   <div class="page-shell">
+    {% if metadata %}
+    <section class="panel run-meta" id="run-metadata" aria-label="Run metadata">
+      {% for key, value in metadata.items() %}<span class="run-meta-item"><strong>{{ key }}</strong>{{ value }}</span>{% endfor %}
+    </section>
+    {% endif %}
 
     <main id="page-dashboard" class="page-stack{{ ' hidden' if not show_dashboard else '' }}">
       <section class="panel">
@@ -735,7 +743,7 @@ _TEMPLATE_STR = """<html lang="en">
             <div class="stat-bar"><div class="bar-fill {{ progress_band(scenario_pct) }}" style="width: {{ scenario_pct }}%;"></div></div>
           </div>
           <div class="stat-card stat-card-link" title="{{ passed_total }} of {{ passed_denom }} linked results passed (pass/fail, distinct from declared-tests matched)">
-            <a class="stat-card-anchor" href="#/failures">
+            <a class="stat-card-anchor" {% if show_failures %}href="#/failures"{% endif %}>
               <strong>{{ passed_total }}/{{ passed_denom }}</strong> <span>tests passed &middot; {{ passed_pct }}%</span>
               <div class="stat-sub">{{ failed_total }} failed</div>
               <div class="stat-bar"><div class="bar-fill {{ pass_band(passed_pct) }}" style="width: {{ passed_pct }}%;"></div></div>
@@ -774,7 +782,7 @@ _TEMPLATE_STR = """<html lang="en">
             <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
             {% elif key == 'end_to_end_runtime' and show_pyramid %}
             <a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>
-            {% elif key == 'unlinked' %}
+            {% elif key == 'unlinked' and show_unlinked %}
             <a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>
             {% endif %}
           </div>
@@ -1024,10 +1032,14 @@ _TEMPLATE_STR = """<html lang="en">
   <script>
     const SHOW_DASHBOARD = {{ 'true' if show_dashboard else 'false' }};
     const SHOW_PYRAMID = {{ 'true' if show_pyramid else 'false' }};
+    const SHOW_FAILURES = {{ 'true' if show_failures else 'false' }};
+    const SHOW_UNLINKED = {{ 'true' if show_unlinked else 'false' }};
     const DEFAULT_ROUTE = {{ default_route | tojson }};
     const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked'].filter((r) => {
       if (r === '/') return SHOW_DASHBOARD;
       if (r === '/pyramid') return SHOW_PYRAMID;
+      if (r === '/failures') return SHOW_FAILURES;
+      if (r === '/unlinked') return SHOW_UNLINKED;
       return true;
     });
     const PAGE_BY_ROUTE = {
@@ -1406,6 +1418,9 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     .app-nav a:hover { color: var(--primary); }
     .app-nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
     .page-shell { max-width: 1800px; width: 96%; margin: 0 auto; padding: 32px 0; display: grid; gap: var(--gap); }
+    .run-meta { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 12px 24px; }
+    .run-meta-item { font-size: 0.85rem; color: var(--text-soft); }
+    .run-meta-item strong { color: var(--text); font-weight: 600; margin-right: 6px; }
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1698,6 +1713,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     <a class="nav-link" data-route="/unlinked" href="#/unlinked">Unlinked Tests</a>
   </nav>
   <div class="page-shell">
+    <section class="panel run-meta hidden" id="run-metadata" aria-label="Run metadata"></section>
 
     <main id="page-dashboard" class="page-stack">
       <div id="dashboard-root"></div>
@@ -1795,6 +1811,14 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
   <script type="application/json" id="report-data">{{ json_data }}</script>
   <script>
     const REPORT = JSON.parse(document.getElementById('report-data').textContent);
+
+    // Every optional tab is opt-in via config ui.tabs (#tabs-opt-in).
+    const UI_TABS = (REPORT.config && REPORT.config.ui && REPORT.config.ui.tabs) || {};
+    const SHOW_DASHBOARD = UI_TABS.dashboard === true;
+    const SHOW_PYRAMID = UI_TABS.pyramid === true;
+    const SHOW_MODULES = UI_TABS.modules === true;
+    const SHOW_FAILURES = UI_TABS.failures === true;
+    const SHOW_UNLINKED = UI_TABS.unlinked === true;
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -2206,7 +2230,7 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       h += '<div class="stat-bar"><div class="bar-fill ' + progressBand(scPct) + '" style="width: ' + scPct + '%;"></div></div>';
       h += '</div>';
       h += '<div class="stat-card stat-card-link" title="' + passed + ' of ' + total + ' linked results passed (pass/fail, distinct from declared-tests matched)">';
-      h += '<a class="stat-card-anchor" href="#/failures">';
+      h += '<a class="stat-card-anchor"' + (SHOW_FAILURES ? ' href="#/failures"' : '') + '>';
       h += '<strong>' + passed + '/' + total + '</strong> <span>tests passed &middot; ' + passedPct + '%</span>';
       h += '<div class="stat-sub">' + failed + ' failed</div>';
       h += '<div class="stat-bar"><div class="bar-fill ' + passBand(passedPct) + '" style="width: ' + passedPct + '%;"></div></div>';
@@ -2228,11 +2252,9 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
           h += '<div class="health-value">' + esc(item.value) + '</div>';
         }
         h += '<div class="health-message">' + esc(item.message) + '</div>';
-        const uiTabs = (REPORT.config && REPORT.config.ui && REPORT.config.ui.tabs) || {};
-        const showPyramid = uiTabs.pyramid !== false;
-        if (showPyramid && (item.key === 'pyramid' || item.key === 'end_to_end_runtime')) {
+        if (SHOW_PYRAMID && (item.key === 'pyramid' || item.key === 'end_to_end_runtime')) {
           h += '<a class="health-link" href="#/pyramid">Open test pyramid &rarr;</a>';
-        } else if (item.key === 'unlinked') {
+        } else if (SHOW_UNLINKED && item.key === 'unlinked') {
           h += '<a class="health-link" href="#/unlinked">View unlinked tests &rarr;</a>';
         }
         h += '</div>';
@@ -2281,16 +2303,13 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
     document.getElementById('unlinked-root').innerHTML = renderUnlinked(REPORT.unlinkedTests || []);
 
     const MODULES = REPORT.modules || [];
-    const HAS_MODULES = MODULES.length >= 2;
+    const HAS_MODULES = SHOW_MODULES && MODULES.length >= 2;
     if (!HAS_MODULES) {
       document.querySelector('.app-nav a[data-route="/modules"]').classList.add('hidden');
       document.getElementById('page-modules').classList.add('hidden');
       document.getElementById('page-module-detail').classList.add('hidden');
     }
 
-    const UI_TABS = (REPORT.config && REPORT.config.ui && REPORT.config.ui.tabs) || {};
-    const SHOW_DASHBOARD = UI_TABS.dashboard !== false;
-    const SHOW_PYRAMID = UI_TABS.pyramid !== false;
     if (!SHOW_DASHBOARD) {
       document.querySelector('.app-nav a[data-route="/"]').classList.add('hidden');
       document.getElementById('page-dashboard').classList.add('hidden');
@@ -2299,11 +2318,29 @@ _TEMPLATE_CLIENT_STR = """<!DOCTYPE html>
       document.querySelector('.app-nav a[data-route="/pyramid"]').classList.add('hidden');
       document.getElementById('page-pyramid').classList.add('hidden');
     }
+    [[SHOW_FAILURES, '/failures', 'page-failures'], [SHOW_UNLINKED, '/unlinked', 'page-unlinked']].forEach(function (t) {
+      if (t[0]) return;
+      document.querySelector('.app-nav a[data-route="' + t[1] + '"]').classList.add('hidden');
+      document.getElementById(t[2]).classList.add('hidden');
+    });
     const DEFAULT_ROUTE = SHOW_DASHBOARD ? '/' : SHOW_PYRAMID ? '/pyramid' : '/features';
+
+    (function renderMetadata() {
+      const entries = Object.entries(REPORT.metadata || {});
+      if (!entries.length) return;
+      const el = document.getElementById('run-metadata');
+      el.innerHTML = entries.map(function (e) {
+        return '<span class="run-meta-item"><strong>' + esc(e[0]) + '</strong>' + esc(e[1]) + '</span>';
+      }).join('');
+      el.classList.remove('hidden');
+    })();
 
     const ROUTES = ['/', '/pyramid', '/features', '/failures', '/unlinked', '/modules'].filter((r) => {
       if (r === '/') return SHOW_DASHBOARD;
       if (r === '/pyramid') return SHOW_PYRAMID;
+      if (r === '/failures') return SHOW_FAILURES;
+      if (r === '/unlinked') return SHOW_UNLINKED;
+      if (r === '/modules') return HAS_MODULES;
       return true;
     });
     const PAGE_BY_ROUTE = {
@@ -2511,6 +2548,7 @@ class HtmlRenderer:
         render_mode: str = "server",
         json_report: dict | None = None,
         ui_tabs: dict | None = None,
+        metadata: dict | None = None,
     ) -> str:
         layer_stats = layer_stats or []
         health_checks = health_checks or {}
@@ -2518,9 +2556,12 @@ class HtmlRenderer:
         unlinked_results = unlinked_results or []
         failure_breakdown = failure_breakdown or []
         logo_data_uri = logo_data_uri if logo_data_uri is not None else LOGO_DATA_URI
-        ui_tabs = ui_tabs if ui_tabs is not None else {"dashboard": True, "pyramid": True}
-        show_dashboard = ui_tabs.get("dashboard", True)
-        show_pyramid = ui_tabs.get("pyramid", True)
+        ui_tabs = ui_tabs or {}
+        metadata = metadata or {}
+        show_dashboard = ui_tabs.get("dashboard", False)
+        show_pyramid = ui_tabs.get("pyramid", False)
+        show_failures = ui_tabs.get("failures", False)
+        show_unlinked = ui_tabs.get("unlinked", False)
 
         if render_mode == "client":
             if json_report is None:
@@ -2578,6 +2619,9 @@ class HtmlRenderer:
                 logo_data_uri=logo_data_uri,
                 show_dashboard=show_dashboard,
                 show_pyramid=show_pyramid,
+                show_failures=show_failures,
+                show_unlinked=show_unlinked,
+                metadata=metadata,
                 default_route=(
                     "/" if show_dashboard else "/pyramid" if show_pyramid else "/features"
                 ),

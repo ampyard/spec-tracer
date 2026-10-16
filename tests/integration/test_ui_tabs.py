@@ -53,89 +53,85 @@ def _unit_xml(workdir: Path) -> Path:
     return path
 
 
-@pytest.mark.parametrize("render_mode", ["server", "client"])
-@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_default_config_shows_both_tabs(tag, render_mode, workdir):
-    features = _feature_dir(workdir)
-    unit = _unit_xml(workdir)
+_TABS = {
+    "dashboard": ("/", "Dashboard"),
+    "pyramid": ("/pyramid", "Test Pyramid"),
+    "failures": ("/failures", "Failure Breakdown"),
+    "unlinked": ("/unlinked", "Unlinked Tests"),
+}
 
+
+def _nav(route, label):
+    return f'data-route="{route}" href="#{route}">{label}</a>'
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_default_config_shows_only_feature_breakdown_in_server_html(tag, workdir):
     result = run_tool(
-        features,
-        workdir / "report.html",
-        unit=unit,
-        render_mode=render_mode,
+        _feature_dir(workdir), workdir / "report.html", unit=_unit_xml(workdir),
+        render_mode="server", ui={"tabs": {}},
     )
 
     assert result.returncode == 0, result.stdout
     html = (workdir / "report.html").read_text(encoding="utf-8")
-    assert 'data-route="/" href="#/">Dashboard</a>' in html
-    assert 'data-route="/pyramid" href="#/pyramid">Test Pyramid</a>' in html
+    assert _nav("/features", "Feature Breakdown") in html
+    for route, label in _TABS.values():
+        assert _nav(route, label) not in html
+    assert 'const DEFAULT_ROUTE = "/features";' in html
 
 
-@pytest.mark.parametrize("render_mode", ["server", "client"])
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_hiding_pyramid_tab_removes_nav_link_in_server_html(tag, render_mode, workdir):
-    features = _feature_dir(workdir)
-    unit = _unit_xml(workdir)
-
+def test_default_config_embeds_no_enabled_tabs_in_client_html(tag, workdir):
     result = run_tool(
-        features,
-        workdir / "report.html",
-        unit=unit,
-        render_mode=render_mode,
-        ui={"tabs": {"pyramid": False}},
+        _feature_dir(workdir), workdir / "report.html", unit=_unit_xml(workdir),
+        render_mode="client", ui={"tabs": {}},
     )
 
     assert result.returncode == 0, result.stdout
     html = (workdir / "report.html").read_text(encoding="utf-8")
-    assert 'data-route="/" href="#/">Dashboard</a>' in html
+    assert "const SHOW_DASHBOARD = UI_TABS.dashboard === true;" in html
+    assert '"tabs": {}' in html
+
+
+@pytest.mark.parametrize("name", list(_TABS))
+@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
+def test_enabling_a_tab_shows_its_nav_link_in_server_html(tag, name, workdir):
+    result = run_tool(
+        _feature_dir(workdir), workdir / "report.html", unit=_unit_xml(workdir),
+        render_mode="server", ui={"tabs": {name: True}},
+    )
+
+    assert result.returncode == 0, result.stdout
+    html = (workdir / "report.html").read_text(encoding="utf-8")
+    for other, (route, label) in _TABS.items():
+        assert (_nav(route, label) in html) == (other == name)
+
+
+@pytest.mark.parametrize("render_mode", ["server", "client"])
+def test_metadata_is_rendered_separately_from_cli_and_config(render_mode, workdir):
+    import json
+    import subprocess
+    import sys
+
+    config = {
+        "features": [str(_feature_dir(workdir))],
+        "output": str(workdir / "report.html"),
+        "output_json": str(workdir / "report.json"),
+        "render_mode": render_mode,
+        "metadata": {"build": "1", "env": "<ci>"},
+    }
+    config_path = workdir / "config.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "build_pyramid.py", str(config_path), "--meta", "build=77", "--meta", "run=2026-10-16"],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads((workdir / "report.json").read_text(encoding="utf-8"))
+    assert report["metadata"] == {"build": "77", "env": "<ci>", "run": "2026-10-16"}
+    html = (workdir / "report.html").read_text(encoding="utf-8")
+    assert 'id="run-metadata"' in html
     if render_mode == "server":
-        # Server template omits the hidden tab's nav link entirely.
-        assert 'data-route="/pyramid" href="#/pyramid">Test Pyramid</a>' not in html
-    else:
-        # Client template hides it at runtime via JS; config is embedded for the browser to read.
-        assert '"pyramid": false' in html or '"pyramid":false' in html
-
-
-@pytest.mark.parametrize("render_mode", ["server", "client"])
-@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_hiding_dashboard_tab_removes_nav_link_in_server_html(tag, render_mode, workdir):
-    features = _feature_dir(workdir)
-    unit = _unit_xml(workdir)
-
-    result = run_tool(
-        features,
-        workdir / "report.html",
-        unit=unit,
-        render_mode=render_mode,
-        ui={"tabs": {"dashboard": False}},
-    )
-
-    assert result.returncode == 0, result.stdout
-    html = (workdir / "report.html").read_text(encoding="utf-8")
-    assert 'data-route="/pyramid" href="#/pyramid">Test Pyramid</a>' in html
-    if render_mode == "server":
-        assert 'data-route="/" href="#/">Dashboard</a>' not in html
-
-
-@pytest.mark.parametrize("render_mode", ["server", "client"])
-@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_hiding_both_tabs_falls_back_to_feature_breakdown(tag, render_mode, workdir):
-    features = _feature_dir(workdir)
-    unit = _unit_xml(workdir)
-
-    result = run_tool(
-        features,
-        workdir / "report.html",
-        unit=unit,
-        render_mode=render_mode,
-        ui={"tabs": {"dashboard": False, "pyramid": False}},
-    )
-
-    assert result.returncode == 0, result.stdout
-    html = (workdir / "report.html").read_text(encoding="utf-8")
-    assert 'data-route="/features" href="#/features">Feature Breakdown</a>' in html
-    if render_mode == "server":
-        assert 'data-route="/" href="#/">Dashboard</a>' not in html
-        assert 'data-route="/pyramid" href="#/pyramid">Test Pyramid</a>' not in html
-        assert "const DEFAULT_ROUTE = \"/features\";" in html
+        assert "<strong>build</strong>77" in html
+        assert "<strong>env</strong>&lt;ci&gt;" in html

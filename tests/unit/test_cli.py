@@ -9,7 +9,9 @@ from spec_tracer.cli import (
     _failing_gated_checks,
     _known_modules,
     _load_config,
+    _parse_args,
     _relative_feature_path,
+    _resolved_metadata,
     _resolved_ui_tabs,
     main,
 )
@@ -245,32 +247,76 @@ def test_main_client_render_embeds_json_without_output_json(tag, tmp_path, capsy
     assert "JSON.parse(document.getElementById('report-data').textContent)" in html
 
 
+_ALL_HIDDEN = {name: False for name in ("dashboard", "pyramid", "modules", "failures", "unlinked")}
+
+
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_load_config_defaults_ui_tabs_to_visible(tag, tmp_path):
+def test_load_config_defaults_ui_tabs_to_hidden(tag, tmp_path):
     path = _write_config(tmp_path)
     config = _load_config(path)
-    assert _resolved_ui_tabs(config) == {"dashboard": True, "pyramid": True}
+    assert _resolved_ui_tabs(config) == _ALL_HIDDEN
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_load_config_accepts_hiding_pyramid_tab(tag, tmp_path):
-    path = _write_config(tmp_path, ui={"tabs": {"pyramid": False}})
+def test_load_config_accepts_enabling_pyramid_tab(tag, tmp_path):
+    path = _write_config(tmp_path, ui={"tabs": {"pyramid": True}})
     config = _load_config(path)
-    assert _resolved_ui_tabs(config) == {"dashboard": True, "pyramid": False}
+    assert _resolved_ui_tabs(config) == {**_ALL_HIDDEN, "pyramid": True}
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_load_config_accepts_hiding_dashboard_tab(tag, tmp_path):
-    path = _write_config(tmp_path, ui={"tabs": {"dashboard": False}})
+def test_load_config_accepts_enabling_every_optional_tab(tag, tmp_path):
+    tabs = {name: True for name in _ALL_HIDDEN}
+    path = _write_config(tmp_path, ui={"tabs": tabs})
     config = _load_config(path)
-    assert _resolved_ui_tabs(config) == {"dashboard": False, "pyramid": True}
+    assert _resolved_ui_tabs(config) == tabs
 
 
-@pytest.mark.parametrize("tag", ["@scenario:FC-011"])
-def test_load_config_accepts_hiding_both_tabs(tag, tmp_path):
-    path = _write_config(tmp_path, ui={"tabs": {"dashboard": False, "pyramid": False}})
-    config = _load_config(path)
-    assert _resolved_ui_tabs(config) == {"dashboard": False, "pyramid": False}
+def test_resolved_metadata_cli_overrides_config():
+    config = {"metadata": {"build": "1", "env": "ci", "n": 3}}
+    assert _resolved_metadata(config, {"build": "2", "run": "x"}) == {
+        "build": "2", "env": "ci", "n": "3", "run": "x",
+    }
+
+
+def test_parse_args_collects_repeated_meta(tmp_path):
+    path = _write_config(tmp_path)
+    parsed, meta = _parse_args([str(path), "--meta", "build=42", "-m", "when=2026-01-01T10:00:00Z=x"])
+    assert parsed == path
+    assert meta == {"build": "42", "when": "2026-01-01T10:00:00Z=x"}
+
+
+def test_parse_args_rejects_meta_without_equals(tmp_path):
+    path = _write_config(tmp_path)
+    with pytest.raises(ValueError, match="KEY=VALUE"):
+        _parse_args([str(path), "--meta", "oops"])
+
+
+def test_load_config_rejects_non_object_metadata(tmp_path):
+    path = _write_config(tmp_path, metadata=["nope"])
+    with pytest.raises(ValueError, match="'metadata' must be an object"):
+        _load_config(path)
+
+
+def test_load_config_rejects_nested_metadata_values(tmp_path):
+    path = _write_config(tmp_path, metadata={"a": {"b": 1}})
+    with pytest.raises(ValueError, match="must be scalars"):
+        _load_config(path)
+
+
+def test_main_embeds_metadata_in_html_and_json(tmp_path):
+    features = tmp_path / "f"
+    features.mkdir()
+    (features / "a.feature").write_text("Feature: A\n\n  @id:A-1\n  Scenario: s\n    Given x\n", encoding="utf-8")
+    out, out_json = tmp_path / "r.html", tmp_path / "r.json"
+    path = _write_config(
+        tmp_path, features=[str(features)], output=str(out), output_json=str(out_json),
+        metadata={"build": "1"},
+    )
+    assert main([str(path), "--meta", "build=2", "--meta", "branch=main"]) == 0
+    assert json.loads(out_json.read_text(encoding="utf-8"))["metadata"] == {"build": "2", "branch": "main"}
+    html = out.read_text(encoding="utf-8")
+    assert 'id="run-metadata"' in html and "<strong>branch</strong>main" in html
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-011"])

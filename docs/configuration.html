@@ -83,11 +83,15 @@
 spec-tracer
 
 <span class="c-com"># or point at a differently named / located config</span>
-spec-tracer path/to/other-config.json</code></pre>
+spec-tracer path/to/other-config.json
+
+<span class="c-com"># attach run metadata (repeatable; overrides the config's "metadata" per key)</span>
+spec-tracer --meta build=1234 --meta "run time=2026-10-16T10:00:00Z"</code></pre>
     </div>
 
-    <p>One command, one optional positional argument. No sub-commands, no flags, no environment
-    variables.</p>
+    <p>One command: an optional positional config path plus an optional, repeatable
+    <code>--meta KEY=VALUE</code> (short form <code>-m</code>). The value is everything after the first
+    <code>=</code>. No sub-commands, no environment variables.</p>
 
     <div class="note warn">
       <strong>Shell note</strong>
@@ -150,8 +154,16 @@ spec-tracer path/to/other-config.json</code></pre>
   <span class="c-fn">"ui"</span>: {
     <span class="c-fn">"tabs"</span>: {
       <span class="c-fn">"dashboard"</span>: <span class="c-num">true</span>,
-      <span class="c-fn">"pyramid"</span>:   <span class="c-num">true</span>
+      <span class="c-fn">"pyramid"</span>:   <span class="c-num">true</span>,
+      <span class="c-fn">"modules"</span>:   <span class="c-num">false</span>,
+      <span class="c-fn">"failures"</span>:  <span class="c-num">true</span>,
+      <span class="c-fn">"unlinked"</span>:  <span class="c-num">false</span>
     }
+  },
+
+  <span class="c-fn">"metadata"</span>: {
+    <span class="c-fn">"build"</span>: <span class="c-str">"1234"</span>,
+    <span class="c-fn">"environment"</span>: <span class="c-str">"staging"</span>
   }
 }</code></pre>
     </div>
@@ -202,11 +214,21 @@ spec-tracer path/to/other-config.json</code></pre>
           </tr>
           <tr>
             <td><code>ui.tabs</code></td><td>No</td>
-            <td>Object with <code>dashboard</code> and <code>pyramid</code> boolean keys controlling whether
-            those tabs appear in the report navigation. Both default to <code>true</code>. Hiding the
-            Dashboard tab makes Test Pyramid the landing page; hiding the Test Pyramid tab also suppresses
-            the Dashboard's "Open test pyramid" Health Check links; hiding both makes Feature Breakdown the
-            landing page.</td>
+            <td>Opt-in visibility of the optional tabs. Accepted boolean keys: <code>dashboard</code>,
+            <code>pyramid</code>, <code>modules</code> (client render mode only, and still needs two or more
+            modules), <code>failures</code>, <code>unlinked</code>. <strong>Every tab defaults to
+            <code>false</code></strong> &mdash; by default the report shows only Feature Breakdown, which is
+            always shown. Set a key to <code>true</code> to enable that tab. The Dashboard's links to disabled
+            tabs are suppressed. Landing page: Dashboard, else Test Pyramid, else Feature Breakdown.
+            Unknown keys or non-boolean values are config errors.</td>
+          </tr>
+          <tr>
+            <td><code>metadata</code></td><td>No</td>
+            <td>Free-form <code>key: value</code> object describing this run (build number, run time, branch,
+            &hellip;). Values must be scalars and are stored as strings. Each <code>--meta KEY=VALUE</code> on
+            the command line is merged on top, so a CI job can override or add keys without editing the
+            config. Shown in a strip above the report pages and in the JSON report's top-level
+            <code>metadata</code> object.</td>
           </tr>
         </tbody>
       </table>
@@ -413,6 +435,7 @@ spec-tracer path/to/other-config.json</code></pre>
           <tr><td><code>features[].scenarios[].results[]</code></td><td>Every linked result, with <code>module</code>, <code>duration</code> (milliseconds), <code>steps[]</code> (Cucumber steps when the source result was JSON), and <code>failureMessage</code> <strong>omitted rather than null</strong> when unavailable. Requirement satisfaction sits under <code>requirements[]</code>, whose entries carry <code>unconfigured: true</code> when a module-scoped requirement names a module that isn't a registered config key — omitted entirely otherwise, so existing consumers checking only <code>satisfied</code> keep working unchanged.</td></tr>
           <tr><td><code>unlinkedTests[]</code></td><td>The same orphaned results the HTML report lists, now with each result's <code>status</code> and <code>duration</code> (milliseconds).</td></tr>
           <tr><td><code>modules[]</code></td><td>One entry per configured <em>unit/integration</em> module key (unscoped <code>""</code> excluded, E2E never included), carrying that module's completion, a unit/integration-only pyramid, its unlinked count, and a rolled-up <code>worst</code> status (<code>passed</code> / <code>skipped</code> / <code>failed</code> / <code>none</code>). Powers the Modules page (#36).</td></tr>
+          <tr><td><code>metadata</code></td><td>The merged run metadata (config <code>metadata</code> plus <code>--meta</code> pairs, CLI wins) as string key/value pairs. An empty object when none were supplied.</td></tr>
           <tr><td><code>config</code></td><td>A verbatim echo of the resolved config, for provenance if the JSON is archived away from the repo.</td></tr>
         </tbody>
       </table>

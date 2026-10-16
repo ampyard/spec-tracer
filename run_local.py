@@ -8,6 +8,7 @@ spectracer.config.json expects. Then generates the SpecTracer report.
 Usage:
     uv run python run_local.py
 """
+from datetime import datetime, timezone
 import subprocess
 import sys
 from pathlib import Path
@@ -183,7 +184,12 @@ def main() -> int:
 
     print("\n=== Generating SpecTracer report ===")
     report_result = subprocess.run(
-        ["uv", "run", "python", "build_pyramid.py"], cwd=REPO_ROOT
+        [
+            "uv", "run", "python", "build_pyramid.py",
+            "--meta", "source=run_local.py",
+            "--meta", "run time=" + datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        ],
+        cwd=REPO_ROOT,
     )
 
     if not all_ok:

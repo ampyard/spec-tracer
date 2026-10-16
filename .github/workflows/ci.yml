@@ -81,7 +81,13 @@ jobs:
 
       - name: Generate SpecTracer report
         if: always()
-        run: uv run python build_pyramid.py
+        run: |
+          uv run python build_pyramid.py \
+            --meta "source=GitHub Actions" \
+            --meta "run=#${{ github.run_number }}" \
+            --meta "branch=${{ github.ref_name }}" \
+            --meta "commit=${GITHUB_SHA::7}" \
+            --meta "run time=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Validate JSON report against schema
         if: always()

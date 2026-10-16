@@ -51,6 +51,7 @@ def _render(**overrides):
     failed_results = overrides.pop("failed_results", [])
     unlinked_results = overrides.pop("unlinked_results", [])
     failure_breakdown = overrides.pop("failure_breakdown", [])
+    overrides.setdefault("ui_tabs", {name: True for name in ("dashboard", "pyramid", "failures", "unlinked")})
     return HtmlRenderer().render(
         views, stats, feature_breakdown,
         layer_stats=layer_stats, health_checks=health_checks,
@@ -590,7 +591,7 @@ def test_client_render_produces_shell_and_nav(tag):
     # Module pages are gate-guarded client-side: at least two configured
     # modules are required for the tab to show (#36 item 2).
     assert "const MODULES = REPORT.modules || [];" in html
-    assert "const HAS_MODULES = MODULES.length >= 2;" in html
+    assert "const HAS_MODULES = SHOW_MODULES && MODULES.length >= 2;" in html
     assert "function moduleDetailHtml" in html
     assert "function renderModules" in html
 

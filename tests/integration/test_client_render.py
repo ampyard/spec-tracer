@@ -169,7 +169,7 @@ def test_client_render_module_pages_embedded_json(tag, tmp_path):
     assert report["modules"][1]["completion"]["total"] >= 1
 
     # Multi-module config => the Modules tab is active client-side.
-    assert "const HAS_MODULES = MODULES.length >= 2;" in html
+    assert "const HAS_MODULES = SHOW_MODULES && MODULES.length >= 2;" in html
 
 
 @pytest.mark.parametrize("tag", ["@scenario:FC-007"])

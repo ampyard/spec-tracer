@@ -291,6 +291,18 @@ behave features/ --format json -o reports/e2e.json</code></pre>
 <pre><code>spec-tracer config/coverage.json</code></pre>
     </div>
 
+    <p>To stamp the report with run details (build number, run time, branch…), add any number of
+    <code>--meta KEY=VALUE</code> arguments. They are shown in a metadata strip above the report and
+    included in the JSON output:</p>
+
+    <div class="code">
+      <div class="code-head"><span>terminal</span></div>
+<pre><code>spec-tracer --meta build=$BUILD_NUMBER --meta "run time=$(date -u +%FT%TZ)"</code></pre>
+    </div>
+
+    <p>The report shows only the Feature Breakdown tab by default; enable the others with
+    <a href="configuration.html#keys"><code>ui.tabs</code></a>.</p>
+
     <div class="note warn">
       <strong>Shell note</strong>
       Use forward slashes (<code>./spectracer.config.json</code>) or a bare filename. A leading

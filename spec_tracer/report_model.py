@@ -313,6 +313,7 @@ def build_report(
         "schemaVersion": SCHEMA_VERSION,
         "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "config": config,
+        "metadata": dict(config.get("metadata", {})),
         "summary": {
             "completion": {
                 "tested": stats["complete"],

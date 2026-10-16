@@ -49,11 +49,6 @@ jobs:
         run: |
           sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' pyproject.toml
 
-      - name: Update version in docs badge
-        run: |
-          V=v${{ steps.version.outputs.version }}
-          sed -i "s|\(hero-badge[^\"]*\"[^>]*>\) *&#9670; v[0-9.]\+|\1\&#9670; $V|" docs/index.html
-
       - name: Build wheel
         run: uv build
 
@@ -64,7 +59,7 @@ jobs:
 
       - name: Commit and tag
         run: |
-          git add pyproject.toml docs/index.html
+          git add pyproject.toml
           if git diff --cached --quiet; then
             echo "No version files changed — skipping commit"
             exit 0

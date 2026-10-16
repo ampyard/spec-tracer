@@ -1,3 +1,4 @@
+import argparse
 import base64
 import json
 import os
@@ -24,15 +25,44 @@ FAIL_ON_ALIASES = {
 }
 
 
-def _find_config_path(argv: List[str] | None = None) -> Path:
-    args = sys.argv[1:] if argv is None else argv
-    if args:
-        path = Path(args[0])
-    else:
-        path = Path(DEFAULT_CONFIG_NAME)
+# Tabs that can be toggled via `ui.tabs`; every one defaults to hidden
+# (#tabs-opt-in). The Feature Breakdown tab is always shown.
+OPTIONAL_TABS = ("dashboard", "pyramid", "modules", "failures", "unlinked")
+
+
+def _parse_meta_arg(raw: str) -> tuple:
+    """Split a ``--meta KEY=VALUE`` argument on the first ``=`` (#run-metadata)."""
+    key, sep, value = raw.partition("=")
+    key = key.strip()
+    if not sep or not key:
+        raise ValueError(f"--meta expects KEY=VALUE, got: {raw!r}")
+    return key, value
+
+
+def _parse_args(argv: List[str] | None = None) -> tuple:
+    """Return ``(config_path, cli_metadata)`` from the command line (#run-metadata)."""
+    parser = argparse.ArgumentParser(prog="spectracer")
+    parser.add_argument("config", nargs="?", default=DEFAULT_CONFIG_NAME)
+    parser.add_argument("-m", "--meta", action="append", default=[], metavar="KEY=VALUE")
+    try:
+        args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    except SystemExit as exc:
+        raise ValueError("Invalid command line arguments") from exc
+    path = Path(args.config)
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
-    return path
+    return path, dict(_parse_meta_arg(raw) for raw in args.meta)
+
+
+def _find_config_path(argv: List[str] | None = None) -> Path:
+    return _parse_args(argv)[0]
+
+
+def _resolved_metadata(config: dict, cli_metadata: Dict[str, str]) -> Dict[str, str]:
+    """Merge config ``metadata`` with ``--meta`` pairs; CLI wins (#run-metadata)."""
+    merged = {str(k): str(v) for k, v in config.get("metadata", {}).items()}
+    merged.update(cli_metadata)
+    return merged
 
 
 def _load_config(path: Path) -> dict:
@@ -69,24 +99,28 @@ def _load_config(path: Path) -> dict:
     tabs = ui.get("tabs", {})
     if not isinstance(tabs, dict):
         raise ValueError(f"Config key 'ui.tabs' must be an object, got: {tabs!r}")
-    unknown_tabs = [name for name in tabs if name not in ("dashboard", "pyramid")]
+    unknown_tabs = [name for name in tabs if name not in OPTIONAL_TABS]
     if unknown_tabs:
         raise ValueError(
-            f"Config key 'ui.tabs' has unknown tab names: {sorted(unknown_tabs)}. Accepted values: dashboard, pyramid"
+            f"Config key 'ui.tabs' has unknown tab names: {sorted(unknown_tabs)}. "
+            f"Accepted values: {', '.join(OPTIONAL_TABS)}"
         )
     not_bools = {name: value for name, value in tabs.items() if not isinstance(value, bool)}
     if not_bools:
         raise ValueError(f"Config key 'ui.tabs' entries must be booleans, got: {not_bools}")
+    metadata = config.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError(f"Config key 'metadata' must be an object, got: {metadata!r}")
+    bad_values = {k: v for k, v in metadata.items() if isinstance(v, (dict, list))}
+    if bad_values:
+        raise ValueError(f"Config key 'metadata' values must be scalars, got: {bad_values}")
     return config
 
 
 def _resolved_ui_tabs(config: dict) -> dict:
-    """Resolve the ``ui.tabs`` visibility config to its full defaulted form (#dashboard-pyramid-visibility)."""
+    """Resolve the ``ui.tabs`` visibility config to its full defaulted form (#tabs-opt-in)."""
     tabs = config.get("ui", {}).get("tabs", {})
-    return {
-        "dashboard": tabs.get("dashboard", True),
-        "pyramid": tabs.get("pyramid", True),
-    }
+    return {name: tabs.get(name, False) for name in OPTIONAL_TABS}
 
 
 def _failing_gated_checks(health_checks: dict, fail_on: List[str]) -> List[str]:
@@ -208,8 +242,11 @@ def _warn_unconfigured_requirements(unconfigured: List[dict]) -> None:
 
 
 def main(argv: List[str] | None = None) -> int:
-    config_path = _find_config_path(argv)
+    config_path, cli_metadata = _parse_args(argv)
     config = _load_config(config_path)
+    metadata = _resolved_metadata(config, cli_metadata)
+    if metadata:
+        config["metadata"] = metadata
 
     scenarios, feature_files = _collect_and_parse_features(config["features"], config_path.parent)
 
@@ -282,6 +319,7 @@ def main(argv: List[str] | None = None) -> int:
         render_mode=render_mode,
         json_report=report,
         ui_tabs=_resolved_ui_tabs(config),
+        metadata=metadata,
     )
 
     output_path = Path(config["output"])

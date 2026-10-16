@@ -52,7 +52,7 @@ This is the core logic and easy to get subtly wrong:
 
 ## Module boundaries
 
-- `cli.py` — entrypoint; config loading/validation; wires the pipeline.
+- `cli.py` — entrypoint; argument parsing (`<config>` plus repeatable `--meta KEY=VALUE`), config loading/validation (`ui.tabs`, `metadata`); wires the pipeline. Optional tabs (`dashboard`, `pyramid`, `modules`, `failures`, `unlinked`) are opt-in via `ui.tabs` — only Feature Breakdown shows by default (#tabs-opt-in). Run metadata (`metadata` config + `--meta`, CLI wins) lands in the report's top-level `metadata` object and a metadata strip above the pages (#run-metadata).
 - `collectors.py` — file discovery (`.feature`/`.xml`/`.json`).
 - `parsers.py` — Feature/JUnit/Cucumber parsing.
 - `linker.py` — the `@id`/`@scenario` tag matching (`_scenario_ids`, `_result_scenario_tags`).
@@ -76,4 +76,4 @@ Treat `docs/` the same way you'd treat `README.md`/`AGENTS.md` when they mention
 
 - Comments reference issues/PRs as `#9`, `#module-scope` style tags — keep this style in new code.
 - Dataclasses, `List`/`Dict` from `typing`, static methods on classes (not module functions).
-- Release flow (`.github/workflows/release.yml`) bumps the version via `sed` in `pyproject.toml` and the version badge in `docs/index.html` — don't hand-edit the version string inconsistently.
+- Release flow (`.github/workflows/release.yml`) bumps the version via `sed` in `pyproject.toml` only (the docs hero deliberately shows no version number) — don't hand-edit the version string inconsistently.

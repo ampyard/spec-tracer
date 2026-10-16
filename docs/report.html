@@ -99,10 +99,14 @@
       you can deep-link to a page and the browser back button works.</li>
       <li><strong>Light and dark themes</strong>, following your system preference and toggleable in the
       top-right; the choice persists in <code>localStorage</code>.</li>
-      <li><strong>Overview and Test Pyramid are each optional.</strong> Set
-      <a href="configuration.html#keys"><code>ui.tabs.dashboard</code> / <code>ui.tabs.pyramid</code></a>
-      to <code>false</code> to drop either tab from the nav. Hiding one makes the other the landing page;
-      hiding both makes Feature Breakdown the landing page.</li>
+      <li><strong>Only Feature Breakdown is shown by default.</strong> Overview, Test Pyramid, Modules,
+      Failure Breakdown and Unlinked Tests are opt-in: set the matching key under
+      <a href="configuration.html#keys"><code>ui.tabs</code></a> (<code>dashboard</code>, <code>pyramid</code>,
+      <code>modules</code>, <code>failures</code>, <code>unlinked</code>) to <code>true</code>. The first enabled
+      of Overview / Test Pyramid becomes the landing page; otherwise Feature Breakdown is.</li>
+      <li><strong>Run metadata strip.</strong> Key/value pairs from the config's <code>metadata</code> and
+      repeated <code>--meta KEY=VALUE</code> arguments (build number, run time, branch, &hellip;) appear
+      in a separate strip above the pages, on every tab. The strip is omitted when no metadata is supplied.</li>
     </ul>
 
     <h2 id="overview">1 · Overview</h2>

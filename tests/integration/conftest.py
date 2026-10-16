@@ -25,6 +25,9 @@ def run_tool(features, output, unit=None, integration=None, e2e=None, **extra):
         config["integration"] = _layer_config(integration)
     if e2e is not None:
         config["e2e"] = _layer_config(e2e)
+    # Optional tabs are opt-in (#tabs-opt-in); most tests inspect them, so
+    # enable all by default. Pass ``ui={"tabs": {}}`` to get the real defaults.
+    config["ui"] = {"tabs": {name: True for name in ("dashboard", "pyramid", "modules", "failures", "unlinked")}}
     config.update(extra)
 
     config_path = ROOT / "reports" / f"config-{uuid.uuid4().hex}.json"

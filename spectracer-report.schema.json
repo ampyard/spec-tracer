@@ -12,6 +12,11 @@
             "description": "Version of this report format. Used for compatibility.",
             "examples": ["1", "1.0", "1.0.0"]
         },
+        "metadata": {
+            "type": "object",
+            "description": "Free-form key/value run metadata (build number, run time, ...) supplied via config `metadata` and/or repeated `--meta KEY=VALUE` CLI arguments. Values are strings. Empty when none were supplied.",
+            "additionalProperties": { "type": "string" }
+        },
         "generatedAt": {
             "type": "string",
             "format": "date-time",
@@ -80,13 +85,21 @@
                     "properties": {
                         "tabs": {
                             "type": "object",
-                            "description": "Controls which top-level tabs are visible in the report UI. Both default to true; at least one of dashboard/pyramid must remain visible.",
+                            "description": "Opt-in visibility of optional top-level tabs. Every tab defaults to false (hidden); the Feature Breakdown tab is always shown.",
                             "properties": {
                                 "dashboard": { "type": "boolean" },
-                                "pyramid": { "type": "boolean" }
+                                "pyramid": { "type": "boolean" },
+                                "modules": { "type": "boolean" },
+                                "failures": { "type": "boolean" },
+                                "unlinked": { "type": "boolean" }
                             }
                         }
                     }
+                },
+                "metadata": {
+                    "type": "object",
+                    "description": "Free-form run metadata from the config file (overridden per key by --meta).",
+                    "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
                 }
             }
         },

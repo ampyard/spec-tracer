@@ -260,7 +260,7 @@
       <table>
         <thead><tr><th>Input</th><th>Behaviour</th></tr></thead>
         <tbody>
-          <tr><td>Scenario with no <code>@require-*</code></td><td>Defaults to a bare, unscoped <code>@require-e2e</code>.</td></tr>
+          <tr><td>Scenario with no <code>@require-*</code></td><td>Defaults to a bare, unscoped <code>@require-e2e</code> (set <code>default_e2e_requirement: false</code> to require nothing).</td></tr>
           <tr><td>Scenario with no <code>@id:</code></td><td>Unlinkable. Reported as permanently incomplete.</td></tr>
           <tr><td>Test matching no scenario</td><td>Listed under Unlinked Tests. Still counts toward pyramid and pass-rate stats.</td></tr>
           <tr><td>Scenario matching no test</td><td>Shown as incomplete, with each declared layer flagged missing.</td></tr>

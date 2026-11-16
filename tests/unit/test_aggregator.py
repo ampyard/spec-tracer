@@ -359,7 +359,8 @@ def test_completion_stats_presence_based_not_link_count(tag):
     # Scenario declares @require-e2e (parser injects it when none declared).
     # A linked UNIT result is present but does NOT satisfy e2e, so the
     # presence-based completion is 0% -> the summary % reflects that.
-    views = [_view("F", "S1", [TestResult(layer="unit", name="u1", status="passed")])]
+    views = [_view("F", "S1", [TestResult(layer="unit", name="u1", status="passed")],
+                   required_layers=[RequiredLayer(layer="e2e", module="")])]
     stats = ReportAggregator.completion_stats(views)
     assert stats["total"] == 1
     # 0 of the 1 requirement (default e2e) is satisfied.

@@ -209,6 +209,10 @@ spec-tracer --meta build=1234 --meta "run time=2026-10-16T10:00:00Z"</code></pre
             <td>Array of health checks that gate CI. Accepted values: <code>"progress"</code>, <code>"pyramid"</code>, <code>"e2e_runtime"</code>, <code>"unconfigured_modules"</code>. Any other value is a config error. Default: none.</td>
           </tr>
           <tr>
+            <td><code>default_e2e_requirement</code></td><td>No</td>
+            <td>If <code>false</code>, a scenario with no <code>@require-*</code> tag declares no required layers instead of defaulting to an unscoped <code>@require-e2e</code>; it counts as complete. Must be a boolean. Default <code>true</code>. Also settable on the command line with <code>--default-e2e-requirement</code> / <code>--no-default-e2e-requirement</code>, which overrides the config file.</td>
+          </tr>
+          <tr>
             <td><code>health_checks</code></td><td>No</td>
             <td>Threshold overrides. See <a href="#health">Health checks</a>.</td>
           </tr>

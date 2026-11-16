@@ -102,6 +102,17 @@ def step_gate_ci_on_health_check(context, name):
     context.fail_on.append(name)
 
 
+@given("the config disables the default e2e requirement")
+def step_config_disables_default_e2e(context):
+    context.default_e2e_requirement = False
+
+
+@given('the tool is given the "{flag}" flag')
+def step_tool_given_flag(context, flag):
+    context.extra_args = getattr(context, "extra_args", [])
+    context.extra_args.append(flag)
+
+
 def _build_config(context) -> dict:
     config = {
         "features": [context.features],
@@ -120,6 +131,8 @@ def _build_config(context) -> dict:
         config["output_json"] = context.output_json
     if hasattr(context, "fail_on"):
         config["fail_on"] = context.fail_on
+    if hasattr(context, "default_e2e_requirement"):
+        config["default_e2e_requirement"] = context.default_e2e_requirement
     return config
 
 
@@ -133,7 +146,7 @@ def _run_tool(context):
     config_path.write_text(json.dumps(config), encoding="utf-8")
     try:
         result = subprocess.run(
-            [sys.executable, "build_pyramid.py", str(config_path)],
+            [sys.executable, "build_pyramid.py", str(config_path), *getattr(context, "extra_args", [])],
             cwd=ROOT,
             capture_output=True,
             text=True,

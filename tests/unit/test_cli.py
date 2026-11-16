@@ -281,9 +281,17 @@ def test_resolved_metadata_cli_overrides_config():
 
 def test_parse_args_collects_repeated_meta(tmp_path):
     path = _write_config(tmp_path)
-    parsed, meta = _parse_args([str(path), "--meta", "build=42", "-m", "when=2026-01-01T10:00:00Z=x"])
+    parsed, meta, overrides = _parse_args([str(path), "--meta", "build=42", "-m", "when=2026-01-01T10:00:00Z=x"])
     assert parsed == path
     assert meta == {"build": "42", "when": "2026-01-01T10:00:00Z=x"}
+    assert overrides == {}
+
+
+@pytest.mark.parametrize("tag", ["@scenario:FC-014"])
+def test_parse_args_default_e2e_requirement_flag(tag, tmp_path):
+    path = _write_config(tmp_path)
+    assert _parse_args([str(path), "--no-default-e2e-requirement"])[2] == {"default_e2e_requirement": False}
+    assert _parse_args([str(path), "--default-e2e-requirement"])[2] == {"default_e2e_requirement": True}
 
 
 def test_parse_args_rejects_meta_without_equals(tmp_path):

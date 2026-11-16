@@ -23,7 +23,9 @@ class ResultParser(ABC):
 class FeatureParser:
 
     @staticmethod
-    def parse(path: Path) -> List[Scenario]:
+    def parse(path: Path, default_e2e_requirement: bool = True) -> List[Scenario]:
+        # #default-e2e-requirement: when False, scenarios without @require-* tags
+        # declare no required layers instead of getting an implicit e2e one.
         scenarios: List[Scenario] = []
         feature_name = path.stem
         current_tags: List[str] = []
@@ -54,7 +56,7 @@ class FeatureParser:
                         )
                         continue
                     linking_tags.append(t)
-                if not required_layers:
+                if not required_layers and default_e2e_requirement:
                     required_layers.append(RequiredLayer(layer="e2e", module=""))
                 current_scenario = Scenario(
                     feature=feature_name,

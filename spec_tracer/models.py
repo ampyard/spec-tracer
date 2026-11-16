@@ -38,12 +38,16 @@ def requirement_state(req, linked_results: List["TestResult"], known_modules: Op
 def completion_fraction(view) -> tuple:
     """Presence-based completion for a scenario, as ``(satisfied, total)``.
 
-    ``total`` is the number of declared ``@require-*`` requirements (always at
-    least 1 because ``FeatureParser`` injects a default ``e2e`` requirement when
-    none are declared, so there is never a divide-by-zero). A requirement counts
+    ``total`` is the number of declared ``@require-*`` requirements (``FeatureParser`` injects a default ``e2e`` requirement when none are
+    declared, unless ``default_e2e_requirement`` is false; a scenario with no
+    requirements counts as fully satisfied, ``(1, 1)``). A requirement counts
     toward ``satisfied`` when it is met by layer + module match (presence only).
     """
-    total = len(view.scenario.required_layers) or 1
+    if not view.scenario.required_layers:
+        # #default-e2e-requirement: no declared requirements (implicit e2e
+        # disabled) means nothing is outstanding, so the scenario is complete.
+        return 1, 1
+    total = len(view.scenario.required_layers)
     satisfied = sum(
         1 for req in view.scenario.required_layers if requirement_satisfied(req, view.linked_results)
     )

@@ -40,10 +40,21 @@ def _parse_meta_arg(raw: str) -> tuple:
 
 
 def _parse_args(argv: List[str] | None = None) -> tuple:
-    """Return ``(config_path, cli_metadata)`` from the command line (#run-metadata)."""
+    """Return ``(config_path, cli_metadata, cli_overrides)`` from the command line.
+
+    ``cli_overrides`` holds config keys set via flags (currently only
+    ``default_e2e_requirement``); they win over the config file
+    (#run-metadata, #default-e2e-requirement).
+    """
     parser = argparse.ArgumentParser(prog="spectracer")
     parser.add_argument("config", nargs="?", default=DEFAULT_CONFIG_NAME)
     parser.add_argument("-m", "--meta", action="append", default=[], metavar="KEY=VALUE")
+    parser.add_argument(
+        "--default-e2e-requirement",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Override config 'default_e2e_requirement' (implicit @require-e2e for untagged scenarios).",
+    )
     try:
         args = parser.parse_args(sys.argv[1:] if argv is None else argv)
     except SystemExit as exc:
@@ -51,7 +62,10 @@ def _parse_args(argv: List[str] | None = None) -> tuple:
     path = Path(args.config)
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
-    return path, dict(_parse_meta_arg(raw) for raw in args.meta)
+    overrides = {}
+    if args.default_e2e_requirement is not None:
+        overrides["default_e2e_requirement"] = args.default_e2e_requirement
+    return path, dict(_parse_meta_arg(raw) for raw in args.meta), overrides
 
 
 def _find_config_path(argv: List[str] | None = None) -> Path:
@@ -88,6 +102,10 @@ def _load_config(path: Path) -> dict:
     duplicates = sorted({name for name in fail_on if fail_on.count(name) > 1})
     if duplicates:
         raise ValueError(f"Config key 'fail_on' has duplicate entries: {duplicates}")
+    if not isinstance(config.get("default_e2e_requirement", True), bool):
+        raise ValueError(
+            f"Config key 'default_e2e_requirement' must be a boolean, got: {config['default_e2e_requirement']!r}"
+        )
     render_mode = config.get("render_mode", "server")
     if render_mode not in ("server", "client"):
         raise ValueError(
@@ -141,7 +159,9 @@ def _load_logo(config_dir: Path) -> str:
     return ""
 
 
-def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
+def _collect_and_parse_features(
+    paths: List[str], base_dir: Path, default_e2e_requirement: bool = True
+) -> tuple:
     files = FileCollector.feature_files(paths)
     if not files:
         raise FileNotFoundError("No feature files were found")
@@ -150,7 +170,7 @@ def _collect_and_parse_features(paths: List[str], base_dir: Path) -> tuple:
     parser = FeatureParser()
     resolved_base = base_dir.resolve()
     for f in files:
-        parsed = parser.parse(f)
+        parsed = parser.parse(f, default_e2e_requirement)
         relative = _relative_feature_path(f, resolved_base)
         for scenario in parsed:
             feature_files.setdefault(scenario.feature, relative)
@@ -242,13 +262,16 @@ def _warn_unconfigured_requirements(unconfigured: List[dict]) -> None:
 
 
 def main(argv: List[str] | None = None) -> int:
-    config_path, cli_metadata = _parse_args(argv)
+    config_path, cli_metadata, cli_overrides = _parse_args(argv)
     config = _load_config(config_path)
+    config.update(cli_overrides)
     metadata = _resolved_metadata(config, cli_metadata)
     if metadata:
         config["metadata"] = metadata
 
-    scenarios, feature_files = _collect_and_parse_features(config["features"], config_path.parent)
+    scenarios, feature_files = _collect_and_parse_features(
+        config["features"], config_path.parent, config.get("default_e2e_requirement", True)
+    )
 
     junit_parser = JunitParser()
     cucumber_parser = CucumberParser()

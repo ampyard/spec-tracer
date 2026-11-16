@@ -45,3 +45,29 @@ Feature: Health Signals
     And the report should contain "required-chip ok"
     And the report should contain "required-chip unconfigured"
 
+
+  @id:FC-014 @require-unit:cli @require-integration:cli @require-e2e:cli
+  Scenario: A scenario without require tags defaults to requiring e2e
+    Given a feature file with scenario tagged "@FC-001"
+    And a unit JUnit XML result tagged "@FC-001"
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "<strong>0/1</strong>"
+
+  @id:FC-014 @require-unit:cli @require-integration:cli @require-e2e:cli
+  Scenario: The config can disable the implicit e2e requirement
+    Given a feature file with scenario tagged "@FC-001"
+    And a unit JUnit XML result tagged "@FC-001"
+    And the config disables the default e2e requirement
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "<strong>1/1</strong>"
+
+  @id:FC-014 @require-unit:cli @require-integration:cli @require-e2e:cli
+  Scenario: The command line can disable the implicit e2e requirement
+    Given a feature file with scenario tagged "@FC-001"
+    And a unit JUnit XML result tagged "@FC-001"
+    And the tool is given the "--no-default-e2e-requirement" flag
+    When I run the tool with --features, --unit, and --output
+    Then the exit code should be 0
+    And the report should contain "<strong>1/1</strong>"

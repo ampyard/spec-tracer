@@ -56,6 +56,7 @@ jobs:
           uv run pytest tests/integration/test_edge_cases.py --junitxml=reports/int-edge_cases.xml -q
           uv run pytest tests/integration/test_fail_on.py --junitxml=reports/int-fail_on.xml -q
           uv run pytest tests/integration/test_json_report.py --junitxml=reports/int-json_report.xml -q
+          uv run pytest tests/integration/test_default_e2e_requirement.py --junitxml=reports/int-cli.xml -q
           uv run pytest tests/integration/test_missing_required_layer.py --junitxml=reports/int-missing_required_layer.xml -q
           uv run pytest tests/integration/test_status_badges.py --junitxml=reports/int-status_badges.xml -q
           uv run pytest tests/integration/test_unit_linking.py --junitxml=reports/int-unit_linking.xml -q
@@ -70,7 +71,8 @@ jobs:
           uv run behave features/linking.feature --tags="not @id:FC-004" -f json -o reports/e2e-linker.json
           uv run behave features/edge_cases.feature --tags="not @id:FC-EDGE-006 and not @id:FC-EDGE-007" -f json -o reports/e2e-linker-edge.json
           uv run behave features/linking.feature --tags=@id:FC-004 -f json -o reports/e2e-collectors.json
-          uv run behave features/health.feature -f json -o reports/e2e-aggregator.json
+          uv run behave features/health.feature --tags="not @id:FC-014" -f json -o reports/e2e-aggregator.json
+          uv run behave features/health.feature --tags=@id:FC-014 -f json -o reports/e2e-cli.json
           uv run behave features/internals.feature --tags=@id:FC-008 -f json -o reports/e2e-aggregator-internals.json
           uv run behave features/dashboard.feature -f json -o reports/e2e-renderers.json
           uv run behave features/internals.feature --tags=@id:FC-009 -f json -o reports/e2e-renderers-internals.json

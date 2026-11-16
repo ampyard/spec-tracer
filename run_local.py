@@ -89,6 +89,10 @@ PYTEST_STEPS = [
         "uv", "run", "pytest", "tests/integration/test_json_report.py",
         "--junitxml=reports/int-json_report.xml", "-q",
     ]),
+    ("Integration: cli", [
+        "uv", "run", "pytest", "tests/integration/test_default_e2e_requirement.py",
+        "--junitxml=reports/int-cli.xml", "-q",
+    ]),
     ("Integration: missing_required_layer", [
         "uv", "run", "pytest", "tests/integration/test_missing_required_layer.py",
         "--junitxml=reports/int-missing_required_layer.xml", "-q",
@@ -133,7 +137,11 @@ BEHAVE_STEPS = [
     ]),
     ("E2E: aggregator", [
         "uv", "run", "behave", "features/health.feature",
-        "-f", "json", "-o", "reports/e2e-aggregator.json",
+        "--tags=not @id:FC-014", "-f", "json", "-o", "reports/e2e-aggregator.json",
+    ]),
+    ("E2E: cli", [
+        "uv", "run", "behave", "features/health.feature",
+        "--tags=@id:FC-014", "-f", "json", "-o", "reports/e2e-cli.json",
     ]),
     ("E2E: aggregator (internals)", [
         "uv", "run", "behave", "features/internals.feature",

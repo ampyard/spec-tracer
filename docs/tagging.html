@@ -344,7 +344,7 @@
       <table>
         <thead><tr><th>Situation</th><th>Behaviour</th></tr></thead>
         <tbody>
-          <tr><td>Scenario has no <code>@require-*</code> tag at all</td><td>Defaults to a bare, unscoped <code>@require-e2e</code>.</td></tr>
+          <tr><td>Scenario has no <code>@require-*</code> tag at all</td><td>Defaults to a bare, unscoped <code>@require-e2e</code> (set <code>default_e2e_requirement: false</code> to require nothing).</td></tr>
           <tr><td>Scenario has no <code>@id:</code> tag</td><td>Nothing can ever link to it. It appears in the report as permanently incomplete.</td></tr>
           <tr><td>Test result matches no scenario</td><td>Listed under <strong>Unlinked Tests</strong>. It still counts toward the pyramid and pass-rate stats.</td></tr>
           <tr><td>Scenario matches no test</td><td>Shown as incomplete, with each declared layer flagged missing.</td></tr>

@@ -200,3 +200,14 @@ def test_cucumber_parser_drops_tag_filtered_skipped_scenario_with_no_step_result
     results = CucumberParser().parse([payload_path], module="e2e")
 
     assert results == []
+
+
+def test_feature_parser_default_e2e_requirement_can_be_disabled(tmp_path):
+    path = tmp_path / "sample.feature"
+    path.write_text("Feature: F\n  @id:FC-1\n  Scenario: S\n    Given a step\n", encoding="utf-8")
+
+    default = FeatureParser.parse(path)
+    disabled = FeatureParser.parse(path, default_e2e_requirement=False)
+
+    assert [r.layer for r in default[0].required_layers] == ["e2e"]
+    assert disabled[0].required_layers == []
